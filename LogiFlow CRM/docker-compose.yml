@@ -1,0 +1,231 @@
+services:
+  # ===========================================
+  # BANCO DE DADOS - MariaDB
+  # ===========================================
+  db:
+    image: mariadb:10.6
+    container_name: logiflow_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpass123}
+      MYSQL_DATABASE: ${DB_NAME:-logiflow_crm}
+      MYSQL_USER: ${DB_USER:-logiflow}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-logiflow123}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - logiflow_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootpass123}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================
+  # CACHE - Redis
+  # ===========================================
+  redis:
+    image: redis:7-alpine
+    container_name: logiflow_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    volumes:
+      - redis_data:/data
+    networks:
+      - logiflow_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis123}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================
+  # SUITECRM - PHP-FPM
+  # ===========================================
+  suitecrm:
+    build:
+      context: ./docker/suitecrm
+      dockerfile: Dockerfile
+    container_name: logiflow_suitecrm
+    restart: unless-stopped
+    environment:
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME:-logiflow_crm}
+      - DB_USER=${DB_USER:-logiflow}
+      - DB_PASSWORD=${DB_PASSWORD:-logiflow123}
+      - SITE_URL=${SITE_URL:-http://localhost}
+    volumes:
+      - ./suitecrm:/var/www/html
+      - ./docker/suitecrm/php.ini:/usr/local/etc/php/conf.d/custom.ini
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - logiflow_network
+
+  # ===========================================
+  # WEB SERVER - Nginx
+  # ===========================================
+  nginx:
+    image: nginx:stable-alpine
+    container_name: logiflow_nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - ./suitecrm:/var/www/html:ro
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/sites:/etc/nginx/conf.d:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - suitecrm
+      - api
+    networks:
+      - logiflow_network
+
+  # ===========================================
+  # BACKEND API - FastAPI
+  # ===========================================
+  api:
+    build:
+      context: ./backend
+      dockerfile: ../docker/api/Dockerfile
+    container_name: logiflow_api
+    restart: unless-stopped
+    user: "0:0"
+    environment:
+      - DEBUG=${DEBUG:-True}
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-change-this-in-production}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME:-logiflow_crm}
+      - DB_USER=${DB_USER:-logiflow}
+      - DB_PASSWORD=${DB_PASSWORD:-logiflow123}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/1
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/0
+      - FOCUSNFE_TOKEN=${FOCUSNFE_TOKEN:-}
+    volumes:
+      - ./backend:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - logiflow_network
+    command: >
+      sh -c "uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+
+  # ===========================================
+  # FRONTEND - Vue.js
+  # ===========================================
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    container_name: logiflow_frontend
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    depends_on:
+      - api
+    networks:
+      - logiflow_network
+
+  # ===========================================
+  # WORKER - Celery (Tarefas Assíncronas)
+  # ===========================================
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: ../docker/api/Dockerfile
+    container_name: logiflow_celery_worker
+    restart: unless-stopped
+    environment:
+      - DEBUG=${DEBUG:-True}
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-change-this-in-production}
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME:-logiflow_crm}
+      - DB_USER=${DB_USER:-logiflow}
+      - DB_PASSWORD=${DB_PASSWORD:-logiflow123}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/1
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/0
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - redis
+      - db
+    networks:
+      - logiflow_network
+    command: celery -A worker worker --loglevel=info
+
+  # ===========================================
+  # SCHEDULER - Celery Beat
+  # ===========================================
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: ../docker/api/Dockerfile
+    container_name: logiflow_celery_beat
+    restart: unless-stopped
+    environment:
+      - DEBUG=${DEBUG:-True}
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-change-this-in-production}
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME:-logiflow_crm}
+      - DB_USER=${DB_USER:-logiflow}
+      - DB_PASSWORD=${DB_PASSWORD:-logiflow123}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/1
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/0
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - redis
+    networks:
+      - logiflow_network
+    command: celery -A worker beat --loglevel=info
+
+  # ===========================================
+  # ADMINER - Gerenciador de Banco (Dev Only)
+  # ===========================================
+  adminer:
+    image: adminer:latest
+    container_name: logiflow_adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - logiflow_network
+    profiles:
+      - dev
+
+# ===========================================
+# VOLUMES PERSISTENTES
+# ===========================================
+volumes:
+  mariadb_data:
+    driver: local
+  redis_data:
+    driver: local
+  nginx_logs:
+    driver: local
+  static_volume:
+    driver: local
+  media_volume:
+    driver: local
+
+# ===========================================
+# REDE
+# ===========================================
+networks:
+  logiflow_network:
+    driver: bridge

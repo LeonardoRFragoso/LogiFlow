@@ -1,0 +1,38 @@
+services:
+  db:
+    image: mariadb:10.6
+    container_name: logiflow_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass123
+      MYSQL_DATABASE: logiflow_crm
+      MYSQL_USER: logiflow
+      MYSQL_PASSWORD: logiflow123
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  redis:
+    image: redis:7-alpine
+    container_name: logiflow_redis
+    command: redis-server --requirepass redis123
+    ports:
+      - "6379:6379"
+
+  api:
+    image: python:3.11-slim
+    container_name: logiflow_api
+    working_dir: /app
+    command: bash -c "pip install -q fastapi uvicorn[standard] redis requests loguru pydantic-settings && uvicorn main_simples:app --host 0.0.0.0 --port 8000 --reload"
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      PYTHONUNBUFFERED: 1
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  db_data:

@@ -1,0 +1,2 @@
+placa,tipo_veiculo,renavam,marca,modelo,ano_fabricacao,ano_modelo,capacidade_kg,capacidade_m3,crlv_validade,status,observacoes
+ABC1234,caminhao_truck,12345678901,Mercedes-Benz,Atego 1719,2020,2021,8000,25,31/12/2025,disponivel,"Veículo em ótimo estado"

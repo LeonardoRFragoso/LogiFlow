@@ -1,0 +1,2 @@
+cliente_cnpj,data_cotacao,origem_cidade,origem_uf,destino_cidade,destino_uf,tipo_carga,peso_kg,valor_proposta,status,validade,observacoes
+12345678000190,01/12/2024,"São Paulo",SP,"Rio de Janeiro",RJ,geral,5000,2500.00,aprovada,31/12/2024,"Carga fracionada"

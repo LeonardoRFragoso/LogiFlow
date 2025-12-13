@@ -1,0 +1,346 @@
+/**
+ * LogiFlow CRM - Tema Principal
+ * Cores e estilos customizados para transportadoras
+ */
+
+:root {
+    /* Cores principais LogiFlow */
+    --logiflow-primary: #1e40af;
+    --logiflow-primary-dark: #1e3a8a;
+    --logiflow-primary-light: #3b82f6;
+    --logiflow-secondary: #0891b2;
+    --logiflow-accent: #06b6d4;
+    
+    /* Cores de status */
+    --logiflow-success: #10b981;
+    --logiflow-warning: #f59e0b;
+    --logiflow-danger: #ef4444;
+    --logiflow-info: #3b82f6;
+    
+    /* SLA Colors */
+    --sla-verde: #10b981;
+    --sla-amarelo: #f59e0b;
+    --sla-vermelho: #ef4444;
+    
+    /* Neutros */
+    --logiflow-gray-50: #f9fafb;
+    --logiflow-gray-100: #f3f4f6;
+    --logiflow-gray-200: #e5e7eb;
+    --logiflow-gray-300: #d1d5db;
+    --logiflow-gray-500: #6b7280;
+    --logiflow-gray-700: #374151;
+    --logiflow-gray-900: #111827;
+    
+    /* Tipografia */
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ==========================================
+   RESET E BASE
+   ========================================== */
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--logiflow-gray-50);
+    color: var(--logiflow-gray-900);
+}
+
+/* ==========================================
+   NAVBAR / HEADER
+   ========================================== */
+
+#header,
+.navbar,
+.moduleTitle {
+    background: linear-gradient(135deg, var(--logiflow-primary) 0%, var(--logiflow-primary-dark) 100%) !important;
+    border-bottom: 3px solid var(--logiflow-accent);
+}
+
+.navbar-brand,
+.companyLogo img {
+    max-height: 40px;
+}
+
+/* ==========================================
+   SIDEBAR / MENU
+   ========================================== */
+
+#sidebar,
+.sidebar-nav {
+    background-color: var(--logiflow-gray-900);
+}
+
+.sidebar-nav a {
+    color: var(--logiflow-gray-300);
+    transition: all 0.2s ease;
+}
+
+.sidebar-nav a:hover,
+.sidebar-nav a.active {
+    background-color: var(--logiflow-primary);
+    color: white;
+}
+
+/* ==========================================
+   BOTÕES
+   ========================================== */
+
+.btn-primary,
+button[type="submit"],
+input[type="submit"] {
+    background: var(--logiflow-primary) !important;
+    border-color: var(--logiflow-primary) !important;
+    color: white !important;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover,
+button[type="submit"]:hover {
+    background: var(--logiflow-primary-dark) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(30, 64, 175, 0.3);
+}
+
+.btn-success {
+    background: var(--logiflow-success) !important;
+    border-color: var(--logiflow-success) !important;
+}
+
+.btn-danger {
+    background: var(--logiflow-danger) !important;
+    border-color: var(--logiflow-danger) !important;
+}
+
+.btn-warning {
+    background: var(--logiflow-warning) !important;
+    border-color: var(--logiflow-warning) !important;
+}
+
+/* ==========================================
+   CARDS E PAINÉIS
+   ========================================== */
+
+.panel,
+.card,
+.dashlet {
+    border-radius: 8px;
+    border: 1px solid var(--logiflow-gray-200);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: white;
+}
+
+.panel-heading,
+.card-header,
+.dashlet-header {
+    background: var(--logiflow-gray-50) !important;
+    border-bottom: 1px solid var(--logiflow-gray-200);
+    font-weight: 600;
+    color: var(--logiflow-gray-700);
+}
+
+/* ==========================================
+   TABELAS
+   ========================================== */
+
+.table,
+.listView {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table th,
+.listViewThS1 {
+    background: var(--logiflow-gray-100) !important;
+    color: var(--logiflow-gray-700);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid var(--logiflow-gray-300);
+}
+
+.table td,
+.oddListRowS1,
+.evenListRowS1 {
+    border-bottom: 1px solid var(--logiflow-gray-200);
+    padding: 12px 16px;
+}
+
+.table tr:hover td,
+.oddListRowS1:hover,
+.evenListRowS1:hover {
+    background-color: var(--logiflow-primary-light);
+    background-color: rgba(59, 130, 246, 0.05);
+}
+
+/* ==========================================
+   FORMULÁRIOS
+   ========================================== */
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+    border: 1px solid var(--logiflow-gray-300);
+    border-radius: 6px;
+    padding: 8px 12px;
+    transition: all 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--logiflow-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+/* ==========================================
+   STATUS SLA - Cores específicas logística
+   ========================================== */
+
+.sla-verde,
+.status-verde,
+[data-sla="verde"] {
+    background-color: var(--sla-verde) !important;
+    color: white !important;
+}
+
+.sla-amarelo,
+.status-amarelo,
+[data-sla="amarelo"] {
+    background-color: var(--sla-amarelo) !important;
+    color: white !important;
+}
+
+.sla-vermelho,
+.status-vermelho,
+[data-sla="vermelho"] {
+    background-color: var(--sla-vermelho) !important;
+    color: white !important;
+}
+
+/* Badges de status */
+.badge-sla {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* ==========================================
+   STATUS DE PEDIDOS
+   ========================================== */
+
+.status-em_planejamento { background: #6366f1; color: white; }
+.status-aguardando_coleta { background: #8b5cf6; color: white; }
+.status-em_coleta { background: #a855f7; color: white; }
+.status-coletado { background: #06b6d4; color: white; }
+.status-em_transito { background: #0891b2; color: white; }
+.status-saiu_entrega { background: #10b981; color: white; }
+.status-entregue { background: #059669; color: white; }
+.status-cancelado { background: #ef4444; color: white; }
+.status-devolvido { background: #f97316; color: white; }
+
+/* ==========================================
+   DASHBOARD WIDGETS
+   ========================================== */
+
+.widget-kpi {
+    text-align: center;
+    padding: 24px;
+}
+
+.widget-kpi .value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--logiflow-primary);
+}
+
+.widget-kpi .label {
+    font-size: 0.875rem;
+    color: var(--logiflow-gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ==========================================
+   LOGIN PAGE
+   ========================================== */
+
+#loginform,
+.login-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    max-width: 400px;
+    margin: 100px auto;
+}
+
+.login-logo {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.login-logo img {
+    max-width: 200px;
+}
+
+/* ==========================================
+   RESPONSIVO
+   ========================================== */
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        height: auto;
+    }
+    
+    .widget-kpi .value {
+        font-size: 1.5rem;
+    }
+}
+
+/* ==========================================
+   ANIMAÇÕES
+   ========================================== */
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================
+   UTILITÁRIOS
+   ========================================== */
+
+.text-primary { color: var(--logiflow-primary) !important; }
+.text-success { color: var(--logiflow-success) !important; }
+.text-warning { color: var(--logiflow-warning) !important; }
+.text-danger { color: var(--logiflow-danger) !important; }
+
+.bg-primary { background-color: var(--logiflow-primary) !important; }
+.bg-success { background-color: var(--logiflow-success) !important; }
+.bg-warning { background-color: var(--logiflow-warning) !important; }
+.bg-danger { background-color: var(--logiflow-danger) !important; }
+
+.rounded { border-radius: 6px; }
+.rounded-lg { border-radius: 12px; }
+.shadow { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+.shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }

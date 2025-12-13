@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # ===========================================
+  # BANCO DE DADOS
+  # ===========================================
+  db:
+    image: mariadb:10.6
+    container_name: logiflow_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass123
+      MYSQL_DATABASE: logiflow_crm
+      MYSQL_USER: logiflow
+      MYSQL_PASSWORD: logiflow123
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - logiflow_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================
+  # REDIS
+  # ===========================================
+  redis:
+    image: redis:7-alpine
+    container_name: logiflow_redis
+    restart: unless-stopped
+    command: redis-server --requirepass redis123
+    volumes:
+      - redis_data:/data
+    networks:
+      - logiflow_network
+
+  # ===========================================
+  # BACKEND API - FastAPI
+  # ===========================================
+  api:
+    image: python:3.11-slim
+    container_name: logiflow_api
+    restart: unless-stopped
+    working_dir: /app
+    command: >
+      sh -c "pip install fastapi uvicorn[standard] redis requests loguru pydantic-settings &&
+             uvicorn main_simples:app --host 0.0.0.0 --port 8000 --reload"
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - db
+      - redis
+    networks:
+      - logiflow_network
+
+  # ===========================================
+  # SUITECRM
+  # ===========================================
+  suitecrm:
+    image: bitnami/apache:latest
+    container_name: logiflow_suitecrm
+    restart: unless-stopped
+    volumes:
+      - ./suitecrm:/app
+    ports:
+      - "8080:8080"
+    environment:
+      - APACHE_HTTP_PORT_NUMBER=8080
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - logiflow_network
+
+volumes:
+  mariadb_data:
+  redis_data:
+
+networks:
+  logiflow_network:
+    driver: bridge

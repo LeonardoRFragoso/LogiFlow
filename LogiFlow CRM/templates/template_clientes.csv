@@ -1,0 +1,2 @@
+nome,cnpj,email,telefone,endereco,cidade,uf,cep,contato_nome,contato_telefone,condicao_pagamento,observacoes
+"Transportadora Exemplo Ltda",12345678000190,contato@exemplo.com.br,11987654321,"Av. Paulista, 1000","São Paulo",SP,01310100,"João Silva",11987654321,"30 dias","Cliente desde 2020"

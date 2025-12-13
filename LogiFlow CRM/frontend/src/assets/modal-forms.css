@@ -1,0 +1,152 @@
+/* Modal Forms - Estilos globais para formulários em modais */
+
+/* Fieldset com borda */
+.modal-fieldset {
+  border: 1px solid #4b5563;
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.modal-fieldset legend {
+  padding: 0 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #e5e7eb;
+}
+
+/* Light mode */
+:not(.dark) .modal-fieldset {
+  border-color: #d1d5db;
+}
+
+:not(.dark) .modal-fieldset legend {
+  color: #374151;
+}
+
+/* Form grid dentro do fieldset */
+.modal-fieldset .form-grid,
+.modal-fieldset .grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+/* Form container */
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Grid de 2 colunas */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+/* Span 2 colunas */
+.col-span-2 {
+  grid-column: span 2;
+}
+
+/* Footer do modal padronizado */
+.modal-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* Botão cancelar */
+.modal-btn-cancel {
+  padding: 0.75rem 1.5rem;
+  background: #374151;
+  color: #e5e7eb;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-btn-cancel:hover {
+  background: #4b5563;
+}
+
+:not(.dark) .modal-btn-cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+:not(.dark) .modal-btn-cancel:hover {
+  background: #e5e7eb;
+}
+
+/* Botão salvar */
+.modal-btn-save {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-btn-save:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.modal-btn-save:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Textarea padronizado */
+.modal-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #374151;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  resize: vertical;
+  background: #1f2937;
+  color: #e5e7eb;
+  transition: all 0.2s;
+}
+
+:not(.dark) .modal-textarea {
+  background: white;
+  border-color: #d1d5db;
+  color: #1f2937;
+}
+
+.modal-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.modal-textarea::placeholder {
+  color: #6b7280;
+}
+
+/* Spinner de loading */
+.modal-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: modal-spin 0.8s linear infinite;
+}
+
+@keyframes modal-spin {
+  to { transform: rotate(360deg); }
+}

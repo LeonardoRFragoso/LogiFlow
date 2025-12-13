@@ -1,0 +1,477 @@
+
+LogiFlow CRM - Plano de Ação Completo (Base SuiteCRM)
+====================================================
+
+Este arquivo contém **todas** as explicações, necessidades, planos, passos técnicos, exemplos de código e checklists fornecidos durante a conversa anterior, organizados como um guia prático para iniciar o projeto **LogiFlow CRM** (CRM SaaS white-label especializado em Transportadoras / Logística) usando **SuiteCRM como base** e integrando com **backend Python (FastAPI)** e **frontend Vue 3**.
+
+IMPORTANTE: leia tudo com atenção antes de executar; o plano foi elaborado para ser seguido passo a passo. Sempre faça backup antes de mudanças em produção.
+
+Sumário
+-------
+1) Visão geral do projeto
+2) Por que usar SuiteCRM como base
+3) Arquitetura técnica recomendada (produção SaaS)
+4) Estrutura de desenvolvimento e Git (branches, CI/CD)
+5) Estratégia SaaS / multi-tenant (opções e recomendação)
+6) Infraestrutura e deploy (dev → staging → produção)
+7) Estrutura de pastas custom do SuiteCRM e boas práticas
+8) Módulos e campos (lista completa para Logística)
+9) Exemplos práticos de código (vardefs, logic hook, provision script)
+10) Integração Python + Vue (padrões, autenticação, exemplos)
+11) Workflows e automações essenciais (lista e regras)
+12) Dashboards & KPIs (descrição e métricas)
+13) Tema / Branding (estrutura e arquivos)
+14) Provisionamento e scripts automatizados
+15) Backups, restore e práticas de segurança
+16) Monitoramento e observability
+17) MVP mínimo viável (cronograma 30–45 dias)
+18) Pricing e modelo de negócio
+19) Checklist inicial (tarefas imediatas)
+20) Roadmap de 12 meses e metas de escala
+21) Próximos passos / entregáveis que posso gerar (templates e código)
+22) Referências e notas sobre compatibilidade e documentação
+
+1) Visão geral do projeto
+------------------------
+Objetivo: Construir um CRM SaaS white‑label especializado para transportadoras e logística,
+baseado no SuiteCRM, com interface Vue, backend Python e provisionamento multi-tenant.
+Nome temporário: LogiFlow CRM.
+
+Produto final: uma plataforma com branding próprio, módulos especializados de transporte,
+workflows automatizados, dashboards operacionais e financeiros, integração com WhatsApp/VoIP,
+sistema de cobrança automatizada (Stripe/Asaas), e oferta de hospedagem e suporte.
+
+2) Por que usar SuiteCRM como base
+----------------------------------
+- Fornece o motor (autenticação, usuários, ACL, módulos, API, workflows, temas, etc.).
+- Reduz ~90% do tempo de desenvolvimento comparado a criar do zero.
+- É open-source e permite rebrand e monetização sem royalties.
+- Comunidade e plugins prontos aceleram entregas.
+- Mantenha customizações no diretório /custom para facilitar updates.
+
+3) Arquitetura técnica recomendada (produção SaaS)
+-------------------------------------------------
+Camadas principais:
+- Frontend: Vue 3 (Vite), Pinia, Vue Router, Axios.
+- Backend orquestrador: Python (FastAPI) — autenticação, billing, regras de negócio, integração com SuiteCRM API.
+- SuiteCRM: PHP (7.4/8.0), MySQL/MariaDB — armazena dados de CRM e módulos custom.
+- Cache/Queue: Redis + Celery / RabbitMQ (para jobs assíncronos).
+- Storage: S3 ou MinIO para attachments e backups.
+- Observability: Prometheus + Grafana; Sentry para erros.
+- Proxy/API gateway: Nginx/Traefik (SSL, CORS, rate-limit).
+
+Recomendações:
+- Autenticação SuiteCRM V8 (OAuth2) para token-based access.
+- Backend Python faz cache dos tokens e renova automaticamente.
+- Isolamento por tenant recomendado via DB por tenant (recomendado) — mais seguro para restore e compliance.
+
+4) Estrutura de desenvolvimento e Git (branches, CI/CD)
+------------------------------------------------------
+Branches:
+- main — produção, protegida
+- develop — integração/qa
+- feature/<nome> — desenvolvimento
+- hotfix/<id> — correções urgentes
+
+CI/CD (sugestão):
+- Lint (PHP, JS, Python), composer install, npm build
+- Tests (unitários / integration se existirem)
+- Build de imagem Docker
+- Deploy automático para staging (develop), manual/PR para production (main)
+- Proteger main com pull requests e code review
+
+5) Estratégia SaaS / multi-tenant (opções e recomendação)
+--------------------------------------------------------
+Opções de multitenancy:
+A) DB por tenant (RECOMENDADO) — melhor isolamento, backups por cliente.
+B) Single DB + tenant_id — menor custo, maior complexidade para isolamento e compliance.
+
+Provisionamento recomendado (DB por tenant):
+1. Criar banco novo a partir de um template (schema dump).
+2. Criar usuário e permissões MySQL específicas.
+3. Criar bucket S3/prefixo para attachments.
+4. Registrar tenant no Admin central (metadb).
+5. Gerar credenciais e enviar e-mail de boas-vindas.
+
+6) Infraestrutura e deploy (dev → staging → produção)
+-----------------------------------------------------
+Recomendações:
+- Ambiente dev com Docker Compose (local).
+- Staging similar a produção (mesma orquestração)
+- Produção em VPS/Kubernetes com autoscaling se necessário.
+- Use imagens otimizadas (php-fpm + nginx), habilite redis, certbot para HTTPS.
+- Rotina de backups diários em S3 com retenção (30 dias).
+
+Exemplo simplificado docker-compose.yml (dev):
+- db: mariadb:10.5
+- web: php:8.0-fpm (com extensões)
+- nginx: nginx:stable
+- redis: redis:6
+- fastapi: imagem python app
+- celery + rabbitmq (se usar)
+
+7) Estrutura de pastas custom do SuiteCRM e boas práticas
+--------------------------------------------------------
+Manter customizações apenas em /custom:
+/custom
+  /themes/LogiFlow/
+  /modules/
+    /Cotacoes/
+    /PedidosFrete/
+    /Entregas/
+    /Motoristas/
+    /Veiculos/
+    /Ocorrencias/
+  /Extension/
+  /logic_hooks/
+  /vardefs/
+  /metadata/
+
+Boas práticas:
+- Não editar core fora do /custom.
+- Documentar cada logic hook, vardef e custom endpoint.
+- Versionar todo o conteúdo custom (git).
+- Usar Module Builder para estruturar, depois refinar no /custom.
+
+8) Módulos e campos (lista para Logística)
+------------------------------------------
+Módulos principais e campos sugeridos.
+
+Clientes (Shippers)
+- name (empresa)
+- contato principal
+- telefone
+- email
+- endereço
+- condição de pagamento
+- cnpj
+
+Cotações (Cotacoes)
+- cliente_id (relacionamento)
+- origem (endereço/texto)
+- destino (endereço/texto)
+- tipo_carga (enum)
+- peso_kg (decimal)
+- cubagem_m3 (decimal)
+- valor_proposta (currency)
+- prazo_estimado (int/dias)
+- modal (enum)
+- validade (date)
+- status (enum: Aberta/Aprovada/Perdida)
+
+Pedidos de Frete (PedidosFrete)
+- numero_pedido
+- data_pedido
+- cliente_id
+- cotacao_id (rel)
+- valor_contratado
+- tipo_carga
+- motorista_id (rel)
+- veiculo_id (rel)
+- status_operacional (enum)
+- previsao_entrega (date)
+- data_entrega_real (date)
+- sla_status (enum: Verde/Amarelo/Vermelho)
+
+Entregas (Entregas)
+- pedido_id
+- local_atual
+- status
+- ultimo_evento
+- data_evento
+- anexos (foto)
+- sla (campo calculado)
+- comentario
+
+Motoristas (Motoristas)
+- nome
+- cpf
+- cnh
+- categoria_cnh (enum)
+- vencimento_cnh (date)
+- status (enum: Ativo/Inativo)
+- celular
+
+Veículos (Veiculos)
+- placa
+- renavam
+- tipo_veiculo (enum)
+- ultima_manutencao (date)
+- vencimento_documento (date)
+- status_manutencao
+
+Ocorrências (Ocorrencias)
+- pedido_id
+- tipo (Avaria, Atraso, Roubo, Retorno)
+- descrição
+- status
+- data_ocorrencia
+- responsável
+
+Financeiro (Financials)
+- pedido_id
+- valor_frete
+- custo_estimado
+- lucro
+- status_pagamento
+- data_fatura
+
+Observação: campos extras e labels em pt_BR devem ser definidos em arquivos de linguagem /custom/Extension/application/Ext/Language/pt_BR.<mod>.php
+
+9) Exemplos práticos de código (vardefs, logic hook, provision script)
+----------------------------------------------------------------------
+A) Example vardefs (Motoristas): /custom/modules/Motoristas/vardefs.php
+
+<?php
+$dictionary['Motoristas'] = array(
+  'table' => 'motoristas',
+  'fields' => array(
+    array('name'=>'nome','vname'=>'LBL_NOME','type'=>'varchar','len'=>150),
+    array('name'=>'cpf','vname'=>'LBL_CPF','type'=>'varchar','len'=>14),
+    array('name'=>'cnh','vname'=>'LBL_CNH','type'=>'varchar','len'=>20),
+    array('name'=>'categoria_cnh','vname'=>'LBL_CATEGORIA_CNH','type'=>'enum','options'=>'categoria_cnh_list'),
+    array('name'=>'vencimento_cnh','vname'=>'LBL_VENCIMENTO_CNH','type'=>'date'),
+    array('name'=>'status','vname'=>'LBL_STATUS','type'=>'enum','options'=>'dom_status_motorista'),
+  ),
+  'indices' => array(),
+  'relationships' => array(),
+);
+VardefManager::createVardef('Motoristas','Motoristas', array('basic','assignable'));
+
+B) Logic Hook: Cotacao -> Criar Pedido (custom/modules/Cotacoes/logic_hooks.php)
+<?php
+$hook_version = 1;
+$hook_array = Array();
+$hook_array['after_save'] = Array();
+$hook_array['after_save'][] = Array(
+  1,
+  'CriarPedido',
+  'custom/modules/Cotacoes/CriarPedido.php',
+  'CriarPedido',
+  'executar'
+);
+
+custom/modules/Cotacoes/CriarPedido.php
+<?php
+if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
+
+class CriarPedido {
+  function executar($bean, $event, $arguments) {
+    if ($bean->status == 'Aprovada' && empty($arguments['isUpdate'])) {
+      $pedido = BeanFactory::newBean('PedidosFrete');
+      $pedido->name = 'Pedido de ' . $bean->name;
+      $pedido->cotacao_id = $bean->id;
+      $pedido->cliente_id = $bean->cliente_id;
+      $pedido->valor = $bean->valor_proposta;
+      $pedido->status = 'Em planejamento';
+      $pedido->save();
+    }
+  }
+}
+
+C) Script de provisionamento (esboço) - provision_tenant.sh
+#!/bin/bash
+TENANT=$1
+DB_ROOT_PASS="rootpass"
+TEMPLATE_DB="suitetemplate"
+NEW_DB="logiflow_${TENANT}"
+
+mysql -uroot -p${DB_ROOT_PASS} -e "CREATE DATABASE ${NEW_DB};"
+mysqldump -uroot -p${DB_ROOT_PASS} ${TEMPLATE_DB} | mysql -uroot -p${DB_ROOT_PASS} ${NEW_DB}
+
+USER="user_${TENANT}"
+PASS=$(openssl rand -hex 8)
+mysql -uroot -p${DB_ROOT_PASS} -e "CREATE USER '${USER}'@'%' IDENTIFIED BY '${PASS}'; GRANT ALL PRIVILEGES ON ${NEW_DB}.* TO '${USER}'@'%'; FLUSH PRIVILEGES;"
+
+# Criar bucket S3: logiflow-${TENANT}-attachments (via awscli ou mc)
+# Registrar tenant na DB administrativa (implementar insert conforme schema)
+# Enviar e-mail com credenciais
+
+10) Integração Python + Vue (padrões, autenticação, exemplos)
+------------------------------------------------------------
+Padrão recomendado: Vue (SPA) -> Backend Python (FastAPI) -> SuiteCRM API (V8)
+
+Porque: Camada Python centraliza auth, billing, segurança e regras de negócio.
+- Python faz cache do token OAuth2 (Redis) e renova.
+- Vue nunca deve conter client_secret nem credenciais sensíveis.
+- Use Celery para tarefas assíncronas (e.g. sincronização em massa).
+- Use webhooks / logic hooks para eventos do SuiteCRM que notifiquem o seu backend.
+
+Exemplo (Python) - obter token e listar contacts:
+
+import requests
+
+BASE = "https://crm.exemplo.com/Api/V8"
+CLIENT_ID = "seu_client_id"
+CLIENT_SECRET = "seu_client_secret"
+
+def get_token():
+    url = f"{BASE}/oauth2/token"
+    payload = {
+        "grant_type": "client_credentials",
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET
+    }
+    r = requests.post(url, data=payload)
+    r.raise_for_status()
+    return r.json()["access_token"]
+
+def get_contacts():
+    token = get_token()
+    headers = {"Authorization": f"Bearer {token}"}
+    r = requests.get(f"{BASE}/module/Contacts", headers=headers)
+    r.raise_for_status()
+    return r.json()
+
+Exemplo (Vue + Axios) - criar cotação via seu backend:
+// src/services/api.js
+import axios from 'axios';
+const api = axios.create({ baseURL: '/api/v1' });
+await api.post('/cotacoes', { cliente_id, origem, destino, valor });
+
+11) Workflows e automações essenciais (lista e regras)
+------------------------------------------------------
+- Cotação aprovada -> criar Pedido (logic hook)
+- Mudança de status do Pedido -> criar eventos de rastreamento
+- Motorista CNH vencendo (<30 dias) -> enviar e-mail (AOW)
+- Entrega atrasada -> SLA vermelho e notificação ao gerente
+- Entrega concluída -> enviar e-mail ao cliente com comprovante
+- Distribuição de leads (round robin) -> atribuir automaticamente a motoristas/dispatchers
+- Gatilhos para enviar SMS/WhatsApp em eventos críticos (integração externa)
+
+12) Dashboards & KPIs (descrição e métricas)
+--------------------------------------------
+Dashboards sugeridos:
+- Dashboard Operacional:
+  - Entregas em trânsito (count)
+  - Entregas do dia
+  - Entregas atrasadas (count e %)
+  - SLA status (verde/amarelo/vermelho)
+- Dashboard Comercial:
+  - Total de cotações (mês)
+  - Taxa aprovação (cotacao->pedido)
+  - Ticket médio
+  - Funil comercial (kanban)
+- Dashboard Financeiro:
+  - Faturamento por período
+  - Custo estimado e lucro
+  - Ranking de clientes por faturamento
+
+13) Tema / Branding (estrutura e arquivos)
+-----------------------------------------
+Estrutura do tema LogiFlow em /custom/themes/LogiFlow/:
+- css/
+- images/
+- js/
+- templates/
+- login.tpl
+- header.tpl
+- footer.tpl
+
+Tarefas de tema:
+- Substituir logo no login.tpl
+- Ajustar cores e fontes via CSS principal
+- Atualizar favicon e título do navegador
+- Personalizar e-mails (templates) com marca
+
+14) Provisionamento e scripts automatizados
+-------------------------------------------
+Itens fornecidos e scripts que você deve ter prontos:
+- script provision_tenant.sh (criar db, user, bucket)
+- template DB (dump do schema sem dados)
+- script para criar usuário OS e permissões
+- script para configurar nginx conf para novo tenant (ou rota no gateway)
+- script para criar entry na admin DB
+
+15) Backups, restore e práticas de segurança
+-------------------------------------------
+Backups:
+- Dump diário por tenant (retention 30 dias)
+- Upload para S3 (criptografado at rest)
+- Backup incremental de attachments
+- Teste de restore mensal
+
+Segurança:
+- HTTPS obrigatório (certbot)
+- WAF (Cloudflare opcional)
+- Rate limiting e IP blocking
+- 2FA como addon
+- Monitorar logs para tentativas suspeitas
+- Gerenciar segredos via Vault/Secrets manager
+
+16) Monitoramento e observability
+---------------------------------
+- Health checks (HTTP, DB, processos)
+- Métricas: CPU, Mem, disk, response times, queue length
+- Alerts via Slack/Telegram/email para problemas críticos
+- Sentry para exceções do backend (Python) e frontend (Vue)
+
+17) MVP mínimo viável (30–45 dias, 1 dev + 1 tester)
+----------------------------------------------------
+Entregáveis prioritários:
+1. Deploy do SuiteCRM base no servidor (dev)
+2. Tema LogiFlow básico (branding)
+3. Módulos: Clientes, Cotações, PedidosFrete, Entregas, Motoristas, Veículos
+4. Logic hook Cotacao->Pedido
+5. Workflow CNH vencendo (e-mail)
+6. Dashboard Operacional básico
+7. Provisionamento manual de 3 tenants (clientes pilotos)
+8. Painel admin simples de tenants e planos
+9. Checkout/pagamento manual (Asaas ou MP) para pilotagem
+
+18) Pricing e modelo de negócio (sugestão)
+-----------------------------------------
+Sugestão inicial (Brasil, 2026):
+- Start: R$ 299 / mês (até 5 usuários) — básico
+- Pro: R$ 599 / mês (até 15 usuários) — automações avancadas + addons
+- Premium: R$ 1.499 / mês — integrações ERP/TMS, suporte 24/7
+
+Upsells: WhatsApp oficial, telefonia VoIP, integrações TMS/ERP, relatórios customizados, onboarding.
+
+19) Checklist inicial (primeiras 8 tarefas imediatas)
+-----------------------------------------------------
+1. Criar repositório Git (estrutura inicial)
+2. Provisionar servidor dev (DigitalOcean, Hetzner ou Contabo)
+3. Subir SuiteCRM versão estável no dev
+4. Confirmar versões PHP & MySQL compatíveis
+5. Criar tema básico (logo, cores) em custom/themes/LogiFlow/
+6. Criar módulo Motoristas (vardefs) e testar CRUD
+7. Implementar logic hook Cotacao→Pedido
+8. Criar processo manual de provisionamento de tenant e testar com 1 cliente
+
+20) Roadmap de 12 meses e metas de escala
+----------------------------------------
+Mês 1–2: Infra, tema, módulos base, 3 clientes pilotos
+Mês 3–5: Automação, dashboards avançados, integração WhatsApp, phone
+Mês 6–8: SaaS provisioning automático, pagamento automático, 50+ clientes
+Mês 9–12: Escala, marketing, vendas pagas, parcerias, 100–300 clientes, R$25k–100k/mês
+
+21) Próximos passos / entregáveis que posso gerar agora
+-------------------------------------------------------
+Posso gerar imediatamente (arquivos prontos):
+A. docker-compose.yml completo + Dockerfile PHP + scripts de extensões
+B. vardefs.php + language files completos para todos os módulos (Cotacoes, PedidosFrete, Entregas, Motoristas, Veiculos, Ocorrencias)
+C. logic_hooks + 3 scripts (Cotacao→Pedido, CNH vencendo alert, status atraso)
+D. script de provisionamento provision_tenant.sh completo (SQL + S3 steps)
+E. tema LogiFlow: login.tpl, CSS principal e assets base
+F. Boilerplate FastAPI com wrapper para SuiteCRM V8 (token cache + CRUD examples)
+G. Projeto Vue (Vite) com formulários para criar cotação e listar pedidos
+
+Diga quais itens (letras) você quer agora e eu crio os arquivos.
+
+22) Referências e notas
+----------------------
+- SuiteCRM GitHub: https://github.com/salesagility/SuiteCRM
+- SuiteCRM API (V8) / OAuth2 docs: consultar repositório e docs oficiais do SuiteCRM V8
+- Integração e melhores práticas: use Module Builder, gerencie custom em /custom e documente todas as alterações.
+- Observação: adaptar versões de PHP/MariaDB conforme a versão do SuiteCRM escolhida.
+
+FIM DO DOCUMENTO
+================
+
+Este arquivo foi gerado automaticamente com base em toda a conversa e instruções fornecidas. Se desejar, eu posso agora:
+- Gerar os arquivos solicitados (A..G) e salvar no repositório/como downloads.
+- Criar um checklist em formato CSV ou planilha para execução diária/semanal.
+- Gerar os scripts (provisionamento, docker-compose) e o tema LogiFlow prontos.
+
+Diga o que deseja que eu entregue agora (por exemplo: "Gere A, C e F") e eu crio os arquivos imediatamente.
