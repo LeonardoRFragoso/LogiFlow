@@ -80,10 +80,21 @@ const showModal = ref(false)
 const selected = ref(null)
 
 async function fetchCotacoes() {
-  const params = { search: search.value }
+  const params = {}
   if (filtroStatus.value) params.status = filtroStatus.value
-  const response = await api.get('/cotacoes/', { params })
-  cotacoes.value = response.data.results || response.data
+  const response = await api.get('/api/cotacoes', { params })
+  let data = response.data.data || response.data.results || response.data
+  // Mapear campos para o formato esperado
+  data = data.map(c => ({
+    ...c,
+    rota: `${c.origem_cidade}/${c.origem_uf} → ${c.destino_cidade}/${c.destino_uf}`,
+    valor_total: c.valor_frete
+  }))
+  if (search.value) {
+    const s = search.value.toLowerCase()
+    data = data.filter(c => c.numero?.toLowerCase().includes(s) || c.cliente_nome?.toLowerCase().includes(s))
+  }
+  cotacoes.value = data
 }
 
 function openModal(cotacao = null) {

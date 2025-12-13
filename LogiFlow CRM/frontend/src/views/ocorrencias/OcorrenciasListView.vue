@@ -86,7 +86,7 @@ async function fetchData() {
   if (filtroStatus.value) params.status = filtroStatus.value
   if (filtroPrioridade.value) params.prioridade = filtroPrioridade.value
   const response = await api.get('/ocorrencias/', { params })
-  ocorrencias.value = response.data.results || response.data
+  ocorrencias.value = response.data.data || response.data.results || response.data || []
 }
 
 function openModal(ocorrencia = null) {

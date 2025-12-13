@@ -201,8 +201,19 @@ onMounted(async () => {
   }
   
   try {
-    const response = await api.get('/pedidos/dashboard/')
-    stats.value = response.data
+    const response = await api.get('/api/dashboard/stats')
+    const data = response.data.data
+    stats.value = {
+      em_transito: data.entregas.em_transito,
+      entregas_hoje: data.entregas.entregues_hoje,
+      atrasados: data.entregas.atrasadas,
+      cotacoes_abertas: data.cotacoes.pendentes,
+      sla: {
+        verde: data.pedidos.entregues,
+        amarelo: data.pedidos.em_transito,
+        vermelho: data.entregas.atrasadas
+      }
+    }
   } catch (e) {
     console.error('Erro ao carregar dashboard:', e)
   }

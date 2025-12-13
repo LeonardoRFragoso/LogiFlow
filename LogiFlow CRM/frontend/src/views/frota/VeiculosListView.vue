@@ -83,10 +83,14 @@ const showModal = ref(false)
 const selected = ref(null)
 
 async function fetchData() {
-  const params = { search: search.value }
+  const params = {}
   if (filtroStatus.value) params.status = filtroStatus.value
-  const response = await api.get('/veiculos/', { params })
-  veiculos.value = response.data.results || response.data
+  const response = await api.get('/api/veiculos', { params })
+  let data = response.data.data || response.data.results || response.data
+  if (search.value) {
+    data = data.filter(v => v.placa?.toLowerCase().includes(search.value.toLowerCase()))
+  }
+  veiculos.value = data
 }
 
 function openModal(item = null) {

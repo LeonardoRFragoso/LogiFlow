@@ -77,8 +77,13 @@ const showModal = ref(false)
 const selectedCliente = ref(null)
 
 async function fetchClientes() {
-  const response = await api.get('/clientes/', { params: { search: search.value } })
-  clientes.value = response.data.results || response.data
+  const response = await api.get('/api/clientes')
+  let data = response.data.data || response.data.results || response.data
+  if (search.value) {
+    const s = search.value.toLowerCase()
+    data = data.filter(c => c.razao_social?.toLowerCase().includes(s) || c.nome_fantasia?.toLowerCase().includes(s) || c.cnpj?.includes(s) || c.cidade?.toLowerCase().includes(s))
+  }
+  clientes.value = data
 }
 
 function openModal(cliente = null) {

@@ -94,7 +94,7 @@ async function fetchPedidos() {
   if (filtroStatus.value) params.status = filtroStatus.value
   if (filtroSla.value) params.sla_status = filtroSla.value
   const response = await api.get('/pedidos/', { params })
-  pedidos.value = response.data.results || response.data
+  pedidos.value = response.data.data || response.data.results || response.data || []
 }
 
 function openModal(pedido = null) {
