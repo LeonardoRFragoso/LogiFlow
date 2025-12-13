@@ -6,10 +6,12 @@ API principal para orquestração do LogiFlow CRM
 
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import redis
 from loguru import logger
+from pathlib import Path
 
 from config import settings
 # Importar routers
@@ -163,6 +165,27 @@ async def general_exception_handler(request, exc):
 
 
 # ===========================================
+# Arquivos Estáticos
+# ===========================================
+# Montar pasta static para servir arquivos
+static_path = Path(__file__).parent / "static"
+if static_path.exists():
+    app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
+
+@app.get("/download/guia-completo")
+async def download_guia():
+    """Download do guia completo em PDF"""
+    pdf_path = static_path / "guia-completo-logiflow.pdf"
+    if pdf_path.exists():
+        return FileResponse(
+            path=str(pdf_path),
+            filename="LogiFlow-CRM-Guia-Completo.pdf",
+            media_type="application/pdf"
+        )
+    raise HTTPException(status_code=404, detail="Guia não encontrado")
+
+
+# ===========================================
 # Root Endpoint
 # ===========================================
 @app.get("/")
@@ -172,5 +195,8 @@ async def root():
         "name": "LogiFlow CRM API",
         "version": "1.0.0",
         "status": "running",
-        "docs": "/docs" if settings.DEBUG else "disabled"
+        "docs": "/docs" if settings.DEBUG else "disabled",
+        "downloads": {
+            "guia_completo": "/download/guia-completo"
+        }
     }

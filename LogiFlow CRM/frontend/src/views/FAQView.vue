@@ -319,7 +319,8 @@ function startTour() {
 }
 
 function downloadGuide() {
-  window.open('/guia-completo-logiflow.pdf', '_blank')
+  // Usar endpoint do backend para download
+  window.open('http://localhost:8000/download/guia-completo', '_blank')
 }
 </script>
 
