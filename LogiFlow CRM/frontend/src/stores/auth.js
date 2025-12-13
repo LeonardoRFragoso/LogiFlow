@@ -9,19 +9,27 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value)
 
   async function login(username, password) {
-    const response = await api.post('/auth/token/', { username, password })
-    token.value = response.data.access
+    const formData = new FormData()
+    formData.append('username', username)
+    formData.append('password', password)
+    
+    const response = await api.post('/auth/login', formData, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    })
+    
+    token.value = response.data.access_token
     localStorage.setItem('token', token.value)
-    localStorage.setItem('refreshToken', response.data.refresh)
-    await fetchUser()
+    localStorage.setItem('refreshToken', response.data.refresh_token)
+    user.value = response.data.user
+    localStorage.setItem('user', JSON.stringify(response.data.user))
   }
 
   async function fetchUser() {
     if (!token.value) return
     try {
-      const response = await api.get('/users/me/')
-      user.value = response.data
-      localStorage.setItem('user', JSON.stringify(response.data))
+      const response = await api.get('/auth/me')
+      user.value = response.data.data
+      localStorage.setItem('user', JSON.stringify(response.data.data))
     } catch (e) {
       console.error('Erro ao buscar usuário:', e)
     }

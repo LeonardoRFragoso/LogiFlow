@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  evolution-api:
+    container_name: evolution_api
+    image: atendai/evolution-api:latest
+    restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - evolution_store:/evolution/store
+      - evolution_instances:/evolution/instances
+    networks:
+      - logiflow-network
+
+volumes:
+  evolution_store:
+  evolution_instances:
+
+networks:
+  logiflow-network:
+    driver: bridge

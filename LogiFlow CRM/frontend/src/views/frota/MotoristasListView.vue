@@ -80,8 +80,12 @@ const showModal = ref(false)
 const selected = ref(null)
 
 async function fetchData() {
-  const response = await api.get('/motoristas/', { params: { search: search.value } })
-  motoristas.value = response.data.results || response.data
+  const response = await api.get('/api/motoristas')
+  let data = response.data.data || response.data.results || response.data
+  if (search.value) {
+    data = data.filter(m => m.nome?.toLowerCase().includes(search.value.toLowerCase()) || m.cpf?.includes(search.value))
+  }
+  motoristas.value = data
 }
 
 function openModal(item = null) {

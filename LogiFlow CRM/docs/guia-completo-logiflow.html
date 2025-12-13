@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogiFlow CRM - Guia Completo de Uso</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20mm;
+            background: white;
+        }
+
+        .cover {
+            text-align: center;
+            padding: 60px 0;
+            page-break-after: always;
+        }
+
+        .cover h1 {
+            font-size: 48px;
+            color: #3b82f6;
+            margin-bottom: 20px;
+        }
+
+        .cover .subtitle {
+            font-size: 24px;
+            color: #6b7280;
+            margin-bottom: 40px;
+        }
+
+        .cover .version {
+            font-size: 18px;
+            color: #9ca3af;
+        }
+
+        .toc {
+            page-break-after: always;
+        }
+
+        .toc h2 {
+            color: #3b82f6;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 10px;
+        }
+
+        .toc ul {
+            list-style: none;
+        }
+
+        .toc li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .toc a {
+            text-decoration: none;
+            color: #1f2937;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .toc a:hover {
+            color: #3b82f6;
+        }
+
+        .section {
+            page-break-before: always;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: #3b82f6;
+            font-size: 32px;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #1f2937;
+            font-size: 24px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        h3 {
+            color: #4b5563;
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .success-box {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .step-list {
+            counter-reset: step-counter;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .step-list li {
+            counter-increment: step-counter;
+            margin-bottom: 15px;
+            padding-left: 40px;
+            position: relative;
+        }
+
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #3b82f6;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .feature-card h4 {
+            color: #3b82f6;
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        table th {
+            background: #3b82f6;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        table tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        .footer {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 12px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+            .section {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CAPA -->
+    <div class="cover">
+        <h1>🚚 LogiFlow CRM</h1>
+        <div class="subtitle">Guia Completo de Uso do Sistema</div>
+        <div class="version">Versão 1.0 | Dezembro 2024</div>
+    </div>
+
+    <!-- ÍNDICE -->
+    <div class="toc">
+        <h2>📋 Índice</h2>
+        <ul>
+            <li><a href="#intro"><span>1. Introdução</span><span>3</span></a></li>
+            <li><a href="#visao-geral"><span>2. Visão Geral do Sistema</span><span>4</span></a></li>
+            <li><a href="#fluxo"><span>3. Fluxo de Funcionamento</span><span>5</span></a></li>
+            <li><a href="#pedidos"><span>4. Gestão de Pedidos</span><span>7</span></a></li>
+            <li><a href="#cotacoes"><span>5. Cotações de Frete</span><span>10</span></a></li>
+            <li><a href="#motoristas"><span>6. Gestão de Motoristas</span><span>12</span></a></li>
+            <li><a href="#veiculos"><span>7. Gestão de Veículos</span><span>14</span></a></li>
+            <li><a href="#ocorrencias"><span>8. Ocorrências e Incidentes</span><span>16</span></a></li>
+            <li><a href="#rastreamento"><span>9. Rastreamento em Tempo Real</span><span>18</span></a></li>
+            <li><a href="#app-motorista"><span>10. App do Motorista</span><span>20</span></a></li>
+            <li><a href="#portal-cliente"><span>11. Portal do Cliente</span><span>22</span></a></li>
+            <li><a href="#relatorios"><span>12. Relatórios e Análises</span><span>24</span></a></li>
+            <li><a href="#configuracoes"><span>13. Configurações do Sistema</span><span>26</span></a></li>
+            <li><a href="#suporte"><span>14. Suporte e Contato</span><span>28</span></a></li>
+        </ul>
+    </div>
+
+    <!-- 1. INTRODUÇÃO -->
+    <div class="section" id="intro">
+        <h1>1. Introdução</h1>
+        
+        <h2>Bem-vindo ao LogiFlow CRM</h2>
+        <p>
+            O LogiFlow CRM é uma solução completa e moderna para gestão de transportadoras, desenvolvida 
+            especialmente para otimizar todas as etapas do processo logístico, desde a cotação até a 
+            entrega final.
+        </p>
+
+        <h2>Objetivo deste Guia</h2>
+        <p>
+            Este guia tem como objetivo fornecer instruções detalhadas sobre todas as funcionalidades 
+            do sistema, permitindo que você aproveite ao máximo os recursos disponíveis e otimize 
+            suas operações logísticas.
+        </p>
+
+        <div class="info-box">
+            <strong>💡 Dica:</strong> Recomendamos que você leia este guia na sequência apresentada, 
+            pois os conceitos são apresentados de forma progressiva.
+        </div>
+
+        <h2>Público-Alvo</h2>
+        <ul>
+            <li><strong>Gestores:</strong> Visão completa das operações e tomada de decisões</li>
+            <li><strong>Operadores:</strong> Gestão diária de pedidos e entregas</li>
+            <li><strong>Motoristas:</strong> Uso do aplicativo móvel para entregas</li>
+            <li><strong>Clientes:</strong> Acompanhamento de pedidos via portal</li>
+        </ul>
+    </div>
+
+    <!-- 2. VISÃO GERAL -->
+    <div class="section" id="visao-geral">
+        <h1>2. Visão Geral do Sistema</h1>
+
+        <h2>Componentes do Sistema</h2>
+        <p>O LogiFlow CRM é composto por três aplicações integradas:</p>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🖥️ Sistema Web</h4>
+                <p>Interface principal para gestão completa das operações, acessível via navegador.</p>
+            </div>
+            <div class="feature-card">
+                <h4>📱 App do Motorista</h4>
+                <p>Aplicativo móvel para motoristas gerenciarem suas entregas em campo.</p>
+            </div>
+            <div class="feature-card">
+                <h4>👥 Portal do Cliente</h4>
+                <p>Portal web para clientes acompanharem seus pedidos e solicitarem cotações.</p>
+            </div>
+            <div class="feature-card">
+                <h4>🔗 API Backend</h4>
+                <p>Sistema backend robusto que integra todos os componentes.</p>
+            </div>
+        </div>
+
+        <h2>Principais Funcionalidades</h2>
+        <ul>
+            <li>✅ Gestão completa de pedidos de frete</li>
+            <li>✅ Sistema de cotações automatizado</li>
+            <li>✅ Rastreamento em tempo real</li>
+            <li>✅ Gestão de motoristas e veículos</li>
+            <li>✅ Controle de ocorrências e incidentes</li>
+            <li>✅ Relatórios e dashboards analíticos</li>
+            <li>✅ Integração com WhatsApp</li>
+            <li>✅ Cálculo automático de rotas</li>
+            <li>✅ Gestão de SLA e prazos</li>
+            <li>✅ Portal para clientes</li>
+        </ul>
+
+        <div class="success-box">
+            <strong>✨ Diferencial:</strong> O LogiFlow CRM foi desenvolvido especificamente para 
+            transportadoras brasileiras, considerando as particularidades do mercado nacional.
+        </div>
+    </div>
+
+    <!-- 3. FLUXO DE FUNCIONAMENTO -->
+    <div class="section" id="fluxo">
+        <h1>3. Fluxo de Funcionamento</h1>
+
+        <h2>Ciclo Completo de uma Entrega</h2>
+        <p>Entenda como funciona o fluxo completo de um pedido no LogiFlow CRM:</p>
+
+        <ol class="step-list">
+            <li>
+                <strong>Solicitação de Cotação</strong><br>
+                Cliente solicita cotação via portal ou operador cria manualmente no sistema.
+            </li>
+            <li>
+                <strong>Cálculo e Envio da Cotação</strong><br>
+                Sistema calcula automaticamente valores baseado em distância, peso e tipo de carga.
+            </li>
+            <li>
+                <strong>Aprovação da Cotação</strong><br>
+                Cliente aprova a cotação que é automaticamente convertida em pedido.
+            </li>
+            <li>
+                <strong>Criação do Pedido</strong><br>
+                Pedido é criado no sistema com status "Aguardando Confirmação".
+            </li>
+            <li>
+                <strong>Confirmação e Planejamento</strong><br>
+                Operador confirma o pedido e atribui motorista e veículo disponíveis.
+            </li>
+            <li>
+                <strong>Notificação do Motorista</strong><br>
+                Motorista recebe notificação no app com detalhes da coleta.
+            </li>
+            <li>
+                <strong>Coleta da Carga</strong><br>
+                Motorista vai até o local de coleta e confirma retirada da carga no app.
+            </li>
+            <li>
+                <strong>Transporte</strong><br>
+                Durante o transporte, sistema rastreia localização em tempo real.
+            </li>
+            <li>
+                <strong>Entrega</strong><br>
+                Motorista entrega a carga, coleta assinatura e tira foto do comprovante.
+            </li>
+            <li>
+                <strong>Finalização</strong><br>
+                Pedido é marcado como entregue e cliente recebe notificação de conclusão.
+            </li>
+        </ol>
+
+        <div class="info-box">
+            <strong>📊 Acompanhamento:</strong> Durante todo o processo, cliente e operador podem 
+            acompanhar o status em tempo real através do sistema.
+        </div>
+
+        <h2>Status dos Pedidos</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Descrição</th>
+                    <th>Ações Disponíveis</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Aguardando Confirmação</td>
+                    <td>Pedido criado, aguardando aprovação</td>
+                    <td>Confirmar, Editar, Cancelar</td>
+                </tr>
+                <tr>
+                    <td>Confirmado</td>
+                    <td>Pedido aprovado, pronto para coleta</td>
+                    <td>Atribuir Motorista</td>
+                </tr>
+                <tr>
+                    <td>Aguardando Coleta</td>
+                    <td>Motorista atribuído, aguardando coleta</td>
+                    <td>Iniciar Coleta</td>
+                </tr>
+                <tr>
+                    <td>Em Coleta</td>
+                    <td>Motorista a caminho do local de coleta</td>
+                    <td>Confirmar Coleta</td>
+                </tr>
+                <tr>
+                    <td>Coletado</td>
+                    <td>Carga coletada com sucesso</td>
+                    <td>Iniciar Transporte</td>
+                </tr>
+                <tr>
+                    <td>Em Trânsito</td>
+                    <td>Carga em transporte</td>
+                    <td>Rastrear, Registrar Ocorrência</td>
+                </tr>
+                <tr>
+                    <td>Em Rota de Entrega</td>
+                    <td>Motorista a caminho do destino</td>
+                    <td>Confirmar Entrega</td>
+                </tr>
+                <tr>
+                    <td>Entregue</td>
+                    <td>Entrega concluída com sucesso</td>
+                    <td>Ver Comprovante</td>
+                </tr>
+                <tr>
+                    <td>Cancelado</td>
+                    <td>Pedido cancelado</td>
+                    <td>Ver Motivo</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 4. GESTÃO DE PEDIDOS -->
+    <div class="section" id="pedidos">
+        <h1>4. Gestão de Pedidos</h1>
+
+        <h2>Criando um Novo Pedido</h2>
+        <ol class="step-list">
+            <li>Acesse o menu <strong>"Pedidos"</strong> na barra lateral</li>
+            <li>Clique no botão <strong>"+ Novo Pedido"</strong></li>
+            <li>Preencha os dados do cliente (ou selecione um cliente existente)</li>
+            <li>Informe o endereço de origem (coleta)</li>
+            <li>Informe o endereço de destino (entrega)</li>
+            <li>Adicione os itens da carga:
+                <ul>
+                    <li>Descrição do item</li>
+                    <li>Quantidade</li>
+                    <li>Peso (kg)</li>
+                    <li>Volume (m³)</li>
+                    <li>Valor da mercadoria</li>
+                </ul>
+            </li>
+            <li>Selecione o tipo de frete (CIF ou FOB)</li>
+            <li>Defina a prioridade do pedido</li>
+            <li>Informe datas previstas de coleta e entrega</li>
+            <li>Revise os valores calculados automaticamente</li>
+            <li>Clique em <strong>"Criar Pedido"</strong></li>
+        </ol>
+
+        <div class="warning-box">
+            <strong>⚠️ Atenção:</strong> Certifique-se de que todos os dados estão corretos antes 
+            de criar o pedido, especialmente endereços e valores.
+        </div>
+
+        <h2>Atribuindo Motorista</h2>
+        <p>Após criar o pedido, você precisa atribuir um motorista:</p>
+        <ol class="step-list">
+            <li>Abra o pedido criado</li>
+            <li>Clique em <strong>"Atribuir Motorista"</strong></li>
+            <li>Selecione um motorista disponível na lista</li>
+            <li>Selecione o veículo que será utilizado</li>
+            <li>Confirme a data/hora prevista de coleta</li>
+            <li>Clique em <strong>"Confirmar Atribuição"</strong></li>
+        </ol>
+
+        <div class="info-box">
+            <strong>💡 Dica:</strong> O sistema mostra apenas motoristas disponíveis e veículos 
+            com capacidade adequada para a carga.
+        </div>
+
+        <h2>Acompanhando Pedidos</h2>
+        <p>Na tela de pedidos, você pode:</p>
+        <ul>
+            <li>Filtrar por status (Todos, Planejamento, Em Trânsito, Entregue)</li>
+            <li>Filtrar por SLA (verde, amarelo, vermelho)</li>
+            <li>Buscar por número do pedido ou cliente</li>
+            <li>Ver detalhes completos de cada pedido</li>
+            <li>Rastrear localização em tempo real</li>
+            <li>Visualizar histórico de movimentações</li>
+        </ul>
+
+        <h2>Cancelando um Pedido</h2>
+        <ol class="step-list">
+            <li>Abra o pedido que deseja cancelar</li>
+            <li>Clique em <strong>"Cancelar Pedido"</strong></li>
+            <li>Informe o motivo do cancelamento (mínimo 10 caracteres)</li>
+            <li>Confirme o cancelamento</li>
+        </ol>
+
+        <div class="warning-box">
+            <strong>⚠️ Importante:</strong> Pedidos já entregues não podem ser cancelados. 
+            O cancelamento é irreversível.
+        </div>
+    </div>
+
+    <!-- 5. COTAÇÕES -->
+    <div class="section" id="cotacoes">
+        <h1>5. Cotações de Frete</h1>
+
+        <h2>Criando uma Cotação</h2>
+        <ol class="step-list">
+            <li>Acesse <strong>"Cotações"</strong> no menu</li>
+            <li>Clique em <strong>"+ Nova Cotação"</strong></li>
+            <li>Selecione ou cadastre o cliente</li>
+            <li>Informe origem e destino</li>
+            <li>Adicione informações da carga (peso, volume, valor)</li>
+            <li>Sistema calcula automaticamente o valor do frete</li>
+            <li>Ajuste valores se necessário</li>
+            <li>Defina prazo de validade da cotação</li>
+            <li>Clique em <strong>"Enviar Cotação"</strong></li>
+        </ol>
+
+        <h2>Cálculo Automático</h2>
+        <p>O sistema calcula o valor do frete considerando:</p>
+        <ul>
+            <li>Distância entre origem e destino</li>
+            <li>Peso e volume da carga</li>
+            <li>Tipo de mercadoria</li>
+            <li>Urgência da entrega</li>
+            <li>Custos operacionais (combustível, pedágios)</li>
+            <li>Margem de lucro configurada</li>
+        </ul>
+
+        <h2>Status das Cotações</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Descrição</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Pendente</td>
+                    <td>Cotação criada, aguardando envio</td>
+                </tr>
+                <tr>
+                    <td>Enviada</td>
+                    <td>Cotação enviada ao cliente</td>
+                </tr>
+                <tr>
+                    <td>Aprovada</td>
+                    <td>Cliente aprovou a cotação</td>
+                </tr>
+                <tr>
+                    <td>Recusada</td>
+                    <td>Cliente recusou a cotação</td>
+                </tr>
+                <tr>
+                    <td>Expirada</td>
+                    <td>Prazo de validade venceu</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Convertendo Cotação em Pedido</h2>
+        <p>Quando uma cotação é aprovada:</p>
+        <ol class="step-list">
+            <li>Abra a cotação aprovada</li>
+            <li>Clique em <strong>"Converter em Pedido"</strong></li>
+            <li>Revise os dados (já preenchidos automaticamente)</li>
+            <li>Confirme a criação do pedido</li>
+        </ol>
+
+        <div class="success-box">
+            <strong>✨ Vantagem:</strong> Ao converter uma cotação, todos os dados são transferidos 
+            automaticamente, evitando retrabalho.
+        </div>
+    </div>
+
+    <!-- CONTINUA... -->
+    <div class="section" id="motoristas">
+        <h1>6. Gestão de Motoristas</h1>
+
+        <h2>Cadastrando um Motorista</h2>
+        <ol class="step-list">
+            <li>Acesse <strong>"Motoristas"</strong> no menu</li>
+            <li>Clique em <strong>"+ Novo Motorista"</strong></li>
+            <li>Preencha dados pessoais (nome, CPF, telefone, email)</li>
+            <li>Adicione dados da CNH:
+                <ul>
+                    <li>Número da CNH</li>
+                    <li>Categoria (A, B, C, D, E)</li>
+                    <li>Data de validade</li>
+                </ul>
+            </li>
+            <li>Faça upload da foto do motorista</li>
+            <li>Faça upload dos documentos (CNH, RG, CPF)</li>
+            <li>Defina o status inicial (Disponível/Indisponível)</li>
+            <li>Clique em <strong>"Salvar"</strong></li>
+        </ol>
+
+        <div class="warning-box">
+            <strong>⚠️ Importante:</strong> Sempre verifique a validade da CNH antes de cadastrar. 
+            O sistema alerta quando a CNH está próxima do vencimento.
+        </div>
+
+        <h2>Gerenciando Disponibilidade</h2>
+        <p>O sistema controla automaticamente a disponibilidade dos motoristas:</p>
+        <ul>
+            <li><strong>Disponível:</strong> Motorista livre para novas entregas</li>
+            <li><strong>Em Rota:</strong> Motorista com entregas em andamento</li>
+            <li><strong>Indisponível:</strong> Motorista em folga ou afastado</li>
+        </ul>
+
+        <h2>Avaliação de Desempenho</h2>
+        <p>O sistema avalia automaticamente cada motorista baseado em:</p>
+        <ul>
+            <li>Taxa de entregas no prazo</li>
+            <li>Número de ocorrências registradas</li>
+            <li>Feedback dos clientes</li>
+            <li>Tempo médio de entrega</li>
+        </ul>
+
+        <div class="info-box">
+            <strong>📊 Relatórios:</strong> Acesse relatórios detalhados de desempenho de cada 
+            motorista na seção de Relatórios.
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <p>LogiFlow CRM © 2024 - Todos os direitos reservados</p>
+        <p>Suporte: suporte@logiflow.com | WhatsApp: (21) 99999-9999</p>
+    </div>
+
+</body>
+</html>

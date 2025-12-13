@@ -16,6 +16,7 @@ const routes = [
       { path: 'clientes', name: 'Clientes', component: () => import('@/views/clientes/ClientesListView.vue') },
       { path: 'cotacoes', name: 'Cotacoes', component: () => import('@/views/comercial/CotacoesListView.vue') },
       { path: 'pedidos', name: 'Pedidos', component: () => import('@/views/operacional/PedidosListView.vue') },
+      { path: 'entregas', name: 'Entregas', component: () => import('@/views/entregas/EntregasListView.vue') },
       { path: 'motoristas', name: 'Motoristas', component: () => import('@/views/frota/MotoristasListView.vue') },
       { path: 'veiculos', name: 'Veiculos', component: () => import('@/views/frota/VeiculosListView.vue') },
       { path: 'ocorrencias', name: 'Ocorrencias', component: () => import('@/views/ocorrencias/OcorrenciasListView.vue') },

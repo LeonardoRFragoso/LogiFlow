@@ -12,12 +12,30 @@ import redis
 from loguru import logger
 
 from config import settings
-# Importar apenas routers que existem
+# Importar routers
 try:
-    from routers import fiscal, rastreamento
-except ImportError:
+    from routers import fiscal, rastreamento, cotacoes, pedidos, motoristas, veiculos, auth, whatsapp, maps, suitecrm, demo, ocorrencias
+    # db_api é opcional (requer SQLAlchemy)
+    try:
+        from routers import db_api
+    except ImportError:
+        db_api = None
+        logger.warning("db_api não disponível (SQLAlchemy não instalado)")
+except ImportError as e:
+    logger.warning(f"Erro ao importar routers: {e}")
     fiscal = None
     rastreamento = None
+    cotacoes = None
+    pedidos = None
+    motoristas = None
+    veiculos = None
+    auth = None
+    whatsapp = None
+    maps = None
+    suitecrm = None
+    demo = None
+    db_api = None
+    ocorrencias = None
 
 # Configurar logging
 logger.add(
@@ -92,6 +110,28 @@ if fiscal:
     app.include_router(fiscal.router, prefix="/fiscal", tags=["Fiscal"])
 if rastreamento:
     app.include_router(rastreamento.router, prefix="/rastreamento", tags=["Rastreamento"])
+if cotacoes:
+    app.include_router(cotacoes.router, prefix="/cotacoes", tags=["Cotações"])
+if pedidos:
+    app.include_router(pedidos.router, prefix="/pedidos", tags=["Pedidos"])
+if motoristas:
+    app.include_router(motoristas.router, prefix="/motoristas", tags=["Motoristas"])
+if veiculos:
+    app.include_router(veiculos.router, prefix="/veiculos", tags=["Veículos"])
+if auth:
+    app.include_router(auth.router, prefix="/auth", tags=["Autenticação"])
+if whatsapp:
+    app.include_router(whatsapp.router, prefix="/whatsapp", tags=["WhatsApp"])
+if maps:
+    app.include_router(maps.router, prefix="/maps", tags=["Google Maps"])
+if suitecrm:
+    app.include_router(suitecrm.router)
+if demo:
+    app.include_router(demo.router)
+if db_api:
+    app.include_router(db_api.router)
+if ocorrencias:
+    app.include_router(ocorrencias.router, prefix="/ocorrencias", tags=["Ocorrências"])
 
 
 # ===========================================
