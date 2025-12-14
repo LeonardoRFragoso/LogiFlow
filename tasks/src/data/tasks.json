@@ -1,7 +1,10 @@
 {
   "projectName": "LogiFlow CRM",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "lastUpdate": "2024-12-14",
+  "completionRate": "100%",
+  "totalTasks": 154,
+  "completedTasks": 154,
   "categories": [
     {
       "id": "backend",
@@ -107,8 +110,8 @@
         { "id": "doc4", "name": "GUIA_INICIO_RAPIDO.md", "status": "done", "priority": "high" },
         { "id": "doc5", "name": "Templates de Migração", "status": "done", "priority": "high" },
         { "id": "doc6", "name": "WHATSAPP_SETUP.md", "status": "done", "priority": "medium" },
-        { "id": "doc7", "name": "Vídeos de Treinamento", "status": "pending", "priority": "low" },
-        { "id": "doc8", "name": "Base de Conhecimento Online", "status": "pending", "priority": "low" }
+        { "id": "doc7", "name": "Vídeos de Treinamento", "status": "done", "priority": "low" },
+        { "id": "doc8", "name": "Base de Conhecimento Online", "status": "done", "priority": "low" }
       ]
     },
     {
@@ -234,7 +237,7 @@
       "tasks": [
         { "id": "qa1", "name": "Integração Melhor Envio", "status": "done", "priority": "low" },
         { "id": "qa2", "name": "Integração Frenet", "status": "done", "priority": "low" },
-        { "id": "qa3", "name": "Google Distance Matrix", "status": "pending", "priority": "low" },
+        { "id": "qa3", "name": "Google Distance Matrix", "status": "done", "priority": "low" },
         { "id": "qa4", "name": "Cálculo de Tabela Própria", "status": "done", "priority": "medium" },
         { "id": "qa5", "name": "Cotação Multi-Transportadoras", "status": "done", "priority": "low" },
         { "id": "qa6", "name": "Tela de Cotação Automática", "status": "done", "priority": "low" }
@@ -251,6 +254,71 @@
         { "id": "gp4", "name": "Webhook de Posições em Tempo Real", "status": "done", "priority": "low" },
         { "id": "gp5", "name": "Mapa Consolidado no Dashboard", "status": "done", "priority": "low" },
         { "id": "gp6", "name": "Histórico de Rotas", "status": "done", "priority": "low" }
+      ]
+    },
+    {
+      "id": "billing",
+      "name": "Billing e Pagamentos",
+      "icon": "💳",
+      "tasks": [
+        { "id": "bi1", "name": "Integração Mercado Pago", "status": "done", "priority": "high" },
+        { "id": "bi2", "name": "Checkout de Planos", "status": "done", "priority": "high" },
+        { "id": "bi3", "name": "Webhook de Pagamentos", "status": "done", "priority": "high" },
+        { "id": "bi4", "name": "Gestão de Assinaturas", "status": "done", "priority": "high" },
+        { "id": "bi5", "name": "Limites por Plano", "status": "done", "priority": "high" },
+        { "id": "bi6", "name": "Telas de Checkout (Success/Failure/Pending)", "status": "done", "priority": "medium" }
+      ]
+    },
+    {
+      "id": "leads",
+      "name": "Gestão de Leads",
+      "icon": "🎯",
+      "tasks": [
+        { "id": "ld1", "name": "Captura de Leads via Site", "status": "done", "priority": "high" },
+        { "id": "ld2", "name": "Tela de Gestão de Leads", "status": "done", "priority": "high" },
+        { "id": "ld3", "name": "Conversão Lead → Cliente", "status": "done", "priority": "high" },
+        { "id": "ld4", "name": "Integração com CRM", "status": "done", "priority": "medium" }
+      ]
+    },
+    {
+      "id": "site",
+      "name": "Site de Divulgação",
+      "icon": "🌐",
+      "tasks": [
+        { "id": "st1", "name": "Landing Page Completa", "status": "done", "priority": "high" },
+        { "id": "st2", "name": "Seção de Benefícios", "status": "done", "priority": "high" },
+        { "id": "st3", "name": "Seção de Funcionalidades", "status": "done", "priority": "high" },
+        { "id": "st4", "name": "Seção de Preços", "status": "done", "priority": "high" },
+        { "id": "st5", "name": "Formulário de Contato", "status": "done", "priority": "high" },
+        { "id": "st6", "name": "FAQ Interativo", "status": "done", "priority": "medium" },
+        { "id": "st7", "name": "Depoimentos de Clientes", "status": "done", "priority": "medium" },
+        { "id": "st8", "name": "Modal de Demonstração", "status": "done", "priority": "medium" }
+      ]
+    },
+    {
+      "id": "frontend_advanced",
+      "name": "Frontend Avançado",
+      "icon": "🎯",
+      "tasks": [
+        { "id": "fa1", "name": "Dashboard NPS e Satisfação", "status": "done", "priority": "high" },
+        { "id": "fa2", "name": "Tela de Cotação Automática", "status": "done", "priority": "high" },
+        { "id": "fa3", "name": "Tela de Rastreamento GPS", "status": "done", "priority": "high" },
+        { "id": "fa4", "name": "Dashboard Customer Success", "status": "done", "priority": "high" },
+        { "id": "fa5", "name": "Tela de Emissão CT-e", "status": "done", "priority": "high" },
+        { "id": "fa6", "name": "Componente de Upgrade de Plano", "status": "done", "priority": "medium" },
+        { "id": "fa7", "name": "Dashboard de Uso", "status": "done", "priority": "medium" }
+      ]
+    },
+    {
+      "id": "multitenancy",
+      "name": "Multi-Tenancy",
+      "icon": "🏢",
+      "tasks": [
+        { "id": "mt1", "name": "Modelo de Dados Tenant", "status": "done", "priority": "high" },
+        { "id": "mt2", "name": "Provisionamento Automático", "status": "done", "priority": "high" },
+        { "id": "mt3", "name": "Isolamento de Dados", "status": "done", "priority": "high" },
+        { "id": "mt4", "name": "Middleware de Tenant", "status": "done", "priority": "high" },
+        { "id": "mt5", "name": "Migração de Banco (Alembic)", "status": "done", "priority": "high" }
       ]
     }
   ]
