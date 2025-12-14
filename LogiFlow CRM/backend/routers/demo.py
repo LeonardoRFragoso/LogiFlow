@@ -4,12 +4,29 @@ LogiFlow CRM - Demo Data Router
 Endpoints para dados de demonstração compartilhados entre apps
 """
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Body, Depends
+from sqlalchemy.orm import Session
+from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
 import random
 
+from database import get_db
+from models import Lead, StatusLead
+
 router = APIRouter(prefix="/demo", tags=["Demo Data"])
+
+# ========================================
+# Modelos para Solicitação de Demo
+# ========================================
+
+class DemoRequest(BaseModel):
+    name: str
+    email: EmailStr
+    phone: str
+    company: str
+    vehicles: Optional[str] = None
+    message: Optional[str] = None
 
 # Importar dados de seed
 from seed_data import (
@@ -17,6 +34,113 @@ from seed_data import (
     pedidos_db, entregas_db, cotacoes_db,
     seed_all
 )
+
+
+# ========================================
+# Endpoints - Solicitação de Demo (Landing Page)
+# ========================================
+
+@router.post("/request")
+async def solicitar_demo(request: DemoRequest, db: Session = Depends(get_db)):
+    """
+    Recebe solicitação de demonstração da landing page
+    Salva no banco de dados como Lead
+    """
+    # Verificar se email já existe
+    existing = db.query(Lead).filter(Lead.email == request.email).first()
+    if existing:
+        return {
+            "success": True,
+            "message": "Já recebemos sua solicitação! Nossa equipe entrará em contato em breve.",
+            "lead_id": existing.id
+        }
+    
+    # Criar novo lead
+    lead = Lead(
+        name=request.name,
+        email=request.email,
+        phone=request.phone,
+        company=request.company,
+        vehicles=request.vehicles,
+        message=request.message,
+        source="site",
+        status=StatusLead.NOVO.value
+    )
+    
+    db.add(lead)
+    db.commit()
+    db.refresh(lead)
+    
+    # TODO: Enviar email para a equipe de vendas
+    # TODO: Enviar email de confirmação para o lead
+    # TODO: Notificação no Slack/Discord
+    
+    print(f"📩 Nova solicitação de demo recebida:")
+    print(f"   ID: {lead.id}")
+    print(f"   Nome: {request.name}")
+    print(f"   Email: {request.email}")
+    print(f"   Empresa: {request.company}")
+    print(f"   Veículos: {request.vehicles}")
+    
+    return {
+        "success": True,
+        "message": "Solicitação recebida com sucesso! Nossa equipe entrará em contato em até 24 horas.",
+        "lead_id": lead.id
+    }
+
+
+@router.get("/requests")
+async def listar_solicitacoes(
+    status: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Lista todas as solicitações de demo (admin)"""
+    query = db.query(Lead).filter(Lead.source == "site")
+    
+    if status:
+        query = query.filter(Lead.status == status)
+    
+    leads = query.order_by(Lead.created_at.desc()).all()
+    
+    result = [
+        {
+            "id": lead.id,
+            "name": lead.name,
+            "email": lead.email,
+            "phone": lead.phone,
+            "company": lead.company,
+            "vehicles": lead.vehicles,
+            "message": lead.message,
+            "status": lead.status,
+            "created_at": lead.created_at.isoformat()
+        }
+        for lead in leads
+    ]
+    
+    return {"success": True, "data": result, "count": len(result)}
+
+
+@router.get("/requests/{request_id}")
+async def obter_solicitacao(request_id: int, db: Session = Depends(get_db)):
+    """Obtém detalhes de uma solicitação específica"""
+    lead = db.query(Lead).filter(Lead.id == request_id, Lead.source == "site").first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="Solicitação não encontrada")
+    
+    return {
+        "success": True,
+        "data": {
+            "id": lead.id,
+            "name": lead.name,
+            "email": lead.email,
+            "phone": lead.phone,
+            "company": lead.company,
+            "vehicles": lead.vehicles,
+            "message": lead.message,
+            "status": lead.status,
+            "created_at": lead.created_at.isoformat()
+        }
+    }
 
 
 # ========================================

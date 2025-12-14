@@ -62,6 +62,40 @@ class StatusCotacao(str, enum.Enum):
     EXPIRADA = "expirada"
 
 
+class StatusLead(str, enum.Enum):
+    NOVO = "novo"
+    CONTATADO = "contatado"
+    QUALIFICADO = "qualificado"
+    CONVERTIDO = "convertido"
+    PERDIDO = "perdido"
+
+
+class StatusTenant(str, enum.Enum):
+    ACTIVE = "active"
+    SUSPENDED = "suspended"
+    CANCELLED = "cancelled"
+    TRIAL = "trial"
+
+
+class PlanType(str, enum.Enum):
+    STARTER = "starter"
+    PROFESSIONAL = "professional"
+    ENTERPRISE = "enterprise"
+
+
+class SubscriptionStatus(str, enum.Enum):
+    ACTIVE = "active"
+    PAST_DUE = "past_due"
+    CANCELLED = "cancelled"
+    TRIAL = "trial"
+
+
+class PaymentGateway(str, enum.Enum):
+    STRIPE = "stripe"
+    ASAAS = "asaas"
+    MERCADOPAGO = "mercadopago"
+
+
 # ========================================
 # Models
 # ========================================
@@ -263,3 +297,106 @@ class Ocorrencia(Base):
     
     criado_em = Column(DateTime, default=datetime.utcnow)
     atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# ========================================
+# SaaS / Multi-Tenant Models
+# ========================================
+
+class Lead(Base):
+    """Leads capturados do site de divulgação"""
+    __tablename__ = "leads"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(150), nullable=False)
+    email = Column(String(150), nullable=False, unique=True, index=True)
+    phone = Column(String(20), nullable=False)
+    company = Column(String(150), nullable=False)
+    vehicles = Column(String(20))
+    message = Column(Text)
+    
+    status = Column(String(20), default=StatusLead.NOVO.value, index=True)
+    source = Column(String(50), default="site")
+    assigned_to = Column(Integer, nullable=True)  # ID do vendedor
+    
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    converted_at = Column(DateTime, nullable=True)
+    
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True)
+    
+    # Relationships
+    tenant = relationship("Tenant", back_populates="leads")
+
+
+class Tenant(Base):
+    """Clientes SaaS (multi-tenant)"""
+    __tablename__ = "tenants"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    subdomain = Column(String(50), nullable=False, unique=True, index=True)
+    company_name = Column(String(150), nullable=False)
+    contact_name = Column(String(150), nullable=False)
+    contact_email = Column(String(150), nullable=False, index=True)
+    contact_phone = Column(String(20))
+    
+    # Banco de dados dedicado
+    db_name = Column(String(100), nullable=False, unique=True)
+    db_user = Column(String(100), nullable=False)
+    db_password = Column(String(255), nullable=False)
+    
+    # Storage
+    s3_bucket = Column(String(100))
+    
+    # Status
+    status = Column(String(20), default=StatusTenant.TRIAL.value, index=True)
+    trial_ends_at = Column(DateTime, nullable=True)
+    
+    # Plano e Limites
+    plan = Column(String(20), default=PlanType.STARTER.value)
+    max_users = Column(Integer, default=5)
+    max_vehicles = Column(Integer, default=10)
+    max_orders_per_month = Column(Integer, default=500)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    cancelled_at = Column(DateTime, nullable=True)
+    
+    # Relationships
+    leads = relationship("Lead", back_populates="tenant")
+    subscriptions = relationship("Subscription", back_populates="tenant")
+
+
+class Subscription(Base):
+    """Assinaturas e pagamentos recorrentes"""
+    __tablename__ = "subscriptions"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
+    
+    plan = Column(String(20), nullable=False)
+    status = Column(String(20), default=SubscriptionStatus.TRIAL.value, index=True)
+    
+    # Valores
+    amount = Column(Float, nullable=False)
+    currency = Column(String(3), default="BRL")
+    billing_cycle = Column(String(20), default="monthly")
+    
+    # Datas
+    current_period_start = Column(DateTime, nullable=False)
+    current_period_end = Column(DateTime, nullable=False, index=True)
+    trial_ends_at = Column(DateTime, nullable=True)
+    cancelled_at = Column(DateTime, nullable=True)
+    
+    # Gateway de pagamento
+    payment_gateway = Column(String(20), default=PaymentGateway.ASAAS.value)
+    gateway_subscription_id = Column(String(255))
+    gateway_customer_id = Column(String(255))
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    tenant = relationship("Tenant", back_populates="subscriptions")

@@ -1,0 +1,4 @@
+nome,cpf,rg,cnh,categoria_cnh,vencimento_cnh,data_nascimento,telefone,celular,email,endereco,numero,complemento,bairro,cidade,uf,cep,status,observacoes
+"José da Silva","11122233344","123456789","12345678901","E","2025-12-31","1985-05-15","1133334444","11999998888","jose@email.com","Rua A","10","Apto 5","Jardim","São Paulo","SP","01000100","ativo","Motorista experiente"
+"Pedro Santos","22233344455","987654321","98765432109","D","2026-06-30","1990-08-20","1144445555","11988887777","pedro@email.com","Av. B","200","","Centro","Guarulhos","SP","07000200","ativo","Disponível para viagens longas"
+"Carlos Oliveira","33344455566","456789123","45678912345","C","2024-03-15","1988-12-10","1155556666","11977776666","carlos@email.com","Rua C","50","Casa","Vila Nova","Osasco","SP","06000300","inativo","CNH vencida - renovar"

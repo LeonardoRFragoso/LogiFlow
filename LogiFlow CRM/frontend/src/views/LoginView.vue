@@ -119,7 +119,7 @@ async function handleLogin() {
 .login-branding {
   flex: 1;
   background: linear-gradient(135deg, rgba(30, 64, 175, 0.9) 0%, rgba(5, 150, 105, 0.9) 100%), 
-              url('/backgroud.png');
+              url('/background.png');
   background-size: cover;
   background-position: center;
   display: none;

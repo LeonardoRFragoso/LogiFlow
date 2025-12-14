@@ -1,0 +1,257 @@
+{
+  "projectName": "LogiFlow CRM",
+  "version": "1.0.0",
+  "lastUpdate": "2024-12-14",
+  "categories": [
+    {
+      "id": "backend",
+      "name": "Backend API (FastAPI)",
+      "icon": "🔧",
+      "tasks": [
+        { "id": "b1", "name": "API Principal (main.py)", "status": "done", "priority": "high" },
+        { "id": "b2", "name": "Configurações (config.py)", "status": "done", "priority": "high" },
+        { "id": "b3", "name": "Router Fiscal (CT-e/MDF-e)", "status": "done", "priority": "high" },
+        { "id": "b4", "name": "Integração Focus NFe", "status": "done", "priority": "high" },
+        { "id": "b5", "name": "Router Rastreamento GPS", "status": "done", "priority": "high" },
+        { "id": "b6", "name": "Router Cotações", "status": "done", "priority": "medium" },
+        { "id": "b7", "name": "Router Pedidos", "status": "done", "priority": "medium" },
+        { "id": "b8", "name": "Router Motoristas", "status": "done", "priority": "medium" },
+        { "id": "b9", "name": "Router Veículos", "status": "done", "priority": "medium" },
+        { "id": "b10", "name": "Autenticação JWT", "status": "done", "priority": "high" },
+        { "id": "b11", "name": "Router WhatsApp (Evolution API)", "status": "done", "priority": "high" },
+        { "id": "b12", "name": "Router Google Maps", "status": "done", "priority": "medium" }
+      ]
+    },
+    {
+      "id": "suitecrm",
+      "name": "Módulos SuiteCRM",
+      "icon": "📦",
+      "tasks": [
+        { "id": "s1", "name": "Módulo Cotacoes", "status": "done", "priority": "high" },
+        { "id": "s2", "name": "Módulo PedidosFrete", "status": "done", "priority": "high" },
+        { "id": "s3", "name": "Módulo Entregas", "status": "done", "priority": "high" },
+        { "id": "s4", "name": "Módulo Motoristas", "status": "done", "priority": "high" },
+        { "id": "s5", "name": "Módulo Veiculos", "status": "done", "priority": "high" },
+        { "id": "s6", "name": "Módulo Ocorrencias", "status": "done", "priority": "high" },
+        { "id": "s7", "name": "Instalação Web SuiteCRM", "status": "done", "priority": "high" },
+        { "id": "s8", "name": "Configuração OAuth2", "status": "done", "priority": "high" },
+        { "id": "s9", "name": "Logic Hook Cotação → Pedido", "status": "done", "priority": "medium" },
+        { "id": "s10", "name": "Arquivos de linguagem pt_BR", "status": "done", "priority": "low" }
+      ]
+    },
+    {
+      "id": "frontend",
+      "name": "Frontend Vue 3",
+      "icon": "🎨",
+      "tasks": [
+        { "id": "f1", "name": "Dashboard Principal", "status": "done", "priority": "high" },
+        { "id": "f2", "name": "Tela de Login", "status": "done", "priority": "high" },
+        { "id": "f3", "name": "Módulo Cotações (CRUD)", "status": "done", "priority": "high" },
+        { "id": "f4", "name": "Módulo Pedidos (CRUD)", "status": "done", "priority": "high" },
+        { "id": "f5", "name": "Módulo Motoristas (CRUD)", "status": "done", "priority": "high" },
+        { "id": "f6", "name": "Módulo Veículos (CRUD)", "status": "done", "priority": "high" },
+        { "id": "f7", "name": "Módulo Clientes", "status": "done", "priority": "medium" },
+        { "id": "f8", "name": "Módulo Ocorrências", "status": "done", "priority": "medium" },
+        { "id": "f9", "name": "Módulo Entregas", "status": "done", "priority": "high" },
+        { "id": "f10", "name": "Configurações do Sistema", "status": "done", "priority": "low" }
+      ]
+    },
+    {
+      "id": "integrations",
+      "name": "Integrações Externas",
+      "icon": "🔌",
+      "tasks": [
+        { "id": "i1", "name": "Focus NFe (CT-e/MDF-e)", "status": "done", "priority": "high" },
+        { "id": "i2", "name": "WhatsApp / Evolution API", "status": "done", "priority": "high" },
+        { "id": "i7", "name": "Evolution API Configurada e Testada", "status": "done", "priority": "high" },
+        { "id": "i3", "name": "Google Maps API", "status": "done", "priority": "medium" },
+        { "id": "i4", "name": "ERP Omie", "status": "done", "priority": "low" },
+        { "id": "i5", "name": "ERP Bling", "status": "done", "priority": "low" },
+        { "id": "i6", "name": "Melhor Envio (Cotação)", "status": "done", "priority": "low" }
+      ]
+    },
+    {
+      "id": "apps",
+      "name": "Apps Adicionais",
+      "icon": "📱",
+      "tasks": [
+        { "id": "a1", "name": "App do Motorista (PWA)", "status": "done", "priority": "high" },
+        { "id": "a2", "name": "Portal do Cliente (Tracking)", "status": "done", "priority": "high" },
+        { "id": "a3", "name": "Service Worker (Offline)", "status": "done", "priority": "medium" },
+        { "id": "a4", "name": "Manifest PWA", "status": "done", "priority": "medium" },
+        { "id": "a5", "name": "Página Offline", "status": "done", "priority": "low" },
+        { "id": "a6", "name": "Consistência Visual (Design System)", "status": "done", "priority": "high" }
+      ]
+    },
+    {
+      "id": "infra",
+      "name": "Infraestrutura Docker",
+      "icon": "🐳",
+      "tasks": [
+        { "id": "d1", "name": "docker-compose.yml", "status": "done", "priority": "high" },
+        { "id": "d2", "name": "docker-compose.simple.yml", "status": "done", "priority": "high" },
+        { "id": "d3", "name": "docker-compose-fastapi.yml", "status": "done", "priority": "medium" },
+        { "id": "d4", "name": "Dockerfile API", "status": "done", "priority": "high" },
+        { "id": "d5", "name": "Configuração Nginx", "status": "done", "priority": "medium" },
+        { "id": "d6", "name": "Docker Compose Evolution API", "status": "done", "priority": "medium" }
+      ]
+    },
+    {
+      "id": "docs",
+      "name": "Documentação",
+      "icon": "📚",
+      "tasks": [
+        { "id": "doc1", "name": "README.md", "status": "done", "priority": "high" },
+        { "id": "doc2", "name": "ARCHITECTURE.md", "status": "done", "priority": "high" },
+        { "id": "doc3", "name": "STATUS_ATUAL.md", "status": "done", "priority": "medium" },
+        { "id": "doc4", "name": "GUIA_INICIO_RAPIDO.md", "status": "done", "priority": "high" },
+        { "id": "doc5", "name": "Templates de Migração", "status": "done", "priority": "high" },
+        { "id": "doc6", "name": "WHATSAPP_SETUP.md", "status": "done", "priority": "medium" },
+        { "id": "doc7", "name": "Vídeos de Treinamento", "status": "pending", "priority": "low" },
+        { "id": "doc8", "name": "Base de Conhecimento Online", "status": "pending", "priority": "low" }
+      ]
+    },
+    {
+      "id": "scripts",
+      "name": "Scripts de Automação",
+      "icon": "⚡",
+      "tasks": [
+        { "id": "sc1", "name": "importar_dados.py", "status": "done", "priority": "high" },
+        { "id": "sc2", "name": "provision_tenant.sh", "status": "done", "priority": "medium" },
+        { "id": "sc3", "name": "backup_tenant.sh", "status": "done", "priority": "medium" },
+        { "id": "sc4", "name": "install_suitecrm.ps1", "status": "done", "priority": "medium" },
+        { "id": "sc5", "name": "setup_dev.sh", "status": "done", "priority": "medium" },
+        { "id": "sc6", "name": "Arquivo .env Backend", "status": "done", "priority": "high" }
+      ]
+    },
+    {
+      "id": "migration",
+      "name": "Migração de Dados (MVP)",
+      "icon": "📥",
+      "tasks": [
+        { "id": "m1", "name": "Template Excel - Clientes", "status": "done", "priority": "high" },
+        { "id": "m2", "name": "Template Excel - Motoristas", "status": "done", "priority": "high" },
+        { "id": "m3", "name": "Template Excel - Veículos", "status": "done", "priority": "high" },
+        { "id": "m4", "name": "Template Excel - Histórico de Cotações", "status": "done", "priority": "high" },
+        { "id": "m5", "name": "Script de Validação de Dados", "status": "done", "priority": "high" },
+        { "id": "m6", "name": "Relatório de Inconsistências", "status": "done", "priority": "high" },
+        { "id": "m7", "name": "Suporte a Dry-Run (Simulação)", "status": "done", "priority": "medium" }
+      ]
+    },
+    {
+      "id": "training",
+      "name": "Treinamento e Onboarding",
+      "icon": "🎓",
+      "tasks": [
+        { "id": "t1", "name": "Vídeo: Visão Geral do Sistema (5min)", "status": "done", "priority": "high" },
+        { "id": "t2", "name": "Vídeo: Cadastro de Clientes (8min)", "status": "done", "priority": "high" },
+        { "id": "t3", "name": "Vídeo: Criando Cotações (10min)", "status": "done", "priority": "high" },
+        { "id": "t4", "name": "Vídeo: Convertendo Cotação em Pedido (5min)", "status": "done", "priority": "medium" },
+        { "id": "t5", "name": "Vídeo: Acompanhando Entregas (8min)", "status": "done", "priority": "medium" },
+        { "id": "t6", "name": "Vídeo: Usando o Dashboard (5min)", "status": "done", "priority": "medium" },
+        { "id": "t7", "name": "Vídeo: App do Motorista (8min)", "status": "done", "priority": "medium" },
+        { "id": "t8", "name": "Vídeo: Emitindo CT-e (10min)", "status": "done", "priority": "low" }
+      ]
+    },
+    {
+      "id": "documentation",
+      "name": "Documentação de Usuário",
+      "icon": "📖",
+      "tasks": [
+        { "id": "du1", "name": "Guia de Início Rápido (2 páginas)", "status": "done", "priority": "high" },
+        { "id": "du2", "name": "Manual Completo do Usuário (30 páginas)", "status": "done", "priority": "high" },
+        { "id": "du3", "name": "FAQ - Perguntas Frequentes", "status": "done", "priority": "high" },
+        { "id": "du4", "name": "Glossário de Termos", "status": "done", "priority": "medium" },
+        { "id": "du5", "name": "Base de Conhecimento Online (GitBook)", "status": "done", "priority": "medium" },
+        { "id": "du6", "name": "Documentação: Módulo Clientes", "status": "done", "priority": "medium" },
+        { "id": "du7", "name": "Documentação: Módulo Cotações", "status": "done", "priority": "medium" },
+        { "id": "du8", "name": "Documentação: Módulo Pedidos", "status": "done", "priority": "medium" },
+        { "id": "du9", "name": "Documentação: Módulo Entregas", "status": "done", "priority": "low" },
+        { "id": "du10", "name": "Documentação: Integração WhatsApp", "status": "done", "priority": "low" }
+      ]
+    },
+    {
+      "id": "fiscal",
+      "name": "Integração Fiscal (CT-e/MDF-e)",
+      "icon": "📄",
+      "tasks": [
+        { "id": "fi1", "name": "Cliente Focus NFe - Emissão CT-e", "status": "done", "priority": "high" },
+        { "id": "fi2", "name": "Cliente Focus NFe - Emissão MDF-e", "status": "done", "priority": "high" },
+        { "id": "fi3", "name": "Consulta de Status CT-e", "status": "done", "priority": "high" },
+        { "id": "fi4", "name": "Cancelamento de CT-e", "status": "done", "priority": "medium" },
+        { "id": "fi5", "name": "Carta de Correção", "status": "done", "priority": "medium" },
+        { "id": "fi6", "name": "Campos CT-e no Modelo Pedido", "status": "done", "priority": "high" },
+        { "id": "fi7", "name": "Download de XML/PDF (DACTE)", "status": "done", "priority": "medium" },
+        { "id": "fi8", "name": "Tela de Emissão CT-e no Frontend", "status": "done", "priority": "high" }
+      ]
+    },
+    {
+      "id": "healthscore",
+      "name": "Health Score e CS",
+      "icon": "💚",
+      "tasks": [
+        { "id": "hs1", "name": "Cálculo de Health Score (0-100)", "status": "done", "priority": "medium" },
+        { "id": "hs2", "name": "Métrica: Uso do Sistema (30%)", "status": "done", "priority": "medium" },
+        { "id": "hs3", "name": "Métrica: Adoção de Features (20%)", "status": "done", "priority": "medium" },
+        { "id": "hs4", "name": "Métrica: Engajamento (15%)", "status": "done", "priority": "medium" },
+        { "id": "hs5", "name": "Métrica: Suporte (15%)", "status": "done", "priority": "medium" },
+        { "id": "hs6", "name": "Métrica: Financeiro (20%)", "status": "done", "priority": "medium" },
+        { "id": "hs7", "name": "Dashboard de Customer Success", "status": "done", "priority": "high" },
+        { "id": "hs8", "name": "Alertas de Risco de Churn", "status": "done", "priority": "high" }
+      ]
+    },
+    {
+      "id": "nps",
+      "name": "NPS e Satisfação",
+      "icon": "⭐",
+      "tasks": [
+        { "id": "np1", "name": "Pesquisa NPS Automática (30 dias)", "status": "done", "priority": "medium" },
+        { "id": "np2", "name": "Pesquisa NPS Recorrente (90 dias)", "status": "done", "priority": "medium" },
+        { "id": "np3", "name": "Classificação: Promotores/Neutros/Detratores", "status": "done", "priority": "medium" },
+        { "id": "np4", "name": "Dashboard de NPS", "status": "done", "priority": "low" },
+        { "id": "np5", "name": "Pesquisa CSAT (Pós-Suporte)", "status": "done", "priority": "low" },
+        { "id": "np6", "name": "Ações Automáticas por Score", "status": "done", "priority": "low" }
+      ]
+    },
+    {
+      "id": "erp",
+      "name": "Integrações ERP",
+      "icon": "🔗",
+      "tasks": [
+        { "id": "er1", "name": "Cliente Omie - Listar Clientes", "status": "done", "priority": "low" },
+        { "id": "er2", "name": "Cliente Omie - Sincronizar Cliente", "status": "done", "priority": "low" },
+        { "id": "er3", "name": "Cliente Omie - Gerar Fatura", "status": "done", "priority": "low" },
+        { "id": "er4", "name": "Cliente Bling - Listar Clientes", "status": "done", "priority": "low" },
+        { "id": "er5", "name": "Cliente Bling - Sincronizar Cliente", "status": "done", "priority": "low" },
+        { "id": "er6", "name": "Cliente Tiny - Integração Básica", "status": "done", "priority": "low" },
+        { "id": "er7", "name": "Sincronização Bidirecional", "status": "done", "priority": "low" }
+      ]
+    },
+    {
+      "id": "quotation",
+      "name": "Cotação Automática",
+      "icon": "💰",
+      "tasks": [
+        { "id": "qa1", "name": "Integração Melhor Envio", "status": "done", "priority": "low" },
+        { "id": "qa2", "name": "Integração Frenet", "status": "done", "priority": "low" },
+        { "id": "qa3", "name": "Google Distance Matrix", "status": "pending", "priority": "low" },
+        { "id": "qa4", "name": "Cálculo de Tabela Própria", "status": "done", "priority": "medium" },
+        { "id": "qa5", "name": "Cotação Multi-Transportadoras", "status": "done", "priority": "low" },
+        { "id": "qa6", "name": "Tela de Cotação Automática", "status": "done", "priority": "low" }
+      ]
+    },
+    {
+      "id": "gps",
+      "name": "Rastreamento GPS Avançado",
+      "icon": "🛰️",
+      "tasks": [
+        { "id": "gp1", "name": "Integração Sascar - API", "status": "done", "priority": "low" },
+        { "id": "gp2", "name": "Integração Autotrac - API", "status": "done", "priority": "low" },
+        { "id": "gp3", "name": "Integração Onixsat - API", "status": "done", "priority": "low" },
+        { "id": "gp4", "name": "Webhook de Posições em Tempo Real", "status": "done", "priority": "low" },
+        { "id": "gp5", "name": "Mapa Consolidado no Dashboard", "status": "done", "priority": "low" },
+        { "id": "gp6", "name": "Histórico de Rotas", "status": "done", "priority": "low" }
+      ]
+    }
+  ]
+}
