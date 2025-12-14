@@ -50,6 +50,13 @@ class Settings(BaseSettings):
     # Google Maps API
     GOOGLE_MAPS_API_KEY: str = ""
     
+    # Mercado Pago (Pagamentos)
+    MERCADOPAGO_ACCESS_TOKEN: str = ""
+    MERCADOPAGO_PUBLIC_KEY: str = ""
+    CHECKOUT_SUCCESS_URL: str = "http://localhost:3001/checkout/success"
+    CHECKOUT_FAILURE_URL: str = "http://localhost:3001/checkout/failure"
+    CHECKOUT_PENDING_URL: str = "http://localhost:3001/checkout/pending"
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

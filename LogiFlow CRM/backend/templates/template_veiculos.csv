@@ -1,0 +1,5 @@
+placa,renavam,tipo,marca,modelo,ano_fabricacao,ano_modelo,cor,chassi,capacidade_kg,capacidade_m3,status,proprietario,ultima_manutencao,proxima_manutencao,observacoes
+"ABC1234","12345678901","Caminhão","Mercedes-Benz","Atego 1719","2020","2021","Branco","9BM123456789012345","7000","30","ativo","Empresa","2024-11-15","2025-02-15","Veículo em ótimo estado"
+"DEF5678","98765432109","Van","Fiat","Ducato","2019","2019","Prata","9BD987654321098765","1500","12","ativo","Terceiro","2024-10-20","2025-01-20","Contrato até 2025"
+"GHI9012","45678912345","Carreta","Scania","R450","2021","2022","Azul","9BS456789123456789","25000","80","manutencao","Empresa","2024-12-01","2025-03-01","Em manutenção preventiva"
+"JKL3456","78912345678","Caminhão","Volvo","FH 540","2022","2023","Vermelho","9BV789123456789012","15000","50","ativo","Empresa","2024-12-10","2025-03-10","Veículo novo"

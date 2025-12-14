@@ -124,7 +124,7 @@ services:
       sh -c "uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
 
   # ===========================================
-  # FRONTEND - Vue.js
+  # FRONTEND - Vue.js (App CRM)
   # ===========================================
   frontend:
     build:
@@ -134,6 +134,24 @@ services:
     restart: unless-stopped
     ports:
       - "3001:80"
+    depends_on:
+      - api
+    networks:
+      - logiflow_network
+
+  # ===========================================
+  # SITE DE DIVULGAÇÃO - Vue.js
+  # ===========================================
+  site:
+    build:
+      context: ./site-divulgacao
+      dockerfile: ../docker/site/Dockerfile
+    container_name: logiflow_site
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_URL=http://api:8000
     depends_on:
       - api
     networks:

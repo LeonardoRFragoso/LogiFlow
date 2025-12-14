@@ -16,7 +16,7 @@ from pathlib import Path
 from config import settings
 # Importar routers
 try:
-    from routers import fiscal, rastreamento, cotacoes, pedidos, motoristas, veiculos, auth, whatsapp, maps, suitecrm, demo, ocorrencias
+    from routers import fiscal, rastreamento, cotacoes, pedidos, motoristas, veiculos, auth, whatsapp, maps, suitecrm, demo, ocorrencias, leads, billing, tenants, erp, melhor_envio, health_score, nps, cotacao_automatica
     # db_api é opcional (requer SQLAlchemy)
     try:
         from routers import db_api
@@ -38,6 +38,13 @@ except ImportError as e:
     demo = None
     db_api = None
     ocorrencias = None
+    leads = None
+    billing = None
+    tenants = None
+    erp = None
+    melhor_envio = None
+    health_score = None
+    nps = None
 
 # Configurar logging
 logger.add(
@@ -134,6 +141,18 @@ if db_api:
     app.include_router(db_api.router)
 if ocorrencias:
     app.include_router(ocorrencias.router, prefix="/ocorrencias", tags=["Ocorrências"])
+if leads:
+    app.include_router(leads.router)
+if billing:
+    app.include_router(billing.router)
+if tenants:
+    app.include_router(tenants.router, prefix="/api/tenants", tags=["Tenants"])
+if erp:
+    app.include_router(erp.router, prefix="/erp", tags=["Integrações ERP"])
+if melhor_envio:
+    app.include_router(melhor_envio.router, prefix="/melhor-envio", tags=["Melhor Envio"])
+if health_score:
+    app.include_router(health_score.router, prefix="/customer-success", tags=["Health Score & CS"])
 
 
 # ===========================================

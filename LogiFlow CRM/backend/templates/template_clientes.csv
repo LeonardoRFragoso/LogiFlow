@@ -1,0 +1,4 @@
+nome,nome_fantasia,cnpj,cpf,ie,tipo_pessoa,telefone,celular,email,endereco,numero,complemento,bairro,cidade,uf,cep,contato_principal,observacoes
+"Transportadora ABC Ltda","ABC Transportes","12345678000190","","123456789","J","1133334444","11999998888","contato@abc.com.br","Rua das Flores","100","Sala 5","Centro","São Paulo","SP","01310100","João Silva","Cliente desde 2020"
+"Maria Santos ME","Maria Transportes","","12345678901","","F","1144445555","11988887777","maria@transportes.com","Av. Paulista","1500","","Bela Vista","São Paulo","SP","01310200","Maria Santos","Preferência por pagamento à vista"
+"Logística XYZ S.A.","XYZ Log","98765432000111","","987654321","J","1155556666","11977776666","xyz@logistica.com.br","Rua Comercial","250","Galpão 3","Industrial","Guarulhos","SP","07000100","Carlos Oliveira","Contrato anual renovável"
