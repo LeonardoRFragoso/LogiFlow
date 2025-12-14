@@ -33,6 +33,7 @@ const routes = [
       { path: 'satisfacao', name: 'NPS e Satisfação', component: () => import('@/views/satisfacao/NPSDashboardView.vue') },
       { path: 'cotacao-automatica', name: 'Cotação Automática', component: () => import('@/views/cotacao/CotacaoAutomaticaView.vue') },
       { path: 'gps', name: 'Rastreamento GPS', component: () => import('@/views/gps/RastreamentoGPSView.vue') },
+      { path: 'configuracoes/integracoes', name: 'Integrações', component: () => import('@/views/configuracoes/IntegracoesView.vue') },
     ],
   },
 ]
