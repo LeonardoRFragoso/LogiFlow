@@ -42,7 +42,7 @@ try:
         cotacao_automatica,
         gps_tracking,
         gps_self_service,
-        integrations_self_service,
+        # integrations_self_service,  # Comentado temporariamente
         tenant_credentials,
         plan_info,
     )
@@ -225,7 +225,8 @@ include_router_with_version(nps, prefix="/satisfacao", tags=["NPS & CSAT"])
 include_router_with_version(cotacao_automatica, prefix="/cotacao-automatica", tags=["Cotação Automática"])
 include_router_with_version(gps_tracking, prefix="/gps", tags=["Rastreamento GPS"])
 include_router_with_version(gps_self_service, prefix="/gps-config", tags=["Configuração GPS Self-Service"])
-include_router_with_version(integrations_self_service, prefix="/integrations-config", tags=["Configuração de Integrações Self-Service"])
+# Router temporariamente comentado para deploy (opcional, não crítico)
+# include_router_with_version(integrations_self_service, prefix="/integrations-config", tags=["Configuração de Integrações Self-Service"])
 include_router_with_version(tenant_credentials, prefix="/tenant-credentials", tags=["Tenant Credentials"])
 # plan_info já define /plans internamente; manter prefixo vazio evita caminhos duplicados
 include_router_with_version(plan_info, prefix="", tags=["Planos"])
