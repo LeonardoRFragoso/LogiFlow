@@ -201,7 +201,7 @@ onMounted(async () => {
   }
   
   try {
-    const response = await api.get('/api/dashboard/stats')
+    const response = await api.get('/dashboard/stats')
     const data = response.data.data
     stats.value = {
       em_transito: data.entregas.em_transito,

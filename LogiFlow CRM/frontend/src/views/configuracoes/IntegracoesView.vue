@@ -265,7 +265,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import api from '../../services/api'
 
 const activeTab = ref('erp')
 const showConfigModal = ref(false)
@@ -391,7 +391,7 @@ const saveCredentials = async () => {
     const credentials = { ...credentialsForm.value }
     delete credentials.is_active
 
-    const response = await axios.post('/tenant-credentials/credentials', {
+    const response = await api.post('/tenant-credentials/credentials', {
       integration_type: modalType.value,
       provider: modalProvider.value.id,
       credentials: credentials
@@ -427,7 +427,7 @@ const testConnection = async (type, providerId) => {
       return
     }
 
-    const response = await axios.post(`/tenant-credentials/credentials/${credential.id}/validate`)
+    const response = await api.post(`/tenant-credentials/credentials/${credential.id}/validate`)
     testResult.value = response.data
   } catch (error) {
     console.error('Erro ao testar conexão:', error)
@@ -440,7 +440,7 @@ const testConnection = async (type, providerId) => {
 
 const loadCredentials = async () => {
   try {
-    const response = await axios.get('/tenant-credentials/credentials')
+    const response = await api.get('/tenant-credentials/credentials')
     if (response.data.success) {
       configuredCredentials.value = response.data.credentials
     }

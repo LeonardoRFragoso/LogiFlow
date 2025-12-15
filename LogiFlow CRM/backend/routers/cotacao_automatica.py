@@ -10,6 +10,7 @@ import logging
 
 from integrations.frete.melhor_envio import MelhorEnvioClient
 from integrations.frete.frenet import FrenetClient
+from integrations.maps.distance_matrix import DistanceMatrixClient
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -60,6 +61,17 @@ async def cotar_frete_automatico(request: CotacaoAutomaticaRequest):
     try:
         todas_cotacoes = []
         erros = []
+
+        # Garantir pelo menos uma integração habilitada
+        if not any([
+            request.incluir_melhor_envio and settings.MELHOR_ENVIO_TOKEN,
+            request.incluir_frenet and getattr(settings, "FRENET_TOKEN", None),
+            request.incluir_tabela_propria
+        ]):
+            raise HTTPException(
+                status_code=400,
+                detail="Nenhuma integração de frete disponível. Configure MELHOR_ENVIO_TOKEN/FRENET_TOKEN ou habilite tabela própria."
+            )
         
         # 1. Melhor Envio
         if request.incluir_melhor_envio and settings.MELHOR_ENVIO_TOKEN:
@@ -69,14 +81,11 @@ async def cotar_frete_automatico(request: CotacaoAutomaticaRequest):
                     sandbox=settings.MELHOR_ENVIO_SANDBOX
                 )
                 
-                resultado_me = me_client.calcular_frete_simplificado(
+                resultado_me = me_client.calcular_frete_simples(
                     origem_cep=request.origem_cep,
                     destino_cep=request.destino_cep,
-                    peso=request.peso_kg,
-                    altura=request.altura_cm,
-                    largura=request.largura_cm,
-                    comprimento=request.comprimento_cm,
-                    valor_declarado=request.valor_mercadoria
+                    peso_kg=request.peso_kg,
+                    valor_mercadoria=request.valor_mercadoria
                 )
                 
                 if resultado_me.get("success"):
@@ -137,6 +146,31 @@ async def cotar_frete_automatico(request: CotacaoAutomaticaRequest):
             except Exception as e:
                 logger.error(f"Erro Tabela Própria: {e}")
                 erros.append({"fonte": "tabela_propria", "erro": str(e)})
+        else:
+            erros.append({"fonte": "tabela_propria", "erro": "Tabela própria desabilitada"})
+
+        # 4. Opcional: distância via Google Distance Matrix (quando chave configurada)
+        distancia_info = None
+        try:
+            dm_client = DistanceMatrixClient.from_settings()
+            dm_resp = dm_client.calcular_distancia_por_cep(request.origem_cep, request.destino_cep)
+            if dm_resp.get("success"):
+                distancia_info = {
+                    "km": dm_resp["distancia"]["km"],
+                    "texto": dm_resp["distancia"]["texto"],
+                    "duracao_minutos": dm_resp["duracao"]["minutos"],
+                    "duracao_texto": dm_resp["duracao"]["texto"]
+                }
+            else:
+                erros.append({"fonte": "distance_matrix", "erro": dm_resp.get("error", "Erro Distance Matrix")})
+        except ValueError as e:
+            # Em produção, sem chave → bloquear; em DEBUG apenas avisa
+            if not settings.DEBUG:
+                raise HTTPException(status_code=400, detail=str(e))
+            erros.append({"fonte": "distance_matrix", "erro": str(e)})
+        except Exception as e:
+            logger.error(f"Erro Distance Matrix: {e}")
+            erros.append({"fonte": "distance_matrix", "erro": str(e)})
         
         # Ordenar por valor (mais barato primeiro)
         todas_cotacoes.sort(key=lambda x: x.get("valor", float('inf')))
@@ -162,6 +196,7 @@ async def cotar_frete_automatico(request: CotacaoAutomaticaRequest):
                 "valor": round(economia, 2),
                 "percentual": round(economia_percentual, 2)
             },
+            "distancia": distancia_info,
             "erros": erros if erros else None,
             "parametros": {
                 "origem_cep": request.origem_cep,

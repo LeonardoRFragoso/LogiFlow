@@ -77,7 +77,7 @@ const showModal = ref(false)
 const selectedCliente = ref(null)
 
 async function fetchClientes() {
-  const response = await api.get('/api/clientes')
+  const response = await api.get('/clientes')
   let data = response.data.data || response.data.results || response.data
   if (search.value) {
     const s = search.value.toLowerCase()

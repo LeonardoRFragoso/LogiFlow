@@ -1,4 +1,5 @@
 # LogiFlow CRM - Routers Package
+# Todos os routers disponíveis no backend
 from . import fiscal
 from . import rastreamento
 from . import cotacoes
@@ -11,6 +12,19 @@ from . import maps
 from . import suitecrm
 from . import demo
 from . import ocorrencias
-
-# db_api não incluído (requer SQLAlchemy)
-db_api = None
+from . import leads
+from . import billing
+from . import tenants
+from . import erp
+from . import melhor_envio
+from . import health_score
+from . import nps
+from . import cotacao_automatica
+from . import gps_tracking
+from . import gps_self_service
+from . import integrations_self_service
+from . import tenant_credentials
+from . import plan_info
+from . import clientes
+from . import entregas
+from . import dashboard

@@ -14,11 +14,17 @@ Aqui está a lista completa de **empresas e credenciais** necessárias para que 
 **Custo LogiFlow:** ~R$ 80/mês (fixo)
 
 ### **Cliente LogiFlow Configura (Opcional):**
-- 🟢 ERP (Omie/Bling/Tiny) - Se usar
-- 🔵 GPS (Sascar/Autotrac/Onixsat) - Se tiver
-- 🟡 Frete (Melhor Envio/Frenet) - Se quiser
+- 🟡 **Frete** (Melhor Envio/Frenet) - Plano Pro+ - Cliente tem conta própria
+- 🟢 **ERP** (Omie/Bling/Tiny) - Plano Pro+ - Cliente já usa
+- 🔵 **GPS** (Sascar/Autotrac/Onixsat) - Plano Enterprise - Cliente tem frota rastreada
 
 **Custo Cliente:** Variável (cada um paga seu próprio serviço)
+
+**IMPORTANTE:** Melhor Envio e Frenet são do CLIENTE porque:
+- Cada empresa tem sua própria conta e contratos
+- Descontos negociados diretamente com transportadoras
+- Cliente paga frete diretamente à transportadora
+- Volumes e condições variam por cliente
 
 ---
 
@@ -174,47 +180,45 @@ Aqui está a lista completa de **empresas e credenciais** necessárias para que 
 
 ## 📊 Resumo por Prioridade
 
-### ⚠️ OBRIGATÓRIAS (3)
-1. **Google Maps API** - Mapas e distâncias
-2. **Focus NFe** - Documentos fiscais
-3. **Evolution API** - WhatsApp
+### ⚠️ LOGIFLOW CONTRATA (3)
+1. **Google Maps API** - Mapas e distâncias (todos os planos)
+2. **Focus NFe** - Documentos fiscais (todos os planos)
+3. **Evolution API** - WhatsApp (todos os planos)
 
-### 🟡 RECOMENDADAS (2)
-4. **Melhor Envio** - Cotação de frete
-5. **Frenet** - Cotação de frete alternativa
+### 🟡 CLIENTE CONFIGURA - FRETE (2) - Plano Pro+
+4. **Melhor Envio** - Cotação de frete (cliente tem conta própria)
+5. **Frenet** - Cotação de frete (cliente tem conta própria)
 
-### 🟢 OPCIONAIS (3)
-6. **Omie ERP** - Se usar Omie
-7. **Bling ERP** - Se usar Bling
-8. **Tiny ERP** - Se usar Tiny
+### 🟢 CLIENTE CONFIGURA - ERP (3) - Plano Pro+
+6. **Omie ERP** - Se cliente usar Omie
+7. **Bling ERP** - Se cliente usar Bling
+8. **Tiny ERP** - Se cliente usar Tiny
 
-### 🔵 FUTURAS (3)
-9. **Sascar** - Rastreamento GPS
-10. **Autotrac** - Rastreamento GPS
-11. **Onixsat** - Rastreamento GPS
+### 🔵 CLIENTE CONFIGURA - GPS (3) - Plano Enterprise
+9. **Sascar** - Rastreamento GPS (cliente tem frota)
+10. **Autotrac** - Rastreamento GPS (cliente tem frota)
+11. **Onixsat** - Rastreamento GPS (cliente tem frota)
 
 ---
 
 ## 💰 Estimativa de Custos Mensais
 
-### Mínimo (Obrigatórias)
+### 💰 **Custo LogiFlow (Fixo)**
 - Google Maps: ~R$ 30/mês
 - Focus NFe: ~R$ 50/mês
 - Evolution API: R$ 0 (self-hosted)
-- **Total Mínimo: ~R$ 80/mês**
+- **Total LogiFlow: ~R$ 80/mês** (você paga, divide entre clientes)
 
-### Recomendado (+ Cotação Frete)
-- Melhor Envio: R$ 0 (paga por uso)
-- Frenet: R$ 0 (paga por uso)
-- **Total: ~R$ 80/mês + frete usado**
+### 💳 **Custo Cliente - Plano Pro** (Opcional)
+- Melhor Envio: R$ 0 (cliente paga por uso)
+- Frenet: R$ 0 (cliente paga por uso)
+- Omie/Bling/Tiny: R$ 50-200/mês (cliente já paga)
+- **Total Cliente Pro: R$ 50-200/mês** (se usar ERP)
 
-### Com ERP (Opcional)
-- Omie/Bling/Tiny: R$ 50-200/mês
-- **Total: ~R$ 130-280/mês**
-
-### Com GPS (Futuro - 10 veículos)
-- Sascar/Autotrac/Onixsat: ~R$ 800-1.500/mês
-- **Total: ~R$ 880-1.580/mês**
+### 💎 **Custo Cliente - Plano Enterprise** (Opcional)
+- Tudo do Pro +
+- Sascar/Autotrac/Onixsat: ~R$ 80-150/veículo/mês (cliente já paga)
+- **Total Cliente Enterprise: R$ 50-200/mês + GPS** (se tiver frota)
 
 ---
 
@@ -225,18 +229,16 @@ Aqui está a lista completa de **empresas e credenciais** necessárias para que 
 - [ ] Contratar Focus NFe → Obter Token
 - [ ] Configurar Evolution API → Conectar WhatsApp
 
-### Fase 2: Cotação (Fazer Logo)
-- [ ] Criar conta Melhor Envio → Obter Token
-- [ ] Criar conta Frenet → Obter Token
+### Fase 2: Orientar Clientes (Documentação)
+- [ ] Criar guia para cliente configurar Melhor Envio
+- [ ] Criar guia para cliente configurar Frenet
+- [ ] Criar guia para cliente configurar ERP
+- [ ] Criar guia para cliente configurar GPS
 
-### Fase 3: ERP (Se Necessário)
-- [ ] Verificar se usa Omie/Bling/Tiny
-- [ ] Obter credenciais do ERP escolhido
-
-### Fase 4: GPS (Quando Crescer)
-- [ ] Avaliar fornecedores GPS
-- [ ] Contratar rastreadores
-- [ ] Obter credenciais API
+### Fase 3: Sistema de Permissões
+- [ ] Implementar verificação de plano no backend
+- [ ] Bloquear funcionalidades por plano no frontend
+- [ ] Criar middleware de autorização por plano
 
 ---
 
@@ -280,11 +282,12 @@ ONIXSAT_SIMULATION_MODE=false
 ## ✅ Resumo Executivo
 
 **Total de Empresas:** 11  
-**Obrigatórias:** 3 (Google, Focus NFe, Evolution API)  
-**Recomendadas:** 2 (Melhor Envio, Frenet)  
-**Opcionais:** 3 (Omie, Bling, Tiny)  
-**Futuras:** 3 (Sascar, Autotrac, Onixsat)
+**LogiFlow Contrata:** 3 (Google, Focus NFe, Evolution API)  
+**Cliente Configura - Frete:** 2 (Melhor Envio, Frenet) - Plano Pro+  
+**Cliente Configura - ERP:** 3 (Omie, Bling, Tiny) - Plano Pro+  
+**Cliente Configura - GPS:** 3 (Sascar, Autotrac, Onixsat) - Enterprise
 
-**Custo Inicial:** ~R$ 80/mês  
-**Sistema Funciona Agora:** ✅ Sim (modo simulação para GPS e frete)  
-**Pronto para Produção:** ✅ Sim (após configurar as 3 obrigatórias)
+**Custo LogiFlow:** ~R$ 80/mês (fixo, você paga)  
+**Custo Cliente:** Variável (cada um paga suas integrações)  
+**Sistema Funciona Agora:** ✅ Sim (modo simulação)  
+**Pronto para Produção:** ✅ Sim (após configurar as 3 do LogiFlow)

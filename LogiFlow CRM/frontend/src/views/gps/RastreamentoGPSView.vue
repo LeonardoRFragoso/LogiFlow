@@ -5,6 +5,14 @@
       <p>Monitore sua frota em tempo real</p>
     </div>
 
+    <div v-if="errorMessage" class="error-banner">
+      <div class="error-icon">⚠️</div>
+      <div>
+        <p>{{ errorMessage }}</p>
+        <p class="error-hint">Verifique credenciais do provider do tenant ou tente novamente.</p>
+      </div>
+    </div>
+
     <!-- Estatísticas da Frota -->
     <div class="stats-grid">
       <div class="stat-card movimento">
@@ -275,10 +283,11 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import axios from 'axios'
+import api from '../../services/api'
 
 const veiculos = ref([])
 const estatisticas = ref({})
+const errorMessage = ref('')
 const veiculoSelecionado = ref(null)
 const filtro = ref('')
 const showHistorico = ref(false)
@@ -338,34 +347,49 @@ const formatarDataHora = (data) => {
 
 const carregarVeiculos = async () => {
   try {
-    const response = await axios.get('/gps/veiculos')
+    const response = await api.get('/gps/veiculos')
     if (response.data.success) {
       veiculos.value = response.data.veiculos || []
+      errorMessage.value = ''
+    } else {
+      veiculos.value = []
+      errorMessage.value = response.data.message || 'Nenhum veículo retornado'
     }
   } catch (error) {
     console.error('Erro ao carregar veículos:', error)
+    errorMessage.value = error.response?.data?.detail || 'Erro ao carregar veículos'
   }
 }
 
 const carregarEstatisticas = async () => {
   try {
-    const response = await axios.get('/gps/dashboard/estatisticas')
+    const response = await api.get('/gps/dashboard/estatisticas')
     if (response.data.success) {
       estatisticas.value = response.data.estatisticas || {}
+      errorMessage.value = ''
+    } else {
+      estatisticas.value = {}
+      errorMessage.value = response.data.message || 'Estatísticas indisponíveis'
     }
   } catch (error) {
     console.error('Erro ao carregar estatísticas:', error)
+    errorMessage.value = error.response?.data?.detail || 'Erro ao carregar estatísticas'
   }
 }
 
 const carregarDadosMapa = async () => {
   try {
-    const response = await axios.get('/gps/dashboard/mapa')
+    const response = await api.get('/gps/dashboard/mapa')
     if (response.data.success) {
       veiculos.value = response.data.veiculos || []
+      errorMessage.value = ''
+    } else {
+      veiculos.value = []
+      errorMessage.value = response.data.message || 'Mapa sem dados'
     }
   } catch (error) {
     console.error('Erro ao carregar dados do mapa:', error)
+    errorMessage.value = error.response?.data?.detail || 'Erro ao carregar mapa'
   }
 }
 
@@ -391,13 +415,16 @@ const centralizarMapa = () => {
 
 const atualizarPosicao = async (veiculo) => {
   try {
-    const response = await axios.get(`/gps/posicao/${veiculo.placa}`)
+    const response = await api.get(`/gps/posicao/${veiculo.placa}`)
     if (response.data.success) {
       alert('Posição atualizada!')
       await atualizarMapa()
+    } else {
+      alert(response.data.message || 'Não foi possível atualizar a posição.')
     }
   } catch (error) {
     console.error('Erro ao atualizar posição:', error)
+    alert('Erro ao atualizar posição do veículo.')
   }
 }
 
@@ -427,12 +454,16 @@ const carregarHistorico = async () => {
       params.append('data_fim', new Date(filtroHistorico.value.dataFim).toISOString())
     }
     
-    const response = await axios.get(`/gps/historico/${veiculoHistorico.value.placa}?${params}`)
+    const response = await api.get(`/gps/historico/${veiculoHistorico.value.placa}?${params}`)
     if (response.data.success) {
       historico.value = response.data.historico || response.data
+    } else {
+      historico.value = null
+      errorMessage.value = response.data.message || 'Histórico indisponível'
     }
   } catch (error) {
     console.error('Erro ao carregar histórico:', error)
+    errorMessage.value = error.response?.data?.detail || 'Erro ao carregar histórico'
   }
 }
 

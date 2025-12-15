@@ -11,11 +11,15 @@ from datetime import datetime, timedelta
 from enum import Enum
 import logging
 import uuid
-import hashlib
 import secrets
 
-# JWT
 from jose import JWTError, jwt
+from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+
+from config import settings
+from database import get_db, SessionLocal
+from models import User, RefreshToken
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -25,7 +29,9 @@ router = APIRouter()
 # Configurações JWT
 # ========================================
 
-SECRET_KEY = "logiflow-crm-secret-key-change-in-production-2024"
+SECRET_KEY = settings.SECRET_KEY
+if SECRET_KEY == "change-this-in-production":
+    logger.warning("SECRET_KEY está usando valor padrão. Defina via variável de ambiente em produção.")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 8  # 8 horas
 REFRESH_TOKEN_EXPIRE_DAYS = 7
@@ -121,38 +127,90 @@ class UsuarioResponse(BaseModel):
 # ========================================
 # Storage Simulado (substituir por DB)
 # ========================================
-
-usuarios_db: dict = {}
-tokens_refresh: dict = {}
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 tokens_reset: dict = {}
 
 
 def _hash_senha(senha: str) -> str:
-    """Hash de senha usando SHA256"""
-    return hashlib.sha256(senha.encode()).hexdigest()
+    """Hash seguro com bcrypt"""
+    return pwd_context.hash(senha)
+
+
+def _verificar_senha(senha: str, senha_hash: str) -> bool:
+    try:
+        return pwd_context.verify(senha, senha_hash)
+    except Exception:
+        return False
+
+
+def _get_user_by_email(db: Session, email: str) -> Optional[User]:
+    return db.query(User).filter(User.email == email).first()
+
+
+def _get_user_by_id(db: Session, user_id: str) -> Optional[User]:
+    return db.query(User).filter(User.id == user_id).first()
 
 
 def _criar_usuario_admin():
-    """Cria usuário admin padrão se não existir"""
+    """Cria usuário admin padrão se não existir (uma vez)."""
     admin_email = "admin@logiflow.com"
-    if admin_email not in usuarios_db:
-        usuarios_db[admin_email] = {
-            "id": str(uuid.uuid4()),
-            "email": admin_email,
-            "nome": "Administrador",
-            "senha_hash": _hash_senha("admin123"),
-            "tipo": TipoUsuario.ADMIN.value,
-            "status": StatusUsuario.ATIVO.value,
-            "telefone": None,
-            "cargo": "Administrador do Sistema",
-            "criado_em": datetime.utcnow(),
-            "atualizado_em": datetime.utcnow(),
-            "ultimo_acesso": None
-        }
+    with SessionLocal() as db:
+        if _get_user_by_email(db, admin_email):
+            return
+        user = User(
+            email=admin_email,
+            nome="Administrador",
+            senha_hash=_hash_senha("admin123"),
+            tipo=TipoUsuario.ADMIN.value,
+            status=StatusUsuario.ATIVO.value,
+            cargo="Administrador do Sistema",
+        )
+        db.add(user)
+        db.commit()
         logger.info("Usuário admin criado")
+
 
 # Criar admin ao importar módulo
 _criar_usuario_admin()
+
+
+def criar_refresh_token_db(db: Session, user_id: str) -> str:
+    """Cria e persiste refresh token."""
+    token = secrets.token_urlsafe(32)
+    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    db_token = RefreshToken(
+        token=token,
+        user_id=user_id,
+        expire_at=expire,
+        revoked=False,
+    )
+    db.add(db_token)
+    db.commit()
+    return token
+
+
+def validar_refresh_token_db(db: Session, token: str) -> RefreshToken:
+    db_token = db.query(RefreshToken).filter(RefreshToken.token == token).first()
+    if not db_token or db_token.revoked:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token inválido",
+        )
+    if datetime.utcnow() > db_token.expire_at:
+        db_token.revoked = True
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token expirado",
+        )
+    return db_token
+
+
+def revogar_refresh_token_db(db: Session, token: str) -> None:
+    db_token = db.query(RefreshToken).filter(RefreshToken.token == token).first()
+    if db_token:
+        db_token.revoked = True
+        db.commit()
 
 
 # ========================================
@@ -175,19 +233,6 @@ def criar_access_token(data: dict, expires_delta: Optional[timedelta] = None) ->
     })
     
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-
-def criar_refresh_token(user_id: str) -> str:
-    """Cria token de refresh"""
-    token = secrets.token_urlsafe(32)
-    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    
-    tokens_refresh[token] = {
-        "user_id": user_id,
-        "expire": expire
-    }
-    
-    return token
 
 
 def verificar_token(token: str) -> TokenData:
@@ -219,33 +264,28 @@ def verificar_token(token: str) -> TokenData:
 # Dependencies
 # ========================================
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     """Obtém usuário atual a partir do token"""
     token_data = verificar_token(token)
-    
-    # Buscar usuário
-    usuario = None
-    for u in usuarios_db.values():
-        if u["id"] == token_data.user_id:
-            usuario = u
-            break
-    
+
+    usuario = _get_user_by_id(db, token_data.user_id)
+
     if usuario is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Usuário não encontrado"
         )
-    
-    if usuario["status"] != StatusUsuario.ATIVO.value:
+
+    if usuario.status != StatusUsuario.ATIVO.value:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Usuário inativo ou bloqueado"
         )
-    
+
     return usuario
 
 
-async def get_current_admin(current_user: dict = Depends(get_current_user)) -> dict:
+async def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
     """Verifica se o usuário é admin"""
     if current_user["tipo"] != TipoUsuario.ADMIN.value:
         raise HTTPException(
@@ -255,7 +295,7 @@ async def get_current_admin(current_user: dict = Depends(get_current_user)) -> d
     return current_user
 
 
-async def get_current_gerente_ou_admin(current_user: dict = Depends(get_current_user)) -> dict:
+async def get_current_gerente_ou_admin(current_user: User = Depends(get_current_user)) -> User:
     """Verifica se o usuário é gerente ou admin"""
     if current_user["tipo"] not in [TipoUsuario.ADMIN.value, TipoUsuario.GERENTE.value]:
         raise HTTPException(
@@ -270,7 +310,7 @@ async def get_current_gerente_ou_admin(current_user: dict = Depends(get_current_
 # ========================================
 
 @router.post("/login", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """
     Login com email e senha.
     Retorna access_token e refresh_token.
@@ -278,55 +318,46 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     try:
         email = form_data.username.lower()
         senha = form_data.password
-        
-        # Buscar usuário
-        usuario = usuarios_db.get(email)
-        
-        if not usuario:
+
+        usuario = _get_user_by_email(db, email)
+
+        if not usuario or not _verificar_senha(senha, usuario.senha_hash):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Email ou senha incorretos"
             )
-        
-        # Verificar senha
-        if usuario["senha_hash"] != _hash_senha(senha):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Email ou senha incorretos"
-            )
-        
-        # Verificar status
-        if usuario["status"] != StatusUsuario.ATIVO.value:
+
+        if usuario.status != StatusUsuario.ATIVO.value:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Usuário {usuario['status']}"
+                detail=f"Usuário {usuario.status}"
             )
-        
-        # Criar tokens
+
         access_token = criar_access_token(data={
-            "sub": usuario["id"],
-            "email": usuario["email"],
-            "tipo": usuario["tipo"],
-            "nome": usuario["nome"]
+            "sub": usuario.id,
+            "email": usuario.email,
+            "tipo": usuario.tipo,
+            "nome": usuario.nome
         })
-        
-        refresh_token = criar_refresh_token(usuario["id"])
-        
-        # Atualizar último acesso
-        usuario["ultimo_acesso"] = datetime.utcnow()
-        
+
+        refresh_token = criar_refresh_token_db(db, usuario.id)
+
+        usuario.ultimo_acesso = datetime.utcnow()
+        db.add(usuario)
+        db.commit()
+
         logger.info(f"Login realizado: {email}")
-        
+
         return Token(
             access_token=access_token,
             refresh_token=refresh_token,
             token_type="bearer",
             expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
             user={
-                "id": usuario["id"],
-                "email": usuario["email"],
-                "nome": usuario["nome"],
-                "tipo": usuario["tipo"]
+                "id": usuario.id,
+                "email": usuario.email,
+                "nome": usuario.nome,
+                "tipo": usuario.tipo
             }
         )
         
@@ -337,46 +368,31 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
 @router.post("/refresh")
-async def refresh_token(refresh_token: str):
+async def refresh_token(payload: RefreshRequest, db: Session = Depends(get_db)):
     """Renova access_token usando refresh_token"""
     try:
-        token_data = tokens_refresh.get(refresh_token)
-        
-        if not token_data:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Refresh token inválido"
-            )
-        
-        if datetime.utcnow() > token_data["expire"]:
-            del tokens_refresh[refresh_token]
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Refresh token expirado"
-            )
-        
-        # Buscar usuário
-        usuario = None
-        for u in usuarios_db.values():
-            if u["id"] == token_data["user_id"]:
-                usuario = u
-                break
-        
-        if not usuario or usuario["status"] != StatusUsuario.ATIVO.value:
+        db_token = validar_refresh_token_db(db, payload.refresh_token)
+
+        usuario = _get_user_by_id(db, db_token.user_id)
+
+        if not usuario or usuario.status != StatusUsuario.ATIVO.value:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Usuário não encontrado ou inativo"
             )
-        
-        # Criar novo access_token
+
         access_token = criar_access_token(data={
-            "sub": usuario["id"],
-            "email": usuario["email"],
-            "tipo": usuario["tipo"],
-            "nome": usuario["nome"]
+            "sub": usuario.id,
+            "email": usuario.email,
+            "tipo": usuario.tipo,
+            "nome": usuario.nome
         })
-        
+
         return {
             "access_token": access_token,
             "token_type": "bearer",
@@ -393,30 +409,31 @@ async def refresh_token(refresh_token: str):
 @router.post("/logout")
 async def logout(
     refresh_token: Optional[str] = None,
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     """Invalida refresh_token"""
-    if refresh_token and refresh_token in tokens_refresh:
-        del tokens_refresh[refresh_token]
+    if refresh_token:
+        revogar_refresh_token_db(db, refresh_token)
     
-    logger.info(f"Logout: {current_user['email']}")
+    logger.info(f"Logout: {current_user.email}")
     
     return {"success": True, "message": "Logout realizado"}
 
 
 @router.get("/me")
-async def get_me(current_user: dict = Depends(get_current_user)):
+async def get_me(current_user: User = Depends(get_current_user)):
     """Retorna dados do usuário logado"""
     return {
         "success": True,
         "data": {
-            "id": current_user["id"],
-            "email": current_user["email"],
-            "nome": current_user["nome"],
-            "tipo": current_user["tipo"],
-            "telefone": current_user.get("telefone"),
-            "cargo": current_user.get("cargo"),
-            "ultimo_acesso": current_user.get("ultimo_acesso")
+            "id": current_user.id,
+            "email": current_user.email,
+            "nome": current_user.nome,
+            "tipo": current_user.tipo,
+            "telefone": current_user.telefone,
+            "cargo": current_user.cargo,
+            "ultimo_acesso": current_user.ultimo_acesso
         }
     }
 
@@ -425,22 +442,25 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 async def update_me(
     nome: Optional[str] = None,
     telefone: Optional[str] = None,
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     """Atualiza dados do próprio usuário"""
     if nome:
-        current_user["nome"] = nome
+        current_user.nome = nome
     if telefone:
-        current_user["telefone"] = telefone
+        current_user.telefone = telefone
     
-    current_user["atualizado_em"] = datetime.utcnow()
+    current_user.atualizado_em = datetime.utcnow()
+    db.add(current_user)
+    db.commit()
     
     return {
         "success": True,
         "message": "Dados atualizados",
         "data": {
-            "nome": current_user["nome"],
-            "telefone": current_user.get("telefone")
+            "nome": current_user.nome,
+            "telefone": current_user.telefone
         }
     }
 
@@ -448,21 +468,22 @@ async def update_me(
 @router.post("/alterar-senha")
 async def alterar_senha(
     request: AlterarSenhaRequest,
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     """Altera senha do usuário logado"""
-    # Verificar senha atual
-    if current_user["senha_hash"] != _hash_senha(request.senha_atual):
+    if not _verificar_senha(request.senha_atual, current_user.senha_hash):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Senha atual incorreta"
         )
     
-    # Atualizar senha
-    current_user["senha_hash"] = _hash_senha(request.nova_senha)
-    current_user["atualizado_em"] = datetime.utcnow()
+    current_user.senha_hash = _hash_senha(request.nova_senha)
+    current_user.atualizado_em = datetime.utcnow()
+    db.add(current_user)
+    db.commit()
     
-    logger.info(f"Senha alterada: {current_user['email']}")
+    logger.info(f"Senha alterada: {current_user.email}")
     
     return {"success": True, "message": "Senha alterada com sucesso"}
 
@@ -471,7 +492,8 @@ async def alterar_senha(
 async def recuperar_senha(request: RecuperarSenhaRequest):
     """Envia email para recuperação de senha"""
     email = request.email.lower()
-    usuario = usuarios_db.get(email)
+    with SessionLocal() as db:
+        usuario = _get_user_by_email(db, email)
     
     # Sempre retorna sucesso para não expor emails existentes
     if usuario:
@@ -510,16 +532,16 @@ async def resetar_senha(request: ResetarSenhaRequest):
             detail="Token expirado"
         )
     
-    # Atualizar senha
-    usuario = usuarios_db.get(token_data["email"])
-    if usuario:
-        usuario["senha_hash"] = _hash_senha(request.nova_senha)
-        usuario["atualizado_em"] = datetime.utcnow()
-        
-        # Invalidar token
-        del tokens_reset[request.token]
-        
-        logger.info(f"Senha resetada: {token_data['email']}")
+    with SessionLocal() as db:
+        usuario = _get_user_by_email(db, token_data["email"])
+        if usuario:
+            usuario.senha_hash = _hash_senha(request.nova_senha)
+            usuario.atualizado_em = datetime.utcnow()
+            db.add(usuario)
+            db.commit()
+
+            del tokens_reset[request.token]
+            logger.info(f"Senha resetada: {token_data['email']}")
     
     return {"success": True, "message": "Senha redefinida com sucesso"}
 
@@ -530,22 +552,23 @@ async def resetar_senha(request: ResetarSenhaRequest):
 
 @router.get("/usuarios")
 async def listar_usuarios(
-    current_user: dict = Depends(get_current_admin)
+    current_user: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
 ):
     """Lista todos os usuários (admin only)"""
-    usuarios = [
-        {
-            "id": u["id"],
-            "email": u["email"],
-            "nome": u["nome"],
-            "tipo": u["tipo"],
-            "status": u["status"],
-            "ultimo_acesso": u.get("ultimo_acesso"),
-            "criado_em": u["criado_em"]
-        }
-        for u in usuarios_db.values()
-    ]
-    
+    usuarios_query = db.query(User).all()
+    usuarios = []
+    for u in usuarios_query:
+        usuarios.append({
+            "id": u.id,
+            "email": u.email,
+            "nome": u.nome,
+            "tipo": u.tipo,
+            "status": u.status,
+            "ultimo_acesso": u.ultimo_acesso,
+            "criado_em": u.criado_em
+        })
+
     return {
         "success": True,
         "data": usuarios,
@@ -556,44 +579,41 @@ async def listar_usuarios(
 @router.post("/usuarios")
 async def criar_usuario(
     request: CriarUsuarioRequest,
-    current_user: dict = Depends(get_current_admin)
+    current_user: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
 ):
     """Cria novo usuário (admin only)"""
     email = request.email.lower()
     
-    if email in usuarios_db:
+    if _get_user_by_email(db, email):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email já cadastrado"
         )
     
-    usuario = {
-        "id": str(uuid.uuid4()),
-        "email": email,
-        "nome": request.nome,
-        "senha_hash": _hash_senha(request.senha),
-        "tipo": request.tipo.value,
-        "status": StatusUsuario.ATIVO.value,
-        "telefone": request.telefone,
-        "cargo": request.cargo,
-        "criado_em": datetime.utcnow(),
-        "atualizado_em": datetime.utcnow(),
-        "ultimo_acesso": None,
-        "criado_por": current_user["id"]
-    }
+    usuario = User(
+        email=email,
+        nome=request.nome,
+        senha_hash=_hash_senha(request.senha),
+        tipo=request.tipo.value,
+        status=StatusUsuario.ATIVO.value,
+        telefone=request.telefone,
+        cargo=request.cargo,
+    )
     
-    usuarios_db[email] = usuario
+    db.add(usuario)
+    db.commit()
     
-    logger.info(f"Usuário criado: {email} por {current_user['email']}")
+    logger.info(f"Usuário criado: {email} por {current_user.email}")
     
     return {
         "success": True,
         "message": "Usuário criado com sucesso",
         "data": {
-            "id": usuario["id"],
-            "email": usuario["email"],
-            "nome": usuario["nome"],
-            "tipo": usuario["tipo"]
+            "id": usuario.id,
+            "email": usuario.email,
+            "nome": usuario.nome,
+            "tipo": usuario.tipo
         }
     }
 
@@ -602,28 +622,27 @@ async def criar_usuario(
 async def alterar_status_usuario(
     user_id: str,
     status_novo: StatusUsuario,
-    current_user: dict = Depends(get_current_admin)
+    current_user: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
 ):
     """Altera status de um usuário (admin only)"""
-    usuario = None
-    for u in usuarios_db.values():
-        if u["id"] == user_id:
-            usuario = u
-            break
+    usuario = _get_user_by_id(db, user_id)
     
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     
-    if usuario["id"] == current_user["id"]:
+    if usuario.id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Não é possível alterar o próprio status"
         )
     
-    usuario["status"] = status_novo.value
-    usuario["atualizado_em"] = datetime.utcnow()
+    usuario.status = status_novo.value
+    usuario.atualizado_em = datetime.utcnow()
+    db.add(usuario)
+    db.commit()
     
-    logger.info(f"Status do usuário {usuario['email']} alterado para {status_novo.value}")
+    logger.info(f"Status do usuário {usuario.email} alterado para {status_novo.value}")
     
     return {
         "success": True,
@@ -634,28 +653,26 @@ async def alterar_status_usuario(
 @router.delete("/usuarios/{user_id}")
 async def excluir_usuario(
     user_id: str,
-    current_user: dict = Depends(get_current_admin)
+    current_user: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
 ):
     """Exclui (inativa) um usuário (admin only)"""
-    email_to_delete = None
-    for email, u in usuarios_db.items():
-        if u["id"] == user_id:
-            email_to_delete = email
-            break
+    usuario = _get_user_by_id(db, user_id)
     
-    if not email_to_delete:
+    if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     
-    if usuarios_db[email_to_delete]["id"] == current_user["id"]:
+    if usuario.id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Não é possível excluir o próprio usuário"
         )
     
-    # Soft delete
-    usuarios_db[email_to_delete]["status"] = StatusUsuario.INATIVO.value
-    usuarios_db[email_to_delete]["atualizado_em"] = datetime.utcnow()
+    usuario.status = StatusUsuario.INATIVO.value
+    usuario.atualizado_em = datetime.utcnow()
+    db.add(usuario)
+    db.commit()
     
-    logger.info(f"Usuário inativado: {email_to_delete}")
+    logger.info(f"Usuário inativado: {usuario.email}")
     
     return {"success": True, "message": "Usuário inativado"}

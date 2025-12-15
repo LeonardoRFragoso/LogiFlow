@@ -1,0 +1,163 @@
+{
+  "sascar": {
+    "name": "Sascar",
+    "base_url": "https://api.sascar.com.br/v1",
+    "auth_type": "bearer",
+    "auth_header": "Authorization",
+    "auth_prefix": "Bearer",
+    "endpoints": {
+      "list_vehicles": {
+        "method": "GET",
+        "path": "/veiculos",
+        "description": "Lista todos os veículos rastreados"
+      },
+      "get_position": {
+        "method": "GET",
+        "path": "/veiculos/{placa}/posicao",
+        "description": "Obtém posição atual de um veículo",
+        "path_params": ["placa"]
+      },
+      "get_history": {
+        "method": "GET",
+        "path": "/veiculos/{placa}/historico",
+        "description": "Obtém histórico de rotas",
+        "path_params": ["placa"],
+        "query_params": ["data_inicio", "data_fim"]
+      }
+    },
+    "response_mapping": {
+      "position": {
+        "latitude": "lat",
+        "longitude": "lng",
+        "velocidade": "velocidade",
+        "data_hora": "timestamp",
+        "ignicao": "ignicao",
+        "odometro": "odometro"
+      }
+    },
+    "credentials_schema": {
+      "api_key": {
+        "type": "string",
+        "required": true,
+        "description": "Chave da API Sascar"
+      },
+      "api_secret": {
+        "type": "string",
+        "required": false,
+        "description": "Secret da API (se necessário)"
+      },
+      "environment": {
+        "type": "string",
+        "required": false,
+        "default": "production",
+        "options": ["production", "sandbox"]
+      }
+    },
+    "notes": "ATENÇÃO: Configuração template. Ajustar conforme documentação oficial da Sascar."
+  },
+  
+  "autotrac": {
+    "name": "Autotrac",
+    "base_url": "https://api.autotrac.com.br/v2",
+    "auth_type": "basic",
+    "endpoints": {
+      "list_vehicles": {
+        "method": "GET",
+        "path": "/veiculos"
+      },
+      "get_position": {
+        "method": "GET",
+        "path": "/veiculos/{placa}/posicao",
+        "path_params": ["placa"]
+      },
+      "get_history": {
+        "method": "GET",
+        "path": "/veiculos/{placa}/historico",
+        "path_params": ["placa"],
+        "query_params": ["inicio", "fim"]
+      }
+    },
+    "response_mapping": {
+      "position": {
+        "latitude": "latitude",
+        "longitude": "longitude",
+        "velocidade": "speed",
+        "data_hora": "datetime",
+        "ignicao": "ignition",
+        "odometro": "odometer"
+      }
+    },
+    "credentials_schema": {
+      "username": {
+        "type": "string",
+        "required": true
+      },
+      "password": {
+        "type": "string",
+        "required": true
+      }
+    },
+    "notes": "ATENÇÃO: Configuração template. Ajustar conforme documentação oficial da Autotrac."
+  },
+  
+  "onixsat": {
+    "name": "Onixsat",
+    "base_url": "https://api.onixsat.com.br",
+    "auth_type": "bearer",
+    "auth_header": "X-API-Token",
+    "endpoints": {
+      "list_vehicles": {
+        "method": "GET",
+        "path": "/devices"
+      },
+      "get_position": {
+        "method": "GET",
+        "path": "/devices/{placa}/location",
+        "path_params": ["placa"]
+      },
+      "get_history": {
+        "method": "GET",
+        "path": "/devices/{placa}/history",
+        "path_params": ["placa"],
+        "query_params": ["start_date", "end_date"]
+      }
+    },
+    "response_mapping": {
+      "position": {
+        "latitude": "lat",
+        "longitude": "lon",
+        "velocidade": "velocity",
+        "data_hora": "timestamp",
+        "ignicao": "ignition_on",
+        "odometro": "mileage"
+      }
+    },
+    "credentials_schema": {
+      "api_token": {
+        "type": "string",
+        "required": true
+      }
+    },
+    "notes": "ATENÇÃO: Configuração template. Ajustar conforme documentação oficial da Onixsat."
+  },
+  
+  "_instructions": {
+    "pt": "Este arquivo contém templates baseados em padrões comuns de APIs de rastreamento GPS.",
+    "when_you_get_docs": [
+      "1. Obtenha a documentação oficial do provider",
+      "2. Ajuste base_url para a URL real",
+      "3. Ajuste auth_type (bearer, basic, api_key, oauth)",
+      "4. Ajuste os paths dos endpoints",
+      "5. Ajuste o response_mapping conforme formato real",
+      "6. Teste com credenciais reais",
+      "7. Os clientes Python lerão automaticamente este arquivo"
+    ],
+    "auth_types_supported": {
+      "bearer": "Authorization: Bearer TOKEN",
+      "basic": "Authorization: Basic base64(username:password)",
+      "api_key": "Custom header com a chave",
+      "oauth": "OAuth 2.0 flow"
+    }
+  }
+}
+

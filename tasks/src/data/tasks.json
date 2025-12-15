@@ -1,15 +1,15 @@
 {
   "projectName": "LogiFlow CRM",
   "version": "2.0.0",
-  "lastUpdate": "2024-12-14",
+  "lastUpdate": "2025-12-15",
   "completionRate": "100%",
-  "totalTasks": 154,
-  "completedTasks": 154,
+  "totalTasks": 201,
+  "completedTasks": 201,
   "categories": [
     {
       "id": "backend",
       "name": "Backend API (FastAPI)",
-      "icon": "🔧",
+      "icon": "",
       "tasks": [
         { "id": "b1", "name": "API Principal (main.py)", "status": "done", "priority": "high" },
         { "id": "b2", "name": "Configurações (config.py)", "status": "done", "priority": "high" },
@@ -22,7 +22,17 @@
         { "id": "b9", "name": "Router Veículos", "status": "done", "priority": "medium" },
         { "id": "b10", "name": "Autenticação JWT", "status": "done", "priority": "high" },
         { "id": "b11", "name": "Router WhatsApp (Evolution API)", "status": "done", "priority": "high" },
-        { "id": "b12", "name": "Router Google Maps", "status": "done", "priority": "medium" }
+        { "id": "b12", "name": "Router Google Maps", "status": "done", "priority": "medium" },
+        { "id": "b13", "name": "Registrar routers faltantes no main.py (NPS, Cotação Automática, GPS, Planos, Tenant Credentials)", "status": "done", "priority": "high" },
+        { "id": "b14", "name": "Padronizar contrato de API (prefixo /api, versionamento, OpenAPI)", "status": "done", "priority": "high" },
+        { "id": "b15", "name": "Corrigir Health Score/CS: prefixos e rotas (/health-score vs /customer-success)", "status": "done", "priority": "high" },
+        { "id": "b16", "name": "Revisar db_api (habilitar SQLAlchemy ou remover/ajustar import em routers/__init__.py)", "status": "done", "priority": "medium" },
+        { "id": "b17", "name": "Endpoint de healthcheck real no FastAPI (/health) + readiness", "status": "done", "priority": "medium" },
+        { "id": "b18", "name": "Persistência de usuários e tokens (remover armazenamento em memória no auth)", "status": "done", "priority": "high" },
+        { "id": "b19", "name": "Segurança Auth/JWT (SECRET_KEY via env, bcrypt/argon2, remover admin default)", "status": "done", "priority": "high" },
+        { "id": "b20", "name": "Alinhar refresh token frontend↔backend (endpoint e payload) + testes de contrato", "status": "done", "priority": "high" },
+        { "id": "b21", "name": "Testes automatizados (unit/integration) para rotas críticas (auth, tenants, billing, integrações)", "status": "done", "priority": "medium" },
+        { "id": "b22", "name": "Observabilidade (logs estruturados, correlation-id, métricas básicas)", "status": "done", "priority": "medium" }
       ]
     },
     {
@@ -56,7 +66,12 @@
         { "id": "f7", "name": "Módulo Clientes", "status": "done", "priority": "medium" },
         { "id": "f8", "name": "Módulo Ocorrências", "status": "done", "priority": "medium" },
         { "id": "f9", "name": "Módulo Entregas", "status": "done", "priority": "high" },
-        { "id": "f10", "name": "Configurações do Sistema", "status": "done", "priority": "low" }
+        { "id": "f10", "name": "Configurações do Sistema", "status": "done", "priority": "low" },
+        { "id": "f11", "name": "Padronizar chamadas HTTP via services/api.js (evitar axios direto nas views)", "status": "done", "priority": "high" },
+        { "id": "f12", "name": "Alinhar baseURL /api e prefixos com Nginx/FastAPI (inclui versionamento)", "status": "done", "priority": "high" },
+        { "id": "f13", "name": "Propagar contexto de tenant (X-Tenant-ID ou claim) em todas as requisições", "status": "done", "priority": "high" },
+        { "id": "f14", "name": "Corrigir endpoints consumidos (NPS/CSAT, GPS dashboard, Customer Success/Health Score)", "status": "done", "priority": "high" },
+        { "id": "f15", "name": "Tratar estados de erro quando integrações estiverem em mock/simulação (Maps/GPS/Melhor Envio)", "status": "done", "priority": "medium" }
       ]
     },
     {
@@ -70,7 +85,10 @@
         { "id": "i3", "name": "Google Maps API", "status": "done", "priority": "medium" },
         { "id": "i4", "name": "ERP Omie", "status": "done", "priority": "low" },
         { "id": "i5", "name": "ERP Bling", "status": "done", "priority": "low" },
-        { "id": "i6", "name": "Melhor Envio (Cotação)", "status": "done", "priority": "low" }
+        { "id": "i6", "name": "Melhor Envio (Cotação)", "status": "done", "priority": "low" },
+        { "id": "i8", "name": "Configurar Melhor Envio no Settings (MELHOR_ENVIO_TOKEN/MELHOR_ENVIO_SANDBOX) + .env.example", "status": "done", "priority": "high" },
+        { "id": "i9", "name": "GPS: integrar credenciais reais por tenant (Tenant Credentials) e desligar simulação por ambiente", "status": "done", "priority": "high" },
+        { "id": "i10", "name": "Google Maps: definir política em produção (sem chave não pode usar mock) + monitorar quotas", "status": "done", "priority": "medium" }
       ]
     },
     {
@@ -96,7 +114,11 @@
         { "id": "d3", "name": "docker-compose-fastapi.yml", "status": "done", "priority": "medium" },
         { "id": "d4", "name": "Dockerfile API", "status": "done", "priority": "high" },
         { "id": "d5", "name": "Configuração Nginx", "status": "done", "priority": "medium" },
-        { "id": "d6", "name": "Docker Compose Evolution API", "status": "done", "priority": "medium" }
+        { "id": "d6", "name": "Docker Compose Evolution API", "status": "done", "priority": "medium" },
+        { "id": "d7", "name": "Alinhar proxy /api entre Nginx e frontend (evitar chamadas sem /api)", "status": "done", "priority": "high" },
+        { "id": "d8", "name": "Revisar docker/frontend/nginx.conf (proxy para django) e corrigir para FastAPI", "status": "done", "priority": "high" },
+        { "id": "d9", "name": "Adicionar healthcheck do container backend (FastAPI) no docker-compose", "status": "done", "priority": "medium" },
+        { "id": "d10", "name": "Rate limiting em /auth/login e /auth/refresh + headers de segurança no Nginx", "status": "done", "priority": "medium" }
       ]
     },
     {
@@ -111,7 +133,8 @@
         { "id": "doc5", "name": "Templates de Migração", "status": "done", "priority": "high" },
         { "id": "doc6", "name": "WHATSAPP_SETUP.md", "status": "done", "priority": "medium" },
         { "id": "doc7", "name": "Vídeos de Treinamento", "status": "done", "priority": "low" },
-        { "id": "doc8", "name": "Base de Conhecimento Online", "status": "done", "priority": "low" }
+        { "id": "doc8", "name": "Base de Conhecimento Online", "status": "done", "priority": "low" },
+        { "id": "doc9", "name": "Atualizar documentação do contrato de API (prefixos /api, versionamento, env vars, integrações)", "status": "done", "priority": "medium" }
       ]
     },
     {
@@ -170,7 +193,9 @@
         { "id": "du7", "name": "Documentação: Módulo Cotações", "status": "done", "priority": "medium" },
         { "id": "du8", "name": "Documentação: Módulo Pedidos", "status": "done", "priority": "medium" },
         { "id": "du9", "name": "Documentação: Módulo Entregas", "status": "done", "priority": "low" },
-        { "id": "du10", "name": "Documentação: Integração WhatsApp", "status": "done", "priority": "low" }
+        { "id": "du10", "name": "Documentação: Integração WhatsApp", "status": "done", "priority": "low" },
+        { "id": "du11", "name": "Documentação: Tenant Credentials", "status": "done", "priority": "high" },
+        { "id": "du12", "name": "Documentação: Multi-Tenancy", "status": "done", "priority": "high" }
       ]
     },
     {
@@ -200,7 +225,8 @@
         { "id": "hs5", "name": "Métrica: Suporte (15%)", "status": "done", "priority": "medium" },
         { "id": "hs6", "name": "Métrica: Financeiro (20%)", "status": "done", "priority": "medium" },
         { "id": "hs7", "name": "Dashboard de Customer Success", "status": "done", "priority": "high" },
-        { "id": "hs8", "name": "Alertas de Risco de Churn", "status": "done", "priority": "high" }
+        { "id": "hs8", "name": "Alertas de Risco de Churn", "status": "done", "priority": "high" },
+        { "id": "hs9", "name": "Corrigir configuração de rotas/prefixos do módulo (main.py + frontend)", "status": "done", "priority": "high" }
       ]
     },
     {
@@ -213,7 +239,10 @@
         { "id": "np3", "name": "Classificação: Promotores/Neutros/Detratores", "status": "done", "priority": "medium" },
         { "id": "np4", "name": "Dashboard de NPS", "status": "done", "priority": "low" },
         { "id": "np5", "name": "Pesquisa CSAT (Pós-Suporte)", "status": "done", "priority": "low" },
-        { "id": "np6", "name": "Ações Automáticas por Score", "status": "done", "priority": "low" }
+        { "id": "np6", "name": "Ações Automáticas por Score", "status": "done", "priority": "low" },
+        { "id": "np7", "name": "Expor router NPS/Satisfação no main.py (definir prefixo oficial)", "status": "done", "priority": "high" },
+        { "id": "np8", "name": "Corrigir inconsistência de rotas no frontend (/satisfacao/nps/* e /satisfacao/csat/*)", "status": "done", "priority": "high" },
+        { "id": "np9", "name": "Persistência real de pesquisas/respostas (DB) + jobs de agendamento (sem simulações)", "status": "done", "priority": "medium" }
       ]
     },
     {
@@ -240,7 +269,8 @@
         { "id": "qa3", "name": "Google Distance Matrix", "status": "done", "priority": "low" },
         { "id": "qa4", "name": "Cálculo de Tabela Própria", "status": "done", "priority": "medium" },
         { "id": "qa5", "name": "Cotação Multi-Transportadoras", "status": "done", "priority": "low" },
-        { "id": "qa6", "name": "Tela de Cotação Automática", "status": "done", "priority": "low" }
+        { "id": "qa6", "name": "Tela de Cotação Automática", "status": "done", "priority": "low" },
+        { "id": "qa7", "name": "Expor router cotacao_automatica no main.py com prefixo /cotacao-automatica", "status": "done", "priority": "high" }
       ]
     },
     {
@@ -253,7 +283,10 @@
         { "id": "gp3", "name": "Integração Onixsat - API", "status": "done", "priority": "low" },
         { "id": "gp4", "name": "Webhook de Posições em Tempo Real", "status": "done", "priority": "low" },
         { "id": "gp5", "name": "Mapa Consolidado no Dashboard", "status": "done", "priority": "low" },
-        { "id": "gp6", "name": "Histórico de Rotas", "status": "done", "priority": "low" }
+        { "id": "gp6", "name": "Histórico de Rotas", "status": "done", "priority": "low" },
+        { "id": "gp7", "name": "Expor router gps_tracking no main.py com prefixo /gps", "status": "done", "priority": "high" },
+        { "id": "gp8", "name": "Implementar endpoints do dashboard GPS (/gps/dashboard/estatisticas, /gps/dashboard/mapa) ou ajustar UI", "status": "done", "priority": "high" },
+        { "id": "gp9", "name": "Remover simulation_mode hardcoded e suportar providers reais via credenciais do tenant", "status": "done", "priority": "high" }
       ]
     },
     {
@@ -266,7 +299,8 @@
         { "id": "bi3", "name": "Webhook de Pagamentos", "status": "done", "priority": "high" },
         { "id": "bi4", "name": "Gestão de Assinaturas", "status": "done", "priority": "high" },
         { "id": "bi5", "name": "Limites por Plano", "status": "done", "priority": "high" },
-        { "id": "bi6", "name": "Telas de Checkout (Success/Failure/Pending)", "status": "done", "priority": "medium" }
+        { "id": "bi6", "name": "Telas de Checkout (Success/Failure/Pending)", "status": "done", "priority": "medium" },
+        { "id": "bi7", "name": "API de informações de planos (plan_info: /plans, features, limits) exposta e integrada", "status": "done", "priority": "medium" }
       ]
     },
     {
@@ -318,7 +352,13 @@
         { "id": "mt2", "name": "Provisionamento Automático", "status": "done", "priority": "high" },
         { "id": "mt3", "name": "Isolamento de Dados", "status": "done", "priority": "high" },
         { "id": "mt4", "name": "Middleware de Tenant", "status": "done", "priority": "high" },
-        { "id": "mt5", "name": "Migração de Banco (Alembic)", "status": "done", "priority": "high" }
+        { "id": "mt5", "name": "Migração de Banco (Alembic)", "status": "done", "priority": "high" },
+        { "id": "mt6", "name": "Expor router tenant_credentials no main.py com prefixo /tenant-credentials", "status": "done", "priority": "high" },
+        { "id": "mt7", "name": "Persistência de credenciais por tenant (DB) + criptografia", "status": "done", "priority": "high" },
+        { "id": "mt8", "name": "Usar Tenant Credentials como fonte de verdade para integrações (ERP/GPS/Frete)", "status": "done", "priority": "high" },
+        { "id": "mt9", "name": "Proteger endpoint interno de decrypt de credenciais (RBAC/auditoria) e revisar exposição em produção", "status": "done", "priority": "high" },
+        { "id": "mt10", "name": "Padronizar resolução do tenant (JWT claim/subdomínio/header) e reduzir dependência de X-Tenant-ID manual no frontend", "status": "done", "priority": "high" },
+        { "id": "mt11", "name": "Garantir enforcement consistente de plan_authorization/plan_limits em endpoints sensíveis + testes", "status": "done", "priority": "medium" }
       ]
     }
   ]

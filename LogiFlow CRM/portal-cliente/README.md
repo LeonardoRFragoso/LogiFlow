@@ -1,5 +1,30 @@
-# Vue 3 + Vite
+# 📦 LogiFlow - Portal do Cliente
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Portal web para clientes acompanharem suas entregas em tempo real.
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## 🚀 Funcionalidades
+
+- 🔍 **Rastreamento** - Acompanhe entregas por código de rastreio
+- 🗺️ **Mapa em Tempo Real** - Veja a localização da sua entrega
+- 📊 **Timeline de Status** - Histórico completo da entrega
+- 🔔 **Notificações** - Alertas de mudança de status
+- 📱 **PWA** - Instale como app no celular
+
+## 🏃‍♂️ Executar
+
+```bash
+npm install
+npm run dev
+```
+
+Acesse: `http://localhost:5175`
+
+## 📦 Build
+
+```bash
+npm run build
+```
+
+## 🌐 Deploy
+
+Os arquivos compilados estarão em `dist/`

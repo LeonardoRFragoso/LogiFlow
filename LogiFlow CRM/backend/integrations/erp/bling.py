@@ -16,20 +16,48 @@ class BlingClient:
     
     BASE_URL = "https://api.bling.com.br/Api/v3"
     
-    def __init__(self, access_token: str):
+    def __init__(self, api_key: str = None, access_token: str = None):
         """
         Inicializa cliente Bling
         
         Args:
-            access_token: Token de acesso OAuth2
+            api_key: API Key (versão antiga da API)
+            access_token: Token de acesso OAuth2 (versão nova)
         """
-        self.access_token = access_token
+        # Suportar ambos os formatos
+        token = access_token or api_key
+        if not token:
+            raise ValueError("api_key ou access_token é obrigatório")
+        
+        self.access_token = token
         self.session = requests.Session()
         self.session.headers.update({
-            "Authorization": f"Bearer {access_token}",
+            "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
             "Accept": "application/json"
         })
+    
+    @classmethod
+    def from_tenant_credentials(cls, credentials: Dict):
+        """
+        Cria cliente a partir das credenciais do tenant
+        
+        Args:
+            credentials: Dict com 'api_key' ou 'access_token'
+        """
+        api_key = credentials.get("api_key")
+        access_token = credentials.get("access_token")
+        
+        if not api_key and not access_token:
+            raise ValueError("api_key ou access_token é obrigatório para Bling")
+        
+        return cls(api_key=api_key, access_token=access_token)
+    
+    def listar_situacoes(self) -> Dict:
+        """
+        Lista situações (endpoint simples para testar conexão)
+        """
+        return self._make_request("GET", "/situacoes")
     
     def _make_request(self, method: str, endpoint: str, data: Optional[Dict] = None,
                      params: Optional[Dict] = None) -> Dict:
