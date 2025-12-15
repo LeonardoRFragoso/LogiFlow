@@ -11,7 +11,7 @@ services:
     name: logiflow-api
     env: python
     region: oregon
-    plan: starter
+    plan: free
     branch: main
     buildCommand: |
       cd "LogiFlow CRM/backend"
@@ -55,7 +55,6 @@ services:
   - type: web
     name: logiflow-frontend
     env: static
-    plan: starter
     branch: main
     buildCommand: |
       cd "LogiFlow CRM/frontend"
@@ -82,7 +81,7 @@ services:
   # ========================================
   - type: redis
     name: logiflow-redis
-    plan: starter
+    plan: free
     region: oregon
     maxmemoryPolicy: allkeys-lru
     ipAllowList: []
@@ -93,6 +92,6 @@ services:
 databases:
   - name: logiflow-db
     databaseName: logiflow
-    plan: starter
+    plan: free
     region: oregon
     ipAllowList: []
