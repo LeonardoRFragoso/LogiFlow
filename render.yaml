@@ -53,7 +53,7 @@ services:
   # Frontend - Vue 3 (Static Site)
   # ========================================
   - type: web
-    name: logiflow-frontend
+    name: logiflowcrm
     env: static
     branch: main
     buildCommand: |
