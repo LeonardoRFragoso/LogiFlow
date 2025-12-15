@@ -28,6 +28,32 @@ class OmieClient:
         self.app_secret = app_secret
         self.session = requests.Session()
     
+    @classmethod
+    def from_tenant_credentials(cls, credentials: Dict):
+        """
+        Cria cliente a partir das credenciais do tenant
+        
+        Args:
+            credentials: Dict com 'app_key' e 'app_secret'
+        """
+        app_key = credentials.get("app_key")
+        app_secret = credentials.get("app_secret")
+        
+        if not app_key or not app_secret:
+            raise ValueError("app_key e app_secret são obrigatórios para Omie")
+        
+        return cls(app_key=app_key, app_secret=app_secret)
+    
+    def listar_categorias(self) -> Dict:
+        """
+        Lista categorias (endpoint simples para testar conexão)
+        """
+        return self._make_request(
+            endpoint="/geral/categorias/",
+            call="ListarCategorias",
+            params=[{"pagina": 1, "registros_por_pagina": 10}]
+        )
+    
     def _make_request(self, endpoint: str, call: str, params: List[Dict]) -> Dict:
         """
         Faz requisição para API Omie

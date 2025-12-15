@@ -6,6 +6,7 @@ Cálculo de distâncias e tempos de viagem
 import requests
 from typing import Dict, List, Optional, Tuple
 import logging
+from utils.quota_monitor import quota_monitor
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,14 @@ class DistanceMatrixClient:
             api_key: Chave da API Google Maps
         """
         self.api_key = api_key
+
+    @classmethod
+    def from_settings(cls):
+        from config import settings
+        key = getattr(settings, "GOOGLE_MAPS_DISTANCE_MATRIX_KEY", None) or getattr(settings, "GOOGLE_MAPS_API_KEY", None)
+        if not key:
+            raise ValueError("Chave do Google Maps não configurada (GOOGLE_MAPS_DISTANCE_MATRIX_KEY ou GOOGLE_MAPS_API_KEY).")
+        return cls(api_key=key)
     
     def calcular_distancia(
         self,
@@ -46,6 +55,16 @@ class DistanceMatrixClient:
         Returns:
             Distância e tempo de viagem
         """
+        # Verificar quota
+        is_available, error_msg = quota_monitor.check_quota("google_maps_distance_matrix")
+        if not is_available:
+            logger.warning(f"Quota exceeded for Google Maps: {error_msg}")
+            return {
+                "success": False,
+                "error": error_msg,
+                "quota_exceeded": True
+            }
+        
         try:
             params = {
                 "origins": origem,
@@ -87,6 +106,9 @@ class DistanceMatrixClient:
             distancia = element.get("distance", {})
             duracao = element.get("duration", {})
             
+            # Registrar chamada bem-sucedida
+            quota_monitor.record_call("google_maps_distance_matrix", success=True, cost=0.005)
+            
             return {
                 "success": True,
                 "origem": data.get("origin_addresses", [""])[0],
@@ -107,6 +129,8 @@ class DistanceMatrixClient:
             
         except requests.exceptions.RequestException as e:
             logger.error(f"Erro ao calcular distância: {e}")
+            # Registrar chamada com falha
+            quota_monitor.record_call("google_maps_distance_matrix", success=False)
             return {
                 "success": False,
                 "error": str(e)

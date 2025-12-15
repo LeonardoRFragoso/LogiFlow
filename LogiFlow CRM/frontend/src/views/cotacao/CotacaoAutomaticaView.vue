@@ -171,6 +171,17 @@
         </div>
       </div>
 
+      <!-- Distância (quando disponível) -->
+      <div v-if="resultado.distancia" class="distancia-card">
+        <div class="distancia-icon">🗺️</div>
+        <div>
+          <h4>Distância estimada (Google)</h4>
+          <p class="distancia-texto">
+            {{ resultado.distancia.texto }} — {{ resultado.distancia.duracao_texto }}
+          </p>
+        </div>
+      </div>
+
       <!-- Tabela de Comparação -->
       <div class="comparacao-card">
         <h2>📊 Comparação Detalhada</h2>
@@ -245,7 +256,7 @@
     </div>
 
     <!-- Estado Vazio -->
-    <div v-else-if="!loading" class="empty-state">
+    <div v-else-if="!loading && !errorMessage" class="empty-state">
       <div class="empty-icon">📦</div>
       <h3>Nenhuma cotação realizada ainda</h3>
       <p>Preencha o formulário acima e clique em "Cotar Frete" para comparar preços</p>
@@ -256,12 +267,23 @@
       <div class="spinner"></div>
       <p>Consultando transportadoras...</p>
     </div>
+
+    <!-- Erro -->
+    <div v-if="!loading && errorMessage" class="error-state">
+      <div class="error-icon">⚠️</div>
+      <p>{{ errorMessage }}</p>
+      <p class="error-hint">
+        Verifique tokens Melhor Envio/Frenet ou habilite tabela própria.
+        <br v-if="distanceMatrixError" />
+        <span v-if="distanceMatrixError">Google Distance Matrix indisponível ({{ distanceMatrixError }}).</span>
+      </p>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import axios from 'axios'
+import api from '../../services/api'
 
 const form = ref({
   origem_cep: '',
@@ -278,6 +300,8 @@ const form = ref({
 
 const resultado = ref(null)
 const loading = ref(false)
+const errorMessage = ref('')
+const distanceMatrixError = ref('')
 
 const fonteLabel = (fonte) => {
   const labels = {
@@ -297,18 +321,24 @@ const calcularLarguraBarra = (valor) => {
 const cotar = async () => {
   loading.value = true
   resultado.value = null
+  errorMessage.value = ''
 
   try {
-    const response = await axios.post('/cotacao-automatica/cotar', form.value)
+    const response = await api.post('/cotacao-automatica/cotar', form.value)
     
     if (response.data.success) {
       resultado.value = response.data
+      distanceMatrixError.value = ''
+      if (response.data.erros) {
+        const dmErr = response.data.erros.find(e => e.fonte === 'distance_matrix')
+        if (dmErr) distanceMatrixError.value = dmErr.erro || 'Chave ou requisição inválida'
+      }
     } else {
-      alert('Erro ao cotar: ' + (response.data.message || 'Erro desconhecido'))
+      errorMessage.value = response.data.message || 'Erro ao cotar'
     }
   } catch (error) {
     console.error('Erro ao cotar:', error)
-    alert('Erro ao realizar cotação. Verifique os dados e tente novamente.')
+    errorMessage.value = error.response?.data?.detail || 'Erro ao realizar cotação. Configure tokens ou revise os dados.'
   } finally {
     loading.value = false
   }
@@ -328,6 +358,8 @@ const limparForm = () => {
     incluir_tabela_propria: true
   }
   resultado.value = null
+  errorMessage.value = ''
+  distanceMatrixError.value = ''
 }
 
 const selecionarCotacao = (cotacao) => {

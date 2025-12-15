@@ -1,0 +1,33 @@
+# LogiFlow CRM - Dependências para Testes
+
+# Framework de testes
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+
+# Cliente de testes FastAPI
+httpx==0.25.1
+
+# Factories para criar dados de teste
+factory-boy==3.3.0
+
+# Faker para dados fictícios
+Faker==20.1.0
+
+# Coverage
+coverage[toml]==7.3.2
+
+# Freeze time para testes com datas
+freezegun==1.4.0
+
+# Linting e qualidade de código
+flake8==6.1.0
+black==23.11.0
+isort==5.12.0
+mypy==1.7.1
+
+# Segurança
+bandit==1.7.5
+safety==2.3.5
+

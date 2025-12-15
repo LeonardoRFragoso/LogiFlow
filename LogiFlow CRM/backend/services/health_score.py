@@ -493,50 +493,172 @@ class HealthScoreCalculator:
 
 
 class ChurnAlertSystem:
-    """Sistema de Alertas de Risco de Churn"""
+    """Sistema REAL de Alertas de Risco de Churn (com persistência)"""
     
-    def __init__(self, db=None):
+    def __init__(self, db):
         self.db = db
     
-    def verificar_alertas(self) -> List[Dict]:
+    def verificar_alertas(self, tenant_id: str) -> List[Dict]:
         """
-        Verifica todos os clientes e gera alertas de risco
+        Verifica todos os clientes e gera alertas de risco (PERSISTENTE)
+        
+        Args:
+            tenant_id: ID do tenant
         
         Returns:
             Lista de alertas de clientes em risco
         """
-        alertas = []
+        from models import Cliente, ChurnAlert, ChurnRiskLevel
+        from sqlalchemy import and_
+        import json
         
-        # Simular lista de clientes (em produção, buscar do DB)
-        clientes = self._get_clientes()
+        alertas_criados = []
         
-        for cliente in clientes:
-            calculator = HealthScoreCalculator(cliente['id'])
-            resultado = calculator.calcular_health_score()
+        try:
+            # Buscar clientes ativos do tenant
+            clientes = self.db.query(Cliente).filter(
+                and_(
+                    Cliente.tenant_id == tenant_id,
+                    Cliente.ativo == True
+                )
+            ).limit(100).all()
             
-            # Gerar alerta se em risco
-            if resultado['risco_churn']['nivel'] in ['medio', 'alto']:
-                alerta = {
-                    'cliente_id': cliente['id'],
-                    'cliente_nome': cliente['nome'],
-                    'health_score': resultado['health_score'],
-                    'status': resultado['status'],
-                    'risco_churn': resultado['risco_churn'],
-                    'recomendacoes': resultado['recomendacoes'],
-                    'urgencia': 'alta' if resultado['risco_churn']['nivel'] == 'alto' else 'media',
-                    'data_alerta': datetime.now().isoformat()
-                }
-                alertas.append(alerta)
+            for cliente in clientes:
+                try:
+                    calculator = HealthScoreCalculator(str(cliente.id), self.db)
+                    resultado = calculator.calcular_health_score()
+                    
+                    # Gerar/atualizar alerta se em risco
+                    if resultado['risco_churn']['nivel'] in ['medio', 'alto', 'critico']:
+                        # Buscar alerta existente
+                        alerta_existente = self.db.query(ChurnAlert).filter(
+                            and_(
+                                ChurnAlert.tenant_id == tenant_id,
+                                ChurnAlert.cliente_id == str(cliente.id),
+                                ChurnAlert.status == 'ativo'
+                            )
+                        ).first()
+                        
+                        # Mapear nível de risco
+                        nivel_map = {
+                            'baixo': ChurnRiskLevel.BAIXO.value,
+                            'medio': ChurnRiskLevel.MEDIO.value,
+                            'alto': ChurnRiskLevel.ALTO.value,
+                            'critico': ChurnRiskLevel.CRITICO.value
+                        }
+                        
+                        if alerta_existente:
+                            # Atualizar alerta existente
+                            alerta_existente.health_score_anterior = alerta_existente.health_score
+                            alerta_existente.health_score = resultado['health_score']
+                            alerta_existente.nivel_risco = nivel_map[resultado['risco_churn']['nivel']]
+                            alerta_existente.probabilidade_churn = resultado['risco_churn']['probabilidade']
+                            alerta_existente.motivos = json.dumps([r['motivo'] for r in resultado['recomendacoes']])
+                            alerta_existente.acao_sugerida = json.dumps([r['acao'] for r in resultado['recomendacoes']])
+                            alerta_existente.updated_at = datetime.utcnow()
+                        else:
+                            # Criar novo alerta
+                            alerta = ChurnAlert(
+                                tenant_id=tenant_id,
+                                cliente_id=str(cliente.id),
+                                health_score=resultado['health_score'],
+                                nivel_risco=nivel_map[resultado['risco_churn']['nivel']],
+                                probabilidade_churn=resultado['risco_churn']['probabilidade'],
+                                motivos=json.dumps([r['motivo'] for r in resultado['recomendacoes']]),
+                                acao_sugerida=json.dumps([r['acao'] for r in resultado['recomendacoes']]),
+                                acao_requerida=resultado['risco_churn']['nivel'] in ['alto', 'critico'],
+                                prazo_acao_dias=3 if resultado['risco_churn']['nivel'] == 'critico' else 7,
+                                status='ativo'
+                            )
+                            self.db.add(alerta)
+                        
+                        alertas_criados.append({
+                            'cliente_id': str(cliente.id),
+                            'cliente_nome': cliente.razao_social or cliente.nome_fantasia,
+                            'health_score': resultado['health_score'],
+                            'status': resultado['status'],
+                            'risco_churn': resultado['risco_churn'],
+                            'recomendacoes': resultado['recomendacoes']
+                        })
+                    
+                    else:
+                        # Se não está mais em risco, resolver alerta existente
+                        alerta_existente = self.db.query(ChurnAlert).filter(
+                            and_(
+                                ChurnAlert.tenant_id == tenant_id,
+                                ChurnAlert.cliente_id == str(cliente.id),
+                                ChurnAlert.status == 'ativo'
+                            )
+                        ).first()
+                        
+                        if alerta_existente:
+                            alerta_existente.status = 'resolvido'
+                            alerta_existente.data_resolucao = datetime.utcnow()
+                            alerta_existente.resultado = 'recuperado'
+                
+                except Exception as e:
+                    logger.error(f"Erro ao processar alerta para cliente {cliente.id}: {e}")
+            
+            self.db.commit()
+            logger.info(f"✅ {len(alertas_criados)} alertas de churn verificados/criados para tenant {tenant_id}")
+            
+            return alertas_criados
         
-        # Ordenar por urgência e score
-        alertas.sort(key=lambda x: (x['urgencia'] == 'alta', -x['health_score']), reverse=True)
-        
-        return alertas
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Erro ao verificar alertas: {e}")
+            raise
     
-    def _get_clientes(self) -> List[Dict]:
-        """Simula lista de clientes"""
-        return [
-            {'id': 'cli_001', 'nome': 'Empresa ABC Ltda'},
-            {'id': 'cli_002', 'nome': 'Transportadora XYZ'},
-            {'id': 'cli_003', 'nome': 'Logística 123'}
-        ]
+    def obter_alertas_ativos(self, tenant_id: str) -> List[Dict]:
+        """
+        Obtém alertas ativos do tenant (REAL do banco)
+        
+        Args:
+            tenant_id: ID do tenant
+        
+        Returns:
+            Lista de alertas ativos
+        """
+        from models import ChurnAlert, Cliente
+        from sqlalchemy import and_
+        import json
+        
+        try:
+            alertas_db = self.db.query(ChurnAlert, Cliente).join(
+                Cliente,
+                and_(
+                    ChurnAlert.cliente_id == Cliente.id,
+                    ChurnAlert.tenant_id == Cliente.tenant_id
+                )
+            ).filter(
+                and_(
+                    ChurnAlert.tenant_id == tenant_id,
+                    ChurnAlert.status == 'ativo'
+                )
+            ).order_by(
+                ChurnAlert.nivel_risco.desc(),
+                ChurnAlert.health_score.asc()
+            ).all()
+            
+            alertas = []
+            for alerta, cliente in alertas_db:
+                alertas.append({
+                    'id': alerta.id,
+                    'cliente_id': alerta.cliente_id,
+                    'cliente_nome': cliente.razao_social or cliente.nome_fantasia,
+                    'health_score': alerta.health_score,
+                    'nivel_risco': alerta.nivel_risco,
+                    'probabilidade_churn': alerta.probabilidade_churn,
+                    'motivos': json.loads(alerta.motivos) if alerta.motivos else [],
+                    'acao_sugerida': json.loads(alerta.acao_sugerida) if alerta.acao_sugerida else [],
+                    'acao_requerida': alerta.acao_requerida,
+                    'prazo_acao_dias': alerta.prazo_acao_dias,
+                    'atribuido_a': alerta.atribuido_a,
+                    'created_at': alerta.created_at.isoformat() if alerta.created_at else None
+                })
+            
+            return alertas
+        
+        except Exception as e:
+            logger.error(f"Erro ao obter alertas ativos: {e}")
+            raise

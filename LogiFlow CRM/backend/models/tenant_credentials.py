@@ -10,8 +10,10 @@ import json
 from cryptography.fernet import Fernet
 import os
 
+from database import Base
 
-class TenantCredentials:
+
+class TenantCredentials(Base):
     """
     Modelo para armazenar credenciais de integrações por tenant
     

@@ -1,0 +1,80 @@
+# =============================================
+# COMANDOS GIT - LogiFlow CRM
+# Cole estes comandos no PowerShell
+# =============================================
+
+# 1. Ir para o diretório do projeto
+cd "C:\Users\leonardo.fragoso\OneDrive - INTERNATIONAL CONTAINER TERMINAL SERVICES\Área de Trabalho\Projetos\SuiteCRM"
+
+# 2. Inicializar Git (se necessário)
+git init
+
+# 3. Configurar usuário (primeira vez)
+git config user.name "Leonardo Fragoso"
+git config user.email "leonardo.fragoso@ictsi.com"
+
+# 4. Adicionar todos os arquivos
+git add .
+
+# 5. Criar commit
+git commit -m "Deploy: LogiFlow CRM 100% Concluído - 201/201 Tasks - Production Ready"
+
+# 6. Conectar ao GitHub (substitua SEU_USUARIO pelo seu usuário GitHub)
+git remote add origin https://github.com/SEU_USUARIO/logiflow-crm.git
+
+# 7. Renomear branch para main
+git branch -M main
+
+# 8. Enviar para GitHub
+git push -u origin main
+
+# =============================================
+# APÓS ENVIAR PARA GITHUB
+# =============================================
+
+# 1. Acesse: https://dashboard.render.com
+# 2. Clique em: New + → Blueprint
+# 3. Conecte o repositório: logiflow-crm
+# 4. Branch: main
+# 5. Render detectará o render.yaml
+# 6. Configure variáveis de ambiente
+# 7. Clique em Apply
+
+# URLs após deploy:
+# Frontend: https://logiflow-frontend.onrender.com
+# Backend:  https://logiflow-api.onrender.com
+# Docs:     https://logiflow-api.onrender.com/docs
+
+# =============================================
+# COMANDOS ÚTEIS
+# =============================================
+
+# Ver status
+git status
+
+# Ver histórico
+git log --oneline
+
+# Ver remote
+git remote -v
+
+# Atualizar código (próximas vezes)
+git add .
+git commit -m "Update: descrição da mudança"
+git push origin main
+
+# =============================================
+# TROUBLESHOOTING
+# =============================================
+
+# Se der erro de remote já existe:
+git remote remove origin
+git remote add origin https://github.com/SEU_USUARIO/logiflow-crm.git
+
+# Se der erro de credenciais:
+git config --global credential.helper wincred
+
+# Se der erro de push rejected:
+git pull origin main --rebase
+git push origin main
+

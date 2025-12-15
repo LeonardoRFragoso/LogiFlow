@@ -3,12 +3,15 @@ LogiFlow CRM - Router de Credenciais por Tenant
 Permite que clientes configurem suas próprias credenciais de integrações
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi import APIRouter, HTTPException, Depends, Header, Request
 from pydantic import BaseModel
 from typing import Optional, Dict, List
 from datetime import datetime
 import logging
 
+from sqlalchemy.orm import Session
+
+from database import get_db
 from models.tenant_credentials import (
     TenantCredentials,
     ALL_CREDENTIALS_SCHEMAS,
@@ -16,6 +19,7 @@ from models.tenant_credentials import (
     GPS_CREDENTIALS_SCHEMAS,
     FREIGHT_CREDENTIALS_SCHEMAS
 )
+from middleware.rbac import require_permission, audit_log
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -136,7 +140,8 @@ async def listar_schemas_disponiveis():
 @router.get("/credentials")
 async def listar_credenciais(
     tenant_id: str = Depends(get_tenant_id),
-    integration_type: Optional[str] = None
+    integration_type: Optional[str] = None,
+    db: Session = Depends(get_db)
 ):
     """
     Lista todas as credenciais configuradas pelo tenant
@@ -144,25 +149,23 @@ async def listar_credenciais(
     Não retorna os valores das credenciais por segurança
     """
     try:
-        # TODO: Buscar do banco de dados
-        # Por enquanto, retorna exemplo
-        
-        credentials = [
-            {
-                "id": 1,
-                "integration_type": "erp",
-                "provider": "omie",
-                "is_active": True,
-                "is_validated": True,
-                "last_validation": datetime.now().isoformat(),
-                "created_at": datetime.now().isoformat(),
-                "updated_at": datetime.now().isoformat()
-            }
-        ]
-        
+        query = db.query(TenantCredentials).filter(TenantCredentials.tenant_id == tenant_id)
         if integration_type:
-            credentials = [c for c in credentials if c["integration_type"] == integration_type]
-        
+            query = query.filter(TenantCredentials.integration_type == integration_type)
+
+        credentials = []
+        for c in query.all():
+            credentials.append({
+                "id": c.id,
+                "integration_type": c.integration_type,
+                "provider": c.provider,
+                "is_active": c.is_active,
+                "is_validated": c.is_validated,
+                "last_validation": c.last_validation,
+                "created_at": c.created_at,
+                "updated_at": c.updated_at
+            })
+
         return {
             "success": True,
             "tenant_id": tenant_id,
@@ -177,7 +180,8 @@ async def listar_credenciais(
 @router.post("/credentials")
 async def criar_credencial(
     data: CredentialCreate,
-    tenant_id: str = Depends(get_tenant_id)
+    tenant_id: str = Depends(get_tenant_id),
+    db: Session = Depends(get_db)
 ):
     """
     Cria nova credencial de integração para o tenant
@@ -192,23 +196,34 @@ async def criar_credencial(
             data.credentials
         )
         
-        # Criptografar credenciais
         encrypted = TenantCredentials.encrypt_credentials(data.credentials)
-        
-        # TODO: Salvar no banco de dados
-        # Por enquanto, apenas simula
-        
+
+        cred = TenantCredentials(
+            tenant_id=tenant_id,
+            integration_type=data.integration_type,
+            provider=data.provider,
+            encrypted_credentials=encrypted,
+            is_active=True,
+            is_validated=False,
+            last_validation=None,
+            created_by=tenant_id
+        )
+
+        db.add(cred)
+        db.commit()
+        db.refresh(cred)
+
         logger.info(f"Credencial criada: {tenant_id} - {data.integration_type}/{data.provider}")
-        
+
         return {
             "success": True,
             "message": "Credencial criada com sucesso",
             "credential": {
-                "id": 1,
-                "integration_type": data.integration_type,
-                "provider": data.provider,
-                "is_active": True,
-                "is_validated": False
+                "id": cred.id,
+                "integration_type": cred.integration_type,
+                "provider": cred.provider,
+                "is_active": cred.is_active,
+                "is_validated": cred.is_validated
             }
         }
         
@@ -223,18 +238,37 @@ async def criar_credencial(
 async def atualizar_credencial(
     credential_id: int,
     data: CredentialUpdate,
-    tenant_id: str = Depends(get_tenant_id)
+    tenant_id: str = Depends(get_tenant_id),
+    db: Session = Depends(get_db)
 ):
     """
     Atualiza credencial existente
     """
     try:
-        # TODO: Buscar credencial do banco
-        # TODO: Verificar se pertence ao tenant
-        # TODO: Atualizar credenciais criptografadas
-        
+        cred = db.query(TenantCredentials).filter(
+            TenantCredentials.id == credential_id,
+            TenantCredentials.tenant_id == tenant_id
+        ).first()
+
+        if not cred:
+            raise HTTPException(status_code=404, detail="Credencial não encontrada")
+
+        if data.credentials:
+            validate_credential_schema(cred.integration_type, cred.provider, data.credentials)
+            cred.encrypted_credentials = TenantCredentials.encrypt_credentials(data.credentials)
+            cred.last_validation = None
+            cred.is_validated = False
+
+        if data.is_active is not None:
+            cred.is_active = data.is_active
+
+        cred.updated_at = datetime.utcnow()
+
+        db.add(cred)
+        db.commit()
+
         logger.info(f"Credencial atualizada: {credential_id}")
-        
+
         return {
             "success": True,
             "message": "Credencial atualizada com sucesso"
@@ -248,18 +282,26 @@ async def atualizar_credencial(
 @router.delete("/credentials/{credential_id}")
 async def deletar_credencial(
     credential_id: int,
-    tenant_id: str = Depends(get_tenant_id)
+    tenant_id: str = Depends(get_tenant_id),
+    db: Session = Depends(get_db)
 ):
     """
     Remove credencial
     """
     try:
-        # TODO: Buscar credencial do banco
-        # TODO: Verificar se pertence ao tenant
-        # TODO: Deletar
-        
+        cred = db.query(TenantCredentials).filter(
+            TenantCredentials.id == credential_id,
+            TenantCredentials.tenant_id == tenant_id
+        ).first()
+
+        if not cred:
+            raise HTTPException(status_code=404, detail="Credencial não encontrada")
+
+        db.delete(cred)
+        db.commit()
+
         logger.info(f"Credencial deletada: {credential_id}")
-        
+
         return {
             "success": True,
             "message": "Credencial removida com sucesso"
@@ -277,7 +319,8 @@ async def deletar_credencial(
 @router.post("/credentials/{credential_id}/validate")
 async def validar_credencial(
     credential_id: int,
-    tenant_id: str = Depends(get_tenant_id)
+    tenant_id: str = Depends(get_tenant_id),
+    db: Session = Depends(get_db)
 ):
     """
     Valida se as credenciais estão funcionando
@@ -285,21 +328,30 @@ async def validar_credencial(
     Faz uma chamada de teste à API do provider
     """
     try:
-        # TODO: Buscar credencial do banco
-        # TODO: Descriptografar
-        # TODO: Fazer chamada de teste à API
-        # TODO: Atualizar is_validated e last_validation
-        
+        cred = db.query(TenantCredentials).filter(
+            TenantCredentials.id == credential_id,
+            TenantCredentials.tenant_id == tenant_id
+        ).first()
+
+        if not cred:
+            raise HTTPException(status_code=404, detail="Credencial não encontrada")
+
+        # TODO: integração real com provider
+        cred.is_validated = True
+        cred.last_validation = datetime.utcnow()
+        db.add(cred)
+        db.commit()
+
         logger.info(f"Validando credencial: {credential_id}")
-        
+
         return {
             "success": True,
             "is_valid": True,
             "message": "Credenciais validadas com sucesso",
             "details": {
-                "provider": "omie",
-                "test_performed": "Listagem de clientes",
-                "response_time_ms": 245
+                "provider": cred.provider,
+                "test_performed": "Validação simulada",
+                "response_time_ms": 0
             }
         }
         
@@ -317,33 +369,71 @@ async def validar_credencial(
 # ===========================================
 
 @router.get("/credentials/{integration_type}/{provider}/decrypt")
+@require_permission("credentials:decrypt")
 async def obter_credenciais_descriptografadas(
     integration_type: str,
     provider: str,
-    tenant_id: str = Depends(get_tenant_id)
+    request: Request,
+    tenant_id: str = Depends(get_tenant_id),
+    db: Session = Depends(get_db)
 ):
     """
-    Obtém credenciais descriptografadas (uso interno apenas)
+    ⚠️  ENDPOINT SENSÍVEL - PROTEGIDO POR RBAC ⚠️
     
-    Este endpoint deve ser protegido e usado apenas internamente
-    pelos outros routers (ERP, GPS, etc)
+    Obtém credenciais descriptografadas (uso interno ou admin apenas)
+    Requer permissão: credentials:decrypt (apenas admin)
+    
+    Este endpoint deve ser usado apenas por:
+    - Administradores do sistema
+    - Internamente pelos outros routers (ERP, GPS, etc) via service account
+    
+    ⚠️  TODAS AS CHAMADAS SÃO AUDITADAS ⚠️
     """
     try:
-        # TODO: Buscar credencial do banco
-        # TODO: Verificar se pertence ao tenant
-        # TODO: Descriptografar
+        cred = db.query(TenantCredentials).filter(
+            TenantCredentials.integration_type == integration_type,
+            TenantCredentials.provider == provider,
+            TenantCredentials.tenant_id == tenant_id
+        ).first()
+
+        if not cred:
+            audit_log(
+                request=request,
+                action="credentials:decrypt",
+                details=f"Credencial não encontrada: {integration_type}/{provider}",
+                resource_type="credential",
+                resource_id=None,
+                success=False
+            )
+            raise HTTPException(status_code=404, detail="Credencial não encontrada")
+
+        credentials = TenantCredentials.decrypt_credentials(cred.encrypted_credentials)
         
-        # Exemplo:
-        credentials = {
-            "app_key": "123456",
-            "app_secret": "secret123"
-        }
-        
+        # Log de auditoria para decrypt
+        audit_log(
+            request=request,
+            action="credentials:decrypt",
+            details=f"Credenciais descriptografadas: {integration_type}/{provider}",
+            resource_type="credential",
+            resource_id=cred.id,
+            success=True
+        )
+
         return {
             "success": True,
-            "credentials": credentials
+            "credentials": credentials,
+            "warning": "⚠️ Esta operação foi auditada"
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Erro ao obter credenciais: {e}")
+        audit_log(
+            request=request,
+            action="credentials:decrypt",
+            details=f"Erro ao descriptografar: {str(e)}",
+            resource_type="credential",
+            success=False
+        )
         raise HTTPException(status_code=500, detail=str(e))

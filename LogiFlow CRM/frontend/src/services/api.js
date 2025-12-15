@@ -1,13 +1,15 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: '',
+  baseURL: '/api/v1',
   headers: { 'Content-Type': 'application/json' },
 })
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
+  const tenantId = localStorage.getItem('tenantId')
   if (token) config.headers.Authorization = `Bearer ${token}`
+  if (tenantId) config.headers['X-Tenant-ID'] = tenantId
   return config
 })
 
@@ -18,9 +20,9 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem('refreshToken')
       if (refreshToken) {
         try {
-          const response = await axios.post('/api/v1/auth/token/refresh/', { refresh: refreshToken })
-          localStorage.setItem('token', response.data.access)
-          error.config.headers.Authorization = `Bearer ${response.data.access}`
+          const response = await api.post('/auth/refresh', { refresh_token: refreshToken })
+          localStorage.setItem('token', response.data.access_token)
+          error.config.headers.Authorization = `Bearer ${response.data.access_token}`
           return api.request(error.config)
         } catch {
           localStorage.removeItem('token')

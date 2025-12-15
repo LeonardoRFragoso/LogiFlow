@@ -35,6 +35,21 @@ class MelhorEnvioClient:
             "User-Agent": "LogiFlow CRM (contato@logiflow.com.br)"
         })
     
+    @classmethod
+    def from_tenant_credentials(cls, credentials: Dict):
+        """
+        Cria cliente a partir das credenciais do tenant
+        
+        Args:
+            credentials: Dict com 'token' e 'sandbox' (opcional)
+        """
+        token = credentials.get("token")
+        if not token:
+            raise ValueError("Token do Melhor Envio não encontrado nas credenciais do tenant")
+        
+        sandbox = credentials.get("sandbox", False)
+        return cls(token=token, sandbox=sandbox)
+    
     def _make_request(self, method: str, endpoint: str, data: Optional[Dict] = None,
                      params: Optional[Dict] = None) -> Dict:
         """
@@ -174,6 +189,9 @@ class MelhorEnvioClient:
             comprimento=comprimento,
             valor_declarado=valor_mercadoria
         )
+    
+    # Alias para compatibilidade
+    calcular_frete_simplificado = calcular_frete_simples
     
     # ========================================
     # Rastreamento

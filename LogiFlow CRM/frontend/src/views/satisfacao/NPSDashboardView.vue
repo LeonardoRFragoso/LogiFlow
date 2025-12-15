@@ -175,7 +175,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import axios from 'axios'
+import api from '../../services/api'
 
 const dashboard = ref({
   nps: null,
@@ -250,7 +250,7 @@ const statusLabel = (status) => {
 
 const carregarDashboard = async () => {
   try {
-    const response = await axios.get('/satisfacao/dashboard')
+    const response = await api.get('/satisfacao/dashboard')
     if (response.data.success) {
       dashboard.value = response.data.data
     }
@@ -261,7 +261,7 @@ const carregarDashboard = async () => {
 
 const carregarAlertas = async () => {
   try {
-    const response = await axios.get('/satisfacao/alertas')
+    const response = await api.get('/satisfacao/alertas')
     if (response.data.success) {
       alertas.value = response.data.data
     }
@@ -272,7 +272,7 @@ const carregarAlertas = async () => {
 
 const agendarPesquisas = async () => {
   try {
-    const response = await axios.post('/satisfacao/nps/agendar-automaticas')
+    const response = await api.post('/satisfacao/nps/agendar-automaticas')
     if (response.data.success) {
       alert(`${response.data.message}`)
       await carregarDashboard()
@@ -288,7 +288,7 @@ const criarPesquisa = async () => {
       ? '/satisfacao/csat/pesquisa/criar'
       : '/satisfacao/nps/pesquisa/criar'
     
-    const response = await axios.post(endpoint, {
+    const response = await api.post(endpoint, {
       cliente_id: novaPesquisa.value.cliente_id,
       tipo: novaPesquisa.value.tipo
     })

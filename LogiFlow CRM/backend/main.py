@@ -4,7 +4,7 @@ LogiFlow CRM - FastAPI Backend
 API principal para orquestração do LogiFlow CRM
 """
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -14,15 +14,39 @@ from loguru import logger
 from pathlib import Path
 
 from config import settings
+from database import init_db
+from middleware.correlation import correlation_middleware
+from middleware.tenant import TenantMiddleware
 # Importar routers
 try:
-    from routers import fiscal, rastreamento, cotacoes, pedidos, motoristas, veiculos, auth, whatsapp, maps, suitecrm, demo, ocorrencias, leads, billing, tenants, erp, melhor_envio, health_score, nps, cotacao_automatica
-    # db_api é opcional (requer SQLAlchemy)
-    try:
-        from routers import db_api
-    except ImportError:
-        db_api = None
-        logger.warning("db_api não disponível (SQLAlchemy não instalado)")
+    from routers import (
+        fiscal,
+        rastreamento,
+        cotacoes,
+        pedidos,
+        motoristas,
+        veiculos,
+        auth,
+        whatsapp,
+        maps,
+        suitecrm,
+        demo,
+        ocorrencias,
+        leads,
+        billing,
+        tenants,
+        erp,
+        melhor_envio,
+        health_score,
+        nps,
+        cotacao_automatica,
+        gps_tracking,
+        gps_self_service,
+        integrations_self_service,
+        tenant_credentials,
+        plan_info,
+    )
+    from routers.admin import quota_router
 except ImportError as e:
     logger.warning(f"Erro ao importar routers: {e}")
     fiscal = None
@@ -36,7 +60,6 @@ except ImportError as e:
     maps = None
     suitecrm = None
     demo = None
-    db_api = None
     ocorrencias = None
     leads = None
     billing = None
@@ -45,6 +68,11 @@ except ImportError as e:
     melhor_envio = None
     health_score = None
     nps = None
+    cotacao_automatica = None
+    gps_tracking = None
+    gps_self_service = None
+    tenant_credentials = None
+    plan_info = None
 
 # Configurar logging
 logger.add(
@@ -74,6 +102,31 @@ async def lifespan(app: FastAPI):
         app.state.redis = redis_client
     except Exception as e:
         logger.error(f"Erro ao conectar Redis: {e}")
+
+    # Garantir que as tabelas do banco existam
+    try:
+        init_db()
+        logger.info("Banco inicializado (init_db).")
+    except Exception as e:
+        logger.error(f"Erro ao inicializar banco: {e}")
+    
+    # Inicializar monitoramento de quotas
+    try:
+        from utils.quota_monitor import init_quota_monitoring
+        init_quota_monitoring()
+        logger.info("Monitoramento de quotas inicializado")
+    except Exception as e:
+        logger.error(f"Erro ao inicializar quota monitoring: {e}")
+    
+    # Inicializar agendador de pesquisas automáticas (NPS/CSAT)
+    try:
+        from services.scheduler import start_scheduler, stop_scheduler
+        start_scheduler()
+        logger.info("Agendador de pesquisas automáticas inicializado")
+        app.state.scheduler_active = True
+    except Exception as e:
+        logger.error(f"Erro ao inicializar scheduler: {e}")
+        app.state.scheduler_active = False
     
     # Inicializar cliente SuiteCRM (quando necessário)
     # app.state.suitecrm = SuiteCRMClient(
@@ -87,18 +140,28 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
+    # Parar agendador
+    if hasattr(app.state, 'scheduler_active') and app.state.scheduler_active:
+        try:
+            from services.scheduler import stop_scheduler
+            stop_scheduler()
+            logger.info("Agendador parado")
+        except Exception as e:
+            logger.error(f"Erro ao parar scheduler: {e}")
     logger.info("Encerrando LogiFlow API...")
     if hasattr(app.state, 'redis'):
         app.state.redis.close()
 
 
 # Criar aplicação FastAPI
+docs_base = f"{settings.API_PREFIX.rstrip('/')}/{settings.API_VERSION}".rstrip("/")
 app = FastAPI(
     title="LogiFlow CRM API",
     description="API de orquestração para o LogiFlow CRM - Sistema especializado para Transportadoras",
     version="1.0.0",
-    docs_url="/docs" if settings.DEBUG else None,
-    redoc_url="/redoc" if settings.DEBUG else None,
+    docs_url=f"{docs_base}/docs" if settings.DEBUG else None,
+    redoc_url=f"{docs_base}/redoc" if settings.DEBUG else None,
+    openapi_url=f"{docs_base}/openapi.json",
     lifespan=lifespan
 )
 
@@ -111,48 +174,111 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Middleware de Tenant (Multi-Tenancy)
+app.add_middleware(TenantMiddleware)
+
+# Rate Limiting
+from middleware.rate_limit import RateLimitMiddleware
+app.add_middleware(RateLimitMiddleware)
+
+# Correlation ID
+app.middleware("http")(correlation_middleware)
+
 
 # ===========================================
-# Routers
+# Prefixos e Routers
 # ===========================================
-if fiscal:
-    app.include_router(fiscal.router, prefix="/fiscal", tags=["Fiscal"])
-if rastreamento:
-    app.include_router(rastreamento.router, prefix="/rastreamento", tags=["Rastreamento"])
-if cotacoes:
-    app.include_router(cotacoes.router, prefix="/cotacoes", tags=["Cotações"])
-if pedidos:
-    app.include_router(pedidos.router, prefix="/pedidos", tags=["Pedidos"])
-if motoristas:
-    app.include_router(motoristas.router, prefix="/motoristas", tags=["Motoristas"])
-if veiculos:
-    app.include_router(veiculos.router, prefix="/veiculos", tags=["Veículos"])
-if auth:
-    app.include_router(auth.router, prefix="/auth", tags=["Autenticação"])
-if whatsapp:
-    app.include_router(whatsapp.router, prefix="/whatsapp", tags=["WhatsApp"])
-if maps:
-    app.include_router(maps.router, prefix="/maps", tags=["Google Maps"])
-if suitecrm:
-    app.include_router(suitecrm.router)
-if demo:
-    app.include_router(demo.router)
-if db_api:
-    app.include_router(db_api.router)
-if ocorrencias:
-    app.include_router(ocorrencias.router, prefix="/ocorrencias", tags=["Ocorrências"])
-if leads:
-    app.include_router(leads.router)
-if billing:
-    app.include_router(billing.router)
-if tenants:
-    app.include_router(tenants.router, prefix="/api/tenants", tags=["Tenants"])
-if erp:
-    app.include_router(erp.router, prefix="/erp", tags=["Integrações ERP"])
-if melhor_envio:
-    app.include_router(melhor_envio.router, prefix="/melhor-envio", tags=["Melhor Envio"])
-if health_score:
-    app.include_router(health_score.router, prefix="/customer-success", tags=["Health Score & CS"])
+api_prefix = f"{settings.API_PREFIX.rstrip('/')}/{settings.API_VERSION}".rstrip("/")
+api_router = APIRouter(prefix=api_prefix)
+
+
+def include_router_with_version(router_module, prefix: str = "", tags=None):
+    """Inclui router na rota legada e na rota versionada /api/{version}."""
+    if not router_module:
+        return
+    router_obj = getattr(router_module, "router", None)
+    if not router_obj:
+        return
+    app.include_router(router_obj, prefix=prefix, tags=tags)
+    api_router.include_router(router_obj, prefix=prefix, tags=tags)
+
+
+include_router_with_version(fiscal, prefix="/fiscal", tags=["Fiscal"])
+include_router_with_version(rastreamento, prefix="/rastreamento", tags=["Rastreamento"])
+include_router_with_version(cotacoes, prefix="/cotacoes", tags=["Cotações"])
+include_router_with_version(pedidos, prefix="/pedidos", tags=["Pedidos"])
+include_router_with_version(motoristas, prefix="/motoristas", tags=["Motoristas"])
+include_router_with_version(veiculos, prefix="/veiculos", tags=["Veículos"])
+include_router_with_version(auth, prefix="/auth", tags=["Autenticação"])
+include_router_with_version(whatsapp, prefix="/whatsapp", tags=["WhatsApp"])
+include_router_with_version(maps, prefix="/maps", tags=["Google Maps"])
+include_router_with_version(suitecrm)
+include_router_with_version(demo)
+include_router_with_version(ocorrencias, prefix="/ocorrencias", tags=["Ocorrências"])
+include_router_with_version(leads)
+include_router_with_version(billing)
+include_router_with_version(tenants, prefix="/api/tenants", tags=["Tenants"])
+include_router_with_version(erp, prefix="/erp", tags=["Integrações ERP"])
+include_router_with_version(melhor_envio, prefix="/melhor-envio", tags=["Melhor Envio"])
+include_router_with_version(health_score, prefix="/customer-success", tags=["Health Score & CS"])
+include_router_with_version(nps, prefix="/satisfacao", tags=["NPS & CSAT"])
+include_router_with_version(cotacao_automatica, prefix="/cotacao-automatica", tags=["Cotação Automática"])
+include_router_with_version(gps_tracking, prefix="/gps", tags=["Rastreamento GPS"])
+include_router_with_version(gps_self_service, prefix="/gps-config", tags=["Configuração GPS Self-Service"])
+include_router_with_version(integrations_self_service, prefix="/integrations-config", tags=["Configuração de Integrações Self-Service"])
+include_router_with_version(tenant_credentials, prefix="/tenant-credentials", tags=["Tenant Credentials"])
+# plan_info já define /plans internamente; manter prefixo vazio evita caminhos duplicados
+include_router_with_version(plan_info, prefix="", tags=["Planos"])
+include_router_with_version(clientes, prefix="/clientes", tags=["Clientes"])
+include_router_with_version(entregas, prefix="/entregas", tags=["Entregas"])
+include_router_with_version(dashboard, prefix="/dashboard", tags=["Dashboard"])
+
+# Admin routers (protegidos por RBAC)
+include_router_with_version(quota_router, prefix="/admin", tags=["Admin - Quotas"])
+
+app.include_router(api_router)
+
+
+# ===========================================
+# Healthcheck
+# ===========================================
+@app.get("/health", tags=["Health"])
+@api_router.get("/health", tags=["Health"])
+async def healthcheck(request: Request):
+    """Healthcheck simples (liveness) + verificação de Redis quando disponível."""
+    redis_ok = False
+    try:
+        redis_client = getattr(request.app.state, "redis", None)
+        if redis_client:
+            redis_client.ping()
+            redis_ok = True
+    except Exception as e:
+        logger.warning(f"Healthcheck Redis falhou: {e}")
+    
+    return {
+        "status": "ok",
+        "redis": redis_ok
+    }
+
+
+@app.get("/ready", tags=["Health"])
+@api_router.get("/ready", tags=["Health"])
+async def readiness(request: Request):
+    """Readiness check básico."""
+    redis_ok = False
+    try:
+        redis_client = getattr(request.app.state, "redis", None)
+        if redis_client:
+            redis_client.ping()
+            redis_ok = True
+    except Exception as e:
+        logger.error(f"Readiness Redis falhou: {e}")
+    
+    status = "ready" if redis_ok else "degraded"
+    return {
+        "status": status,
+        "redis": redis_ok
+    }
 
 
 # ===========================================

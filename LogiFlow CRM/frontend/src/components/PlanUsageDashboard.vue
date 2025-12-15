@@ -155,7 +155,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import axios from 'axios'
+import api from '../services/api'
 
 const props = defineProps({
   tenantId: {
@@ -193,7 +193,7 @@ async function loadUsage() {
   error.value = null
   
   try {
-    const response = await axios.get(`/api/tenants/${props.tenantId}/usage`)
+    const response = await api.get(`/tenants/${props.tenantId}/usage`)
     usage.value = response.data
   } catch (err) {
     error.value = err.response?.data?.detail || 'Erro ao carregar estatísticas'

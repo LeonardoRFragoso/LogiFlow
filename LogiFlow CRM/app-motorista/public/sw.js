@@ -1,348 +1,197 @@
-// LogiFlow CRM - Service Worker (PWA)
-// Permite funcionamento offline do App do Motorista
+// LogiFlow - Service Worker PWA
+const CACHE_NAME = 'logiflow-motorista-v1.0.0'
+const API_CACHE = 'logiflow-api-v1'
 
-const CACHE_NAME = 'logiflow-motorista-v1';
-const OFFLINE_URL = '/offline.html';
-
-// Arquivos para cachear (App Shell)
-const STATIC_ASSETS = [
+// Arquivos para cache offline
+const STATIC_FILES = [
   '/',
   '/index.html',
-  '/offline.html',
-  '/manifest.json'
-];
+  '/manifest.json',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png'
+]
 
-// URLs da API que devem ser cacheadas
-const API_CACHE_NAME = 'logiflow-api-v1';
-const API_URLS_TO_CACHE = [
-  '/pedidos/em-andamento',
-  '/motoristas/me'
-];
-
-// ==========================================
-// Instalação do Service Worker
-// ==========================================
+// Instalar Service Worker
 self.addEventListener('install', (event) => {
-  console.log('[SW] Instalando Service Worker...');
-  
+  console.log('[SW] Instalando Service Worker...')
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('[SW] Cacheando arquivos estáticos');
-        return cache.addAll(STATIC_ASSETS);
+        console.log('[SW] Cache aberto, adicionando arquivos estáticos...')
+        return cache.addAll(STATIC_FILES)
       })
-      .then(() => {
-        console.log('[SW] Service Worker instalado');
-        return self.skipWaiting();
-      })
-      .catch((error) => {
-        console.error('[SW] Erro na instalação:', error);
-      })
-  );
-});
+      .then(() => self.skipWaiting())
+  )
+})
 
-// ==========================================
-// Ativação do Service Worker
-// ==========================================
+// Ativar Service Worker
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Ativando Service Worker...');
-  
+  console.log('[SW] Ativando Service Worker...')
   event.waitUntil(
-    caches.keys()
-      .then((cacheNames) => {
-        return Promise.all(
-          cacheNames
-            .filter((name) => name !== CACHE_NAME && name !== API_CACHE_NAME)
-            .map((name) => {
-              console.log('[SW] Removendo cache antigo:', name);
-              return caches.delete(name);
-            })
-        );
-      })
-      .then(() => {
-        console.log('[SW] Service Worker ativado');
-        return self.clients.claim();
-      })
-  );
-});
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME && cacheName !== API_CACHE) {
+            console.log('[SW] Removendo cache antigo:', cacheName)
+            return caches.delete(cacheName)
+          }
+        })
+      )
+    }).then(() => self.clients.claim())
+  )
+})
 
-// ==========================================
-// Interceptação de Requisições (Fetch)
-// ==========================================
+// Interceptar requisições
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
-  
-  // Ignorar requisições não-GET
-  if (request.method !== 'GET') {
-    return;
-  }
-  
-  // Ignorar extensões do navegador
-  if (url.protocol === 'chrome-extension:') {
-    return;
-  }
-  
-  // Estratégia para requisições de API
-  if (url.pathname.startsWith('/api') || url.hostname.includes('localhost:8000')) {
-    event.respondWith(networkFirstStrategy(request));
-    return;
-  }
-  
-  // Estratégia para arquivos estáticos
-  event.respondWith(cacheFirstStrategy(request));
-});
+  const { request } = event
+  const url = new URL(request.url)
 
-// ==========================================
-// Estratégias de Cache
-// ==========================================
-
-// Cache First: Primeiro tenta o cache, depois a rede
-async function cacheFirstStrategy(request) {
-  const cachedResponse = await caches.match(request);
-  
-  if (cachedResponse) {
-    // Atualiza o cache em background
-    fetchAndCache(request);
-    return cachedResponse;
+  // Estratégia: Network First para API, Cache First para assets
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(networkFirst(request))
+  } else {
+    event.respondWith(cacheFirst(request))
   }
+})
+
+// Cache First: busca no cache primeiro, depois na rede
+async function cacheFirst(request) {
+  const cache = await caches.open(CACHE_NAME)
+  const cached = await cache.match(request)
   
+  if (cached) {
+    console.log('[SW] Retornando do cache:', request.url)
+    return cached
+  }
+
   try {
-    const networkResponse = await fetch(request);
-    
-    if (networkResponse.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, networkResponse.clone());
+    const response = await fetch(request)
+    if (response.status === 200) {
+      cache.put(request, response.clone())
     }
-    
-    return networkResponse;
+    return response
   } catch (error) {
-    // Se falhar e for navegação, mostra página offline
-    if (request.mode === 'navigate') {
-      return caches.match(OFFLINE_URL);
-    }
-    throw error;
+    console.error('[SW] Erro ao buscar:', request.url, error)
+    return new Response('Offline - Recurso não disponível', {
+      status: 503,
+      statusText: 'Service Unavailable'
+    })
   }
 }
 
-// Network First: Primeiro tenta a rede, depois o cache
-async function networkFirstStrategy(request) {
+// Network First: tenta rede primeiro, fallback para cache
+async function networkFirst(request) {
+  const cache = await caches.open(API_CACHE)
+  
   try {
-    const networkResponse = await fetch(request);
-    
-    if (networkResponse.ok) {
-      // Cacheia resposta de API bem-sucedida
-      const cache = await caches.open(API_CACHE_NAME);
-      cache.put(request, networkResponse.clone());
+    const response = await fetch(request)
+    if (response.status === 200) {
+      cache.put(request, response.clone())
     }
-    
-    return networkResponse;
+    return response
   } catch (error) {
-    console.log('[SW] Rede falhou, buscando no cache:', request.url);
-    
-    const cachedResponse = await caches.match(request);
-    
-    if (cachedResponse) {
-      return cachedResponse;
+    console.log('[SW] Rede indisponível, buscando no cache:', request.url)
+    const cached = await cache.match(request)
+    if (cached) {
+      return cached
     }
-    
-    // Retorna resposta de erro personalizada para API
-    return new Response(
-      JSON.stringify({
-        success: false,
-        offline: true,
-        message: 'Você está offline. Os dados exibidos podem estar desatualizados.'
-      }),
-      {
-        status: 503,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    return new Response(JSON.stringify({
+      error: 'Offline',
+      message: 'Você está offline. Algumas funcionalidades podem estar limitadas.'
+    }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' }
+    })
   }
 }
 
-// Atualiza cache em background
-async function fetchAndCache(request) {
-  try {
-    const networkResponse = await fetch(request);
-    
-    if (networkResponse.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, networkResponse.clone());
-    }
-  } catch (error) {
-    // Silenciosamente falha - o usuário já tem a versão cacheada
-  }
-}
-
-// ==========================================
-// Background Sync (Sincronização Offline)
-// ==========================================
+// Sincronização em background
 self.addEventListener('sync', (event) => {
-  console.log('[SW] Background Sync:', event.tag);
+  console.log('[SW] Background Sync:', event.tag)
   
   if (event.tag === 'sync-entregas') {
-    event.waitUntil(syncEntregas());
+    event.waitUntil(syncEntregas())
   }
-  
-  if (event.tag === 'sync-posicao') {
-    event.waitUntil(syncPosicaoGPS());
-  }
-});
+})
 
 async function syncEntregas() {
   try {
-    // Busca atualizações pendentes do IndexedDB
-    const pendingUpdates = await getPendingUpdates();
-    
-    for (const update of pendingUpdates) {
-      await fetch(update.url, {
-        method: update.method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(update.data)
-      });
-      
-      // Remove do IndexedDB após sucesso
-      await removePendingUpdate(update.id);
+    console.log('[SW] Sincronizando entregas...')
+    const response = await fetch('/api/v1/entregas/sync')
+    if (response.ok) {
+      console.log('[SW] Entregas sincronizadas com sucesso')
+      // Notificar clientes (tabs abertas)
+      const clients = await self.clients.matchAll()
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'SYNC_COMPLETE',
+          data: { entregas: true }
+        })
+      })
     }
-    
-    console.log('[SW] Sincronização de entregas concluída');
   } catch (error) {
-    console.error('[SW] Erro na sincronização:', error);
-    throw error; // Tenta novamente depois
+    console.error('[SW] Erro ao sincronizar entregas:', error)
   }
 }
 
-async function syncPosicaoGPS() {
-  try {
-    const pendingPositions = await getPendingPositions();
-    
-    if (pendingPositions.length > 0) {
-      await fetch('/api/rastreamento/posicao/batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ posicoes: pendingPositions })
-      });
-      
-      await clearPendingPositions();
-    }
-    
-    console.log('[SW] Sincronização de posições GPS concluída');
-  } catch (error) {
-    console.error('[SW] Erro na sincronização de GPS:', error);
-    throw error;
-  }
-}
-
-// ==========================================
 // Push Notifications
-// ==========================================
 self.addEventListener('push', (event) => {
-  console.log('[SW] Push recebido');
+  console.log('[SW] Push recebido:', event.data?.text())
   
-  let data = {
-    title: 'LogiFlow',
-    body: 'Nova notificação',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/badge-72.png'
-  };
-  
-  if (event.data) {
-    try {
-      data = { ...data, ...event.data.json() };
-    } catch (e) {
-      data.body = event.data.text();
-    }
-  }
-  
+  const data = event.data ? event.data.json() : {}
+  const title = data.title || 'LogiFlow'
   const options = {
-    body: data.body,
-    icon: data.icon,
-    badge: data.badge,
+    body: data.body || 'Nova notificação',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/badge.png',
     vibrate: [200, 100, 200],
-    tag: data.tag || 'logiflow-notification',
-    renotify: true,
     data: data.data || {},
-    actions: data.actions || [
-      { action: 'open', title: 'Abrir' },
-      { action: 'close', title: 'Fechar' }
-    ]
-  };
-  
+    actions: data.actions || []
+  }
+
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  );
-});
+    self.registration.showNotification(title, options)
+  )
+})
 
 // Clique na notificação
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notificação clicada:', event.action);
+  console.log('[SW] Notificação clicada:', event.notification.tag)
+  event.notification.close()
+
+  const urlToOpen = event.notification.data?.url || '/'
   
-  event.notification.close();
-  
-  if (event.action === 'close') {
-    return;
-  }
-  
-  // Abre o app ou foca na janela existente
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
         // Se já tem uma janela aberta, foca nela
-        for (const client of clientList) {
-          if (client.url.includes('/') && 'focus' in client) {
-            return client.focus();
+        for (let client of clientList) {
+          if (client.url === urlToOpen && 'focus' in client) {
+            return client.focus()
           }
         }
-        // Senão, abre uma nova
+        // Senão, abre nova janela
         if (clients.openWindow) {
-          const url = event.notification.data?.url || '/';
-          return clients.openWindow(url);
+          return clients.openWindow(urlToOpen)
         }
       })
-  );
-});
+  )
+})
 
-// ==========================================
-// Helpers para IndexedDB (Stubs)
-// ==========================================
-
-// Em produção, implementar com IndexedDB real
-async function getPendingUpdates() {
-  return [];
-}
-
-async function removePendingUpdate(id) {
-  return true;
-}
-
-async function getPendingPositions() {
-  return [];
-}
-
-async function clearPendingPositions() {
-  return true;
-}
-
-// ==========================================
-// Mensagens do App
-// ==========================================
+// Mensagens dos clientes
 self.addEventListener('message', (event) => {
-  console.log('[SW] Mensagem recebida:', event.data);
+  console.log('[SW] Mensagem recebida:', event.data)
   
   if (event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+    self.skipWaiting()
   }
   
   if (event.data.type === 'CACHE_URLS') {
-    cacheUrls(event.data.urls);
+    event.waitUntil(
+      caches.open(CACHE_NAME)
+        .then(cache => cache.addAll(event.data.urls))
+    )
   }
-});
+})
 
-async function cacheUrls(urls) {
-  const cache = await caches.open(CACHE_NAME);
-  await cache.addAll(urls);
-  console.log('[SW] URLs cacheadas:', urls.length);
-}
-
-console.log('[SW] Service Worker carregado');
+console.log('[SW] Service Worker carregado!')
