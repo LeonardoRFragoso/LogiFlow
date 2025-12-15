@@ -1,7 +1,7 @@
 """add tenant_id to models
 
 Revision ID: 002_add_tenant_id
-Revises: 001_initial
+Revises: 
 Create Date: 2024-12-15 14:00:00.000000
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '002_add_tenant_id'
-down_revision = '001_initial'
+down_revision = None
 branch_labels = None
 depends_on = None
 
