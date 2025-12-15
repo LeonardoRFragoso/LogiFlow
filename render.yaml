@@ -48,13 +48,6 @@ services:
         value: v1
       - key: ALLOWED_ORIGINS
         value: "*"
-      # Adicione manualmente no painel Render:
-      # - MELHOR_ENVIO_TOKEN
-      # - FRENET_TOKEN
-      # - GOOGLE_MAPS_DISTANCE_MATRIX_KEY
-      # - OMIE_APP_KEY, OMIE_APP_SECRET
-      # - BLING_API_KEY
-      # - EVOLUTION_API_URL, EVOLUTION_API_KEY
 
   # ========================================
   # Frontend - Vue 3 (Static Site)
@@ -85,6 +78,16 @@ services:
         name: X-XSS-Protection
         value: 1; mode=block
 
+  # ========================================
+  # Redis
+  # ========================================
+  - type: redis
+    name: logiflow-redis
+    plan: starter
+    region: oregon
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
+
 # ========================================
 # Database - PostgreSQL
 # ========================================
@@ -94,15 +97,3 @@ databases:
     plan: starter
     region: oregon
     ipAllowList: []
-
-# ========================================
-# Redis
-# ========================================
-services:
-  - type: redis
-    name: logiflow-redis
-    plan: starter
-    region: oregon
-    maxmemoryPolicy: allkeys-lru
-    ipAllowList: []
-
