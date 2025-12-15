@@ -55,7 +55,6 @@ services:
   - type: web
     name: logiflow-frontend
     env: static
-    region: oregon
     plan: starter
     branch: main
     buildCommand: |
