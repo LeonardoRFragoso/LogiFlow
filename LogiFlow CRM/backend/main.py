@@ -45,6 +45,9 @@ try:
         # integrations_self_service,  # Comentado temporariamente
         tenant_credentials,
         plan_info,
+        clientes,
+        entregas,
+        dashboard,
     )
     from routers.admin import quota_router
 except ImportError as e:
@@ -73,6 +76,9 @@ except ImportError as e:
     gps_self_service = None
     tenant_credentials = None
     plan_info = None
+    clientes = None
+    entregas = None
+    dashboard = None
 
 # Configurar logging
 logger.add(
