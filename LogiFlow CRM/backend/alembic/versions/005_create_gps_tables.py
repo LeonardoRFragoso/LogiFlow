@@ -1,7 +1,7 @@
 """Create GPS tracking tables
 
-Revision ID: 005
-Revises: 004
+Revision ID: 005_create_gps
+Revises: 004_create_nps_csat
 Create Date: 2025-12-15 16:00:00.000000
 
 """
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '005'
-down_revision = '004'
+revision = '005_create_gps'
+down_revision = '004_create_nps_csat'
 branch_labels = None
 depends_on = None
 

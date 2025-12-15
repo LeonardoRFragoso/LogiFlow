@@ -1,7 +1,7 @@
 """Create NPS, CSAT and Churn Alert tables
 
-Revision ID: 004
-Revises: 003
+Revision ID: 004_create_nps_csat
+Revises: 003_create_tenants
 Create Date: 2025-12-15 14:00:00.000000
 
 """
@@ -11,8 +11,8 @@ from datetime import datetime
 
 
 # revision identifiers, used by Alembic.
-revision = '004'
-down_revision = '003'
+revision = '004_create_nps_csat'
+down_revision = '003_create_tenants'
 branch_labels = None
 depends_on = None
 
