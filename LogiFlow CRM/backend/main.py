@@ -79,6 +79,7 @@ except ImportError as e:
     clientes = None
     entregas = None
     dashboard = None
+    quota_router = None
 
 # Configurar logging
 logger.add(
