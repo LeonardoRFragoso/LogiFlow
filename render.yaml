@@ -1,6 +1,6 @@
 # =============================================
-# LogiFlow CRM - Render.com Blueprint
-# Deploy completo: Backend + Frontend + DB + Redis
+# LogiFlow CRM - Render.com Blueprint COMPLETO
+# Deploy: Backend + 4 Frontends + DB + Redis
 # =============================================
 
 services:
@@ -75,6 +75,77 @@ services:
       - path: /*
         name: X-XSS-Protection
         value: 1; mode=block
+
+  # ========================================
+  # App do Motorista - PWA (Static Site)
+  # ========================================
+  - type: web
+    name: logiflow-app-motorista
+    env: static
+    branch: main
+    buildCommand: |
+      cd "LogiFlow CRM/app-motorista"
+      npm install
+      npm run build
+    staticPublishPath: LogiFlow CRM/app-motorista/dist
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://logiflow-api.onrender.com/api/*
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+
+  # ========================================
+  # Portal do Cliente - Tracking (Static Site)
+  # ========================================
+  - type: web
+    name: logiflow-portal-cliente
+    env: static
+    branch: main
+    buildCommand: |
+      cd "LogiFlow CRM/portal-cliente"
+      npm install
+      npm run build
+    staticPublishPath: LogiFlow CRM/portal-cliente/dist
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://logiflow-api.onrender.com/api/*
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+
+  # ========================================
+  # Site de Divulgação - Landing Page (Static Site)
+  # ========================================
+  - type: web
+    name: logiflow-site
+    env: static
+    branch: main
+    buildCommand: |
+      cd "LogiFlow CRM/site-divulgacao"
+      npm install
+      npm run build
+    staticPublishPath: LogiFlow CRM/site-divulgacao/dist
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=3600
 
   # ========================================
   # Redis
