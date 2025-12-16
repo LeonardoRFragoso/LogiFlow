@@ -34,6 +34,11 @@ const routes = [
       { path: 'cotacao-automatica', name: 'Cotação Automática', component: () => import('@/views/cotacao/CotacaoAutomaticaView.vue') },
       { path: 'gps', name: 'Rastreamento GPS', component: () => import('@/views/gps/RastreamentoGPSView.vue') },
       { path: 'configuracoes/integracoes', name: 'Integrações', component: () => import('@/views/configuracoes/IntegracoesView.vue') },
+      
+      // Módulos CRM
+      { path: 'crm/contatos', name: 'Contatos', component: () => import('@/views/crm/ContactsView.vue') },
+      { path: 'crm/oportunidades', name: 'Oportunidades', component: () => import('@/views/crm/OpportunitiesView.vue') },
+      { path: 'crm/casos', name: 'Casos', component: () => import('@/views/crm/CasesView.vue') },
     ],
   },
 ]

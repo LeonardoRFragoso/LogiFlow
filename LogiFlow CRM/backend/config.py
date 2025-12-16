@@ -4,7 +4,7 @@ LogiFlow CRM - Configurações
 
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
-from typing import List, Union
+from typing import List, Union, Optional
 
 
 class Settings(BaseSettings):
@@ -25,21 +25,31 @@ class Settings(BaseSettings):
         return v
     
     # Database (suporta DATABASE_URL do Render ou vars individuais)
-    DATABASE_URL: str = None  # URL completa (Render)
+    DATABASE_URL: Optional[str] = None  # URL completa (Render)
     DB_HOST: str = "db"
     DB_NAME: str = "logiflow_crm"
     DB_USER: str = "logiflow"
     DB_PASSWORD: str = "logiflow123"
     DB_PORT: int = 3306
     
+    def get_database_url(self) -> str:
+        """Retorna URL do banco com driver PyMySQL"""
+        if self.DATABASE_URL:
+            # Se DATABASE_URL já está definida, garantir que use pymysql
+            if self.DATABASE_URL.startswith("mysql://"):
+                return self.DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
+            return self.DATABASE_URL
+        # Construir URL com PyMySQL
+        return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+    
     # Redis (suporta REDIS_URL do Render ou vars individuais)
-    REDIS_URL: str = None  # URL completa (Render)
+    REDIS_URL: Optional[str] = None  # URL completa (Render)
     REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
     REDIS_PASSWORD: str = "redis123"
     
     # SuiteCRM
-    SUITECRM_URL: str = "http://logiflow_suitecrm:8080"
+    SUITECRM_URL: str = "http://nginx:80"
     SUITECRM_CLIENT_ID: str = ""
     SUITECRM_CLIENT_SECRET: str = ""
     
@@ -66,6 +76,20 @@ class Settings(BaseSettings):
     MELHOR_ENVIO_TOKEN: str = ""
     MELHOR_ENVIO_SANDBOX: bool = True
     FRENET_TOKEN: str = ""
+    
+    # Rastreadores GPS - Simulation Modes
+    SASCAR_SIMULATION_MODE: bool = True
+    AUTOTRAC_SIMULATION_MODE: bool = True
+    ONIXSAT_SIMULATION_MODE: bool = True
+    
+    # Email SMTP
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    FROM_EMAIL: str = "noreply@logiflow.com.br"
+    FROM_NAME: str = "LogiFlow CRM"
+    SALES_EMAIL: str = "vendas@logiflow.com.br"
     
     class Config:
         env_file = ".env"
