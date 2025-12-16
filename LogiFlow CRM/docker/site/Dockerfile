@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18-alpine as build
+FROM node:20-alpine as builder
 
 WORKDIR /app
 
@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instalar dependências
-RUN npm ci
+RUN npm install
 
 # Copiar código fonte
 COPY . .
@@ -19,10 +19,7 @@ RUN npm run build
 FROM nginx:stable-alpine
 
 # Copiar build para nginx
-COPY --from=build /app/dist /usr/share/nginx/html
-
-# Copiar configuração customizada do nginx
-COPY --from=build /app/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Expor porta 80
 EXPOSE 80
