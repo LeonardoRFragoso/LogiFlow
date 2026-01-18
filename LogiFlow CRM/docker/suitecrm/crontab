@@ -1,3 +1,0 @@
-# LogiFlow CRM - SuiteCRM Cron Jobs
-# Executa o cron do SuiteCRM a cada minuto
-* * * * * www cd /var/www/html && php -f cron.php > /dev/null 2>&1

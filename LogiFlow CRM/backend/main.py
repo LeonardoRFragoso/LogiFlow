@@ -30,6 +30,10 @@ try:
         whatsapp,
         maps,
         suitecrm,
+        sync,
+        contacts,
+        opportunities,
+        cases,
         demo,
         ocorrencias,
         leads,
@@ -48,6 +52,7 @@ try:
         clientes,
         entregas,
         dashboard,
+        features,  # Feature Flags para BETA
     )
     from routers.admin import quota_router
 except ImportError as e:
@@ -62,6 +67,10 @@ except ImportError as e:
     whatsapp = None
     maps = None
     suitecrm = None
+    sync = None
+    contacts = None
+    opportunities = None
+    cases = None
     demo = None
     ocorrencias = None
     leads = None
@@ -79,6 +88,7 @@ except ImportError as e:
     clientes = None
     entregas = None
     dashboard = None
+    features = None
     quota_router = None
 
 # Configurar logging
@@ -220,6 +230,10 @@ include_router_with_version(auth, prefix="/auth", tags=["Autenticação"])
 include_router_with_version(whatsapp, prefix="/whatsapp", tags=["WhatsApp"])
 include_router_with_version(maps, prefix="/maps", tags=["Google Maps"])
 include_router_with_version(suitecrm)
+include_router_with_version(sync)
+include_router_with_version(contacts)
+include_router_with_version(opportunities)
+include_router_with_version(cases)
 include_router_with_version(demo)
 include_router_with_version(ocorrencias, prefix="/ocorrencias", tags=["Ocorrências"])
 include_router_with_version(leads)
@@ -240,6 +254,7 @@ include_router_with_version(plan_info, prefix="", tags=["Planos"])
 include_router_with_version(clientes, prefix="/clientes", tags=["Clientes"])
 include_router_with_version(entregas, prefix="/entregas", tags=["Entregas"])
 include_router_with_version(dashboard, prefix="/dashboard", tags=["Dashboard"])
+include_router_with_version(features, prefix="", tags=["Feature Flags"])
 
 # Admin routers (protegidos por RBAC)
 include_router_with_version(quota_router, prefix="/admin", tags=["Admin - Quotas"])

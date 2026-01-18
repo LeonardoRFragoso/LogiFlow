@@ -1,0 +1,104 @@
+{
+  "total": 13,
+  "sucessos": 1,
+  "falhas": 12,
+  "percentual": 7.6923076923076925,
+  "testes": [
+    {
+      "teste": "Teste 01 - Conexão",
+      "status": "✅ PASSOU",
+      "sucesso": true,
+      "mensagem": "Conectado em http://nginx:80",
+      "dados": {
+        "success": true,
+        "message": "Conexão estabelecida com sucesso",
+        "base_url": "http://nginx:80",
+        "token_valid": true
+      }
+    },
+    {
+      "teste": "Teste 02 - Listar Cotacoes",
+      "status": "❌ FALHOU",
+      "sucesso": false,
+      "mensagem": "Erro: Erro API: 400",
+      "dados": null
+    },
+    {
+      "teste": "Teste 04 - Listar Pedidos",
+      "status": "❌ FALHOU",
+      "sucesso": false,
+      "mensagem": "Erro: Erro API: 400",
+      "dados": null
+    },
+    {
+      "teste": "Teste 05 - Listar Motoristas",
+      "status": "❌ FALHOU",
+      "sucesso": false,
+      "mensagem": "Erro: Erro API: 400",
+      "dados": null
+    },
+    {
+      "teste": "Teste 06 - Listar Veiculos",
+      "status": "❌ FALHOU",
+      "sucesso": false,
+      "mensagem": "Erro: Erro API: 400",
+      "dados": null
+    },
+    {
+      "teste": "Teste 07 - Listar Entregas",
+      "status": "❌ FALHOU",
+      "sucesso": false,
+      "mensagem": "Erro: Erro API: 400",
+      "dados": null
+    },
+    {
+      "teste": "Teste 03 - Criar Cotacao",
+      "status": "❌ FALHOU",
+      "sucesso": false,
+      "mensagem": "Erro: Erro API: 405",
+      "dados": null
+    },
+    {
+      "teste": "Teste 08.Cotacoes - Acesso Genérico",
+      "status": "❌ FALHOU",
+      "sucesso": false,
+      "mensagem": "Erro: Erro API: 400",
+      "dados": null
+    },
+    {
+      "teste": "Teste 08.PedidosFrete - Acesso Genérico",
+      "status": "❌ FALHOU",
+      "sucesso": false,
+      "mensagem": "Erro: Erro API: 400",
+      "dados": null
+    },
+    {
+      "teste": "Teste 08.Motoristas - Acesso Genérico",
+      "status": "❌ FALHOU",
+      "sucesso": false,
+      "mensagem": "Erro: Erro API: 400",
+      "dados": null
+    },
+    {
+      "teste": "Teste 08.Veiculos - Acesso Genérico",
+      "status": "❌ FALHOU",
+      "sucesso": false,
+      "mensagem": "Erro: Erro API: 400",
+      "dados": null
+    },
+    {
+      "teste": "Teste 08.Entregas - Acesso Genérico",
+      "status": "❌ FALHOU",
+      "sucesso": false,
+      "mensagem": "Erro: Erro API: 400",
+      "dados": null
+    },
+    {
+      "teste": "Teste 08.Ocorrencias - Acesso Genérico",
+      "status": "❌ FALHOU",
+      "sucesso": false,
+      "mensagem": "Erro: Erro API: 400",
+      "dados": null
+    }
+  ]
+}

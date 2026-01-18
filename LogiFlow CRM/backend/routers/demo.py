@@ -13,6 +13,8 @@ import random
 
 from database import get_db
 from models import Lead, StatusLead
+from services.email_service import send_demo_confirmation, send_lead_notification
+from loguru import logger
 
 router = APIRouter(prefix="/demo", tags=["Demo Data"])
 
@@ -71,20 +73,43 @@ async def solicitar_demo(request: DemoRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(lead)
     
-    # TODO: Enviar email para a equipe de vendas
-    # TODO: Enviar email de confirmação para o lead
-    # TODO: Notificação no Slack/Discord
+    logger.info(f"📩 Nova solicitação de demo recebida:")
+    logger.info(f"   ID: {lead.id}")
+    logger.info(f"   Nome: {request.name}")
+    logger.info(f"   Email: {request.email}")
+    logger.info(f"   Empresa: {request.company}")
+    logger.info(f"   Veículos: {request.vehicles}")
     
-    print(f"📩 Nova solicitação de demo recebida:")
-    print(f"   ID: {lead.id}")
-    print(f"   Nome: {request.name}")
-    print(f"   Email: {request.email}")
-    print(f"   Empresa: {request.company}")
-    print(f"   Veículos: {request.vehicles}")
+    # ✅ Enviar email de confirmação para o lead
+    try:
+        send_demo_confirmation(
+            name=request.name,
+            email=request.email,
+            company=request.company,
+            vehicles=request.vehicles
+        )
+        logger.success(f"✅ Email de confirmação enviado para {request.email}")
+    except Exception as e:
+        logger.error(f"❌ Erro ao enviar email de confirmação: {str(e)}")
+        # Não falhar o request mesmo se email falhar
+    
+    # ✅ Notificar equipe de vendas
+    try:
+        send_lead_notification(
+            lead_name=request.name,
+            lead_email=request.email,
+            lead_company=request.company,
+            lead_phone=request.phone
+        )
+        logger.success(f"✅ Notificação enviada para equipe de vendas")
+    except Exception as e:
+        logger.error(f"❌ Erro ao notificar equipe de vendas: {str(e)}")
+    
+    # TODO: Notificação no Slack/Discord (próxima etapa)
     
     return {
         "success": True,
-        "message": "Solicitação recebida com sucesso! Nossa equipe entrará em contato em até 24 horas.",
+        "message": "Solicitação recebida com sucesso! Verifique seu email para confirma��ão. Nossa equipe entrará em contato em até 24 horas.",
         "lead_id": lead.id
     }
 

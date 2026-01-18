@@ -273,6 +273,116 @@ class EmailService:
         
         return self.send_email(contact_email, subject, html_content)
     
+    def send_demo_confirmation(
+        self,
+        name: str,
+        email: str,
+        company: str,
+        vehicles: Optional[str] = None
+    ) -> bool:
+        """
+        Envia email de confirmação após solicitação de demo
+        """
+        subject = "Recebemos sua solicitação de demonstração! 🚀"
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }}
+                .content {{ background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }}
+                .button {{ display: inline-block; background: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+                .footer {{ text-align: center; margin-top: 30px; color: #666; font-size: 14px; }}
+                .box {{ background: white; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #2563eb; }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>🚀 LogiFlow CRM</h1>
+                <p>Gestão Logística Inteligente</p>
+            </div>
+            
+            <div class="content">
+                <h2>Olá, {name}! 👋</h2>
+                
+                <p>Recebemos sua solicitação de demonstração do LogiFlow para a <strong>{company}</strong>!</p>
+                
+                <p>Nossa equipe irá entrar em contato em até <strong>24 horas úteis</strong> para agendar sua demonstração personalizada.</p>
+                
+                <div class="box">
+                    <h3>📋 Próximos Passos:</h3>
+                    <ol>
+                        <li>Aguarde nosso contato por email ou telefone</li>
+                        <li>Prepare suas dúvidas sobre gestão logística</li>
+                        <li>Tenha em mãos informações sobre sua operação atual</li>
+                    </ol>
+                </div>
+                
+                <div class="box">
+                    <h3>⚡ Enquanto isso, que tal assinar agora?</h3>
+                    <p>Se você já está convencido, pode começar a usar imediatamente:</p>
+                    <center>
+                        <a href="http://localhost:5173/#precos" class="button">Ver Planos e Assinar Agora</a>
+                    </center>
+                </div>
+                
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
+                
+                <div class="box">
+                    <h3>❓ Dúvidas Frequentes:</h3>
+                    <p><strong>Quanto tempo leva para implementar?</strong><br>
+                    Apenas 48 horas! Nosso sistema é provisionado automaticamente.</p>
+                    
+                    <p><strong>Preciso de conhecimento técnico?</strong><br>
+                    Não! A interface é super intuitiva e oferecemos treinamento completo.</p>
+                    
+                    <p><strong>Posso cancelar quando quiser?</strong><br>
+                    Sim! Sem multas ou taxas de cancelamento.</p>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p>LogiFlow - Transformando a logística brasileira<br>
+                📧 contato@logiflow.com.br | 📱 (11) 99999-9999<br>
+                🌐 <a href="http://localhost:5173">www.logiflow.com.br</a></p>
+                
+                <p style="font-size: 12px; color: #999; margin-top: 20px;">
+                    Você recebeu este email porque solicitou uma demonstração em nosso site.
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        text_content = f"""
+        Olá {name},
+        
+        Recebemos sua solicitação de demonstração do LogiFlow para a {company}!
+        
+        Nossa equipe irá entrar em contato em até 24 horas úteis para agendar sua demonstração personalizada.
+        
+        Próximos Passos:
+        1. Aguarde nosso contato por email ou telefone
+        2. Prepare suas dúvidas sobre gestão logística
+        3. Tenha em mãos informações sobre sua operação atual
+        
+        Enquanto isso, que tal assinar agora?
+        Se você já está convencido, pode começar a usar imediatamente:
+        http://localhost:5173/#precos
+        
+        Atenciosamente,
+        Equipe LogiFlow CRM
+        
+        contato@logiflow.com.br
+        (11) 99999-9999
+        """
+        
+        return self.send_email(email, subject, html_content, text_content)
+    
     def send_lead_notification(
         self,
         lead_name: str,
@@ -321,6 +431,11 @@ def send_welcome_email(**kwargs):
 def send_payment_confirmation(**kwargs):
     """Helper para enviar confirmação de pagamento"""
     return email_service.send_payment_confirmation(**kwargs)
+
+
+def send_demo_confirmation(**kwargs):
+    """Helper para enviar confirmação de demo"""
+    return email_service.send_demo_confirmation(**kwargs)
 
 
 def send_lead_notification(**kwargs):
