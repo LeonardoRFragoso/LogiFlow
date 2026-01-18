@@ -49,6 +49,7 @@ class HealthScoreService:
         """
         now = datetime.utcnow()
         
+        # Buscar última atividade do cliente (pedido ou interação)
         last_order = self.db.query(func.max(Pedido.criado_em)).filter(
             Pedido.cliente_id == cliente.id
         ).scalar()
@@ -57,11 +58,14 @@ class HealthScoreService:
             CustomerInteraction.cliente_id == cliente.id
         ).scalar()
         
+        # Considera a atividade mais recente (pedido ou interação)
         last_activity = max([d for d in [last_order, last_interaction] if d], default=None)
         
+        # Se nunca houve atividade, score crítico
         if not last_activity:
             return 10.0
         
+        # Calcular dias desde a última atividade
         days_since = (now - last_activity).days
         
         if days_since <= 7:
@@ -191,20 +195,15 @@ class HealthScoreService:
             salvar: Se deve salvar no banco
         
         Returns:
-            {
-                'score': 75.5,
-                'score_anterior': 70.2,
-                'variacao': +5.3,
-                'fatores': {...},
-                'categoria': 'saudavel'
-            }
         """
+        # Calcular cada fator individualmente
         score_recencia = self.calcular_score_recencia(cliente)
         score_frequencia = self.calcular_score_frequencia(cliente)
         score_monetario = self.calcular_score_monetario(cliente)
         score_engajamento = self.calcular_score_engajamento(cliente)
         score_relacionamento = self.calcular_score_relacionamento(cliente)
         
+        # Aplicar pesos e calcular score final (média ponderada)
         score_final = (
             score_recencia * self.PESO_RECENCIA +
             score_frequencia * self.PESO_FREQUENCIA +

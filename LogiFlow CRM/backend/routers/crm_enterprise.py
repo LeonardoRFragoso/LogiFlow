@@ -25,6 +25,7 @@ from services.crm_alerts_service import CRMAlertsService
 from services.health_score_service import HealthScoreService
 from services.sales_forecast_service import SalesForecastService
 from services.opportunity_sla_service import OpportunitySLAService
+from services.cache_service import cache
 
 
 router = APIRouter(prefix="/crm", tags=["CRM Enterprise"])
@@ -537,11 +538,28 @@ async def obter_atividade_clientes(db: Session = Depends(get_db)):
     return service.get_customer_activity_status()
 
 
+# ========================================
+# Métricas e Analytics Endpoints
+# ========================================
+
 @router.get("/metrics/dashboard")
 async def obter_dashboard_completo(db: Session = Depends(get_db)):
-    """Retorna dashboard completo de métricas"""
+    """Retorna dashboard completo de métricas (cached 5min)"""
+    # Tentar cache primeiro
+    cached = cache.get("crm:metrics:dashboard")
+    if cached:
+        logger.debug(" Dashboard recuperado do cache")
+        return cached
+    
+    # Se não houver cache, calcular
     service = CRMMetricsService(db)
-    return service.get_complete_dashboard()
+    dashboard = service.get_complete_dashboard()
+    
+    # Armazenar no cache (TTL: 5 minutos)
+    cache.set("crm:metrics:dashboard", dashboard, ttl=300)
+    logger.debug(" Dashboard armazenado no cache")
+    
+    return dashboard
 
 
 # ========================================
@@ -702,7 +720,7 @@ async def obter_visao_360_cliente(
     health_service = HealthScoreService(db)
     health_score_info = health_service.calcular_health_score(cliente, salvar=False)
     
-    return {
+    resultado = {
         'cliente': {
             'id': cliente.id,
             'razao_social': cliente.razao_social,
