@@ -29,10 +29,6 @@ try:
         auth,
         whatsapp,
         maps,
-        suitecrm,
-        sync,
-        contacts,
-        opportunities,
         cases,
         demo,
         ocorrencias,
@@ -53,6 +49,7 @@ try:
         entregas,
         dashboard,
         features,  # Feature Flags para BETA
+        crm_enterprise,  # CRM Enterprise nativo - ÚNICO CRM
     )
     from routers.admin import quota_router
 except ImportError as e:
@@ -66,10 +63,6 @@ except ImportError as e:
     auth = None
     whatsapp = None
     maps = None
-    suitecrm = None
-    sync = None
-    contacts = None
-    opportunities = None
     cases = None
     demo = None
     ocorrencias = None
@@ -90,6 +83,7 @@ except ImportError as e:
     dashboard = None
     features = None
     quota_router = None
+    crm_enterprise = None
 
 # Configurar logging
 logger.add(
@@ -145,12 +139,7 @@ async def lifespan(app: FastAPI):
         logger.error(f"Erro ao inicializar scheduler: {e}")
         app.state.scheduler_active = False
     
-    # Inicializar cliente SuiteCRM (quando necessário)
-    # app.state.suitecrm = SuiteCRMClient(
-    #     base_url=settings.SUITECRM_URL,
-    #     client_id=settings.SUITECRM_CLIENT_ID,
-    #     client_secret=settings.SUITECRM_CLIENT_SECRET
-    # )
+    # CRM Enterprise é o único sistema de CRM nativo
     
     logger.info("LogiFlow API iniciada com sucesso!")
     
@@ -229,10 +218,6 @@ include_router_with_version(veiculos, prefix="/veiculos", tags=["Veículos"])
 include_router_with_version(auth, prefix="/auth", tags=["Autenticação"])
 include_router_with_version(whatsapp, prefix="/whatsapp", tags=["WhatsApp"])
 include_router_with_version(maps, prefix="/maps", tags=["Google Maps"])
-include_router_with_version(suitecrm)
-include_router_with_version(sync)
-include_router_with_version(contacts)
-include_router_with_version(opportunities)
 include_router_with_version(cases)
 include_router_with_version(demo)
 include_router_with_version(ocorrencias, prefix="/ocorrencias", tags=["Ocorrências"])
@@ -255,6 +240,7 @@ include_router_with_version(clientes, prefix="/clientes", tags=["Clientes"])
 include_router_with_version(entregas, prefix="/entregas", tags=["Entregas"])
 include_router_with_version(dashboard, prefix="/dashboard", tags=["Dashboard"])
 include_router_with_version(features, prefix="", tags=["Feature Flags"])
+include_router_with_version(crm_enterprise, prefix="", tags=["CRM Enterprise"])
 
 # Admin routers (protegidos por RBAC)
 include_router_with_version(quota_router, prefix="/admin", tags=["Admin - Quotas"])

@@ -48,11 +48,6 @@ class Settings(BaseSettings):
     REDIS_PORT: int = 6379
     REDIS_PASSWORD: str = "redis123"
     
-    # SuiteCRM
-    SUITECRM_URL: str = "http://nginx:80"
-    SUITECRM_CLIENT_ID: str = ""
-    SUITECRM_CLIENT_SECRET: str = ""
-    
     # Focus NFe
     FOCUSNFE_TOKEN: str = ""
     
