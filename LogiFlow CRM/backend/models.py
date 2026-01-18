@@ -116,6 +116,24 @@ class ChurnRiskLevel(str, enum.Enum):
     CRITICO = "critico"    # Roxo
 
 
+class SalesStage(str, enum.Enum):
+    LEAD = "lead"
+    QUALIFICADO = "qualificado"
+    PROPOSTA = "proposta"
+    NEGOCIACAO = "negociacao"
+    GANHO = "ganho"
+    PERDIDO = "perdido"
+
+
+class InteractionType(str, enum.Enum):
+    CALL = "call"
+    EMAIL = "email"
+    MEETING = "meeting"
+    WHATSAPP = "whatsapp"
+    FOLLOW_UP = "follow_up"
+    NOTE = "note"
+
+
 # ========================================
 # Auth Models
 # ========================================
@@ -168,13 +186,49 @@ class Cliente(Base):
     uf = Column(String(2))
     cep = Column(String(10))
     contato_nome = Column(String(100))
+    cargo_contato = Column(String(100))
+    email_contato_secundario = Column(String(100))
+    telefone_contato_secundario = Column(String(20))
+    
     ativo = Column(Boolean, default=True)
+    
+    segmento = Column(String(100))
+    porte = Column(String(50))
+    status_comercial = Column(String(50), default="ativo", index=True)
+    classificacao = Column(String(20), default="B")
+    
+    health_score = Column(Float, default=75.0, index=True)
+    health_score_anterior = Column(Float)
+    health_score_atualizado_em = Column(DateTime)
+    
+    responsavel_comercial_id = Column(String(36), ForeignKey("users.id"), index=True)
+    responsavel_cs_id = Column(String(36), ForeignKey("users.id"))
+    
+    data_primeira_compra = Column(DateTime)
+    data_ultima_compra = Column(DateTime)
+    data_ultimo_contato = Column(DateTime, index=True)
+    
+    valor_total_gasto = Column(Float, default=0)
+    ticket_medio = Column(Float, default=0)
+    frequencia_compra_dias = Column(Integer)
+    
+    sla_resposta_horas = Column(Integer, default=24)
+    prioridade_atendimento = Column(String(20), default="normal")
+    
+    tags = Column(Text)
+    observacoes_internas = Column(Text)
+    
     criado_em = Column(DateTime, default=datetime.utcnow)
     atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     pedidos = relationship("Pedido", back_populates="cliente")
     cotacoes = relationship("Cotacao", back_populates="cliente")
+    oportunidades = relationship("Opportunity", back_populates="cliente")
+    interacoes = relationship("CustomerInteraction", back_populates="cliente")
+    responsavel_comercial = relationship("User", foreign_keys=[responsavel_comercial_id])
+    responsavel_cs = relationship("User", foreign_keys=[responsavel_cs_id])
+    campo_historico = relationship("ClienteFieldHistory", back_populates="cliente", order_by="ClienteFieldHistory.data_alteracao.desc()")
 
 
 class Motorista(Base):
@@ -355,7 +409,7 @@ class Ocorrencia(Base):
 # ========================================
 
 class Lead(Base):
-    """Leads capturados do site de divulgação"""
+    """Leads capturados - Entrada do funil comercial"""
     __tablename__ = "leads"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -363,21 +417,42 @@ class Lead(Base):
     email = Column(String(150), nullable=False, unique=True, index=True)
     phone = Column(String(20), nullable=False)
     company = Column(String(150), nullable=False)
+    
+    cargo = Column(String(100))
+    website = Column(String(255))
+    linkedin = Column(String(255))
+    
     vehicles = Column(String(20))
     message = Column(Text)
+    necessidade_descrita = Column(Text)
     
     status = Column(String(20), default=StatusLead.NOVO.value, index=True)
-    source = Column(String(50), default="site")
-    assigned_to = Column(Integer, nullable=True)  # ID do vendedor
+    source = Column(String(50), default="site", index=True)
+    source_details = Column(String(255))
+    
+    lead_score = Column(Integer, default=0, index=True)
+    estagio_maturidade = Column(String(50), default="frio")
+    
+    assigned_to = Column(String(36), ForeignKey("users.id"), nullable=True, index=True)
+    
+    primeiro_contato_em = Column(DateTime, nullable=True)
+    ultimo_contato_em = Column(DateTime, nullable=True)
+    proximo_followup_em = Column(DateTime, nullable=True, index=True)
     
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     converted_at = Column(DateTime, nullable=True)
+    converted_to_cliente_id = Column(String(8), ForeignKey("clientes.id"), nullable=True)
+    
+    motivo_descarte = Column(Text, nullable=True)
     
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True)
     
     # Relationships
     tenant = relationship("Tenant", back_populates="leads")
+    assigned_user = relationship("User", foreign_keys=[assigned_to])
+    converted_cliente = relationship("Cliente", foreign_keys=[converted_to_cliente_id])
+    historico_status = relationship("LeadStatusHistory", back_populates="lead", order_by="LeadStatusHistory.data_mudanca.desc()")
 
 
 class Tenant(Base):
@@ -659,6 +734,89 @@ class GPSPosition(Base):
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Opportunity(Base):
+    """Oportunidades de venda (CRM nativo)"""
+    __tablename__ = "opportunities"
+    
+    id = Column(String(8), primary_key=True, default=generate_uuid)
+    cliente_id = Column(String(8), ForeignKey("clientes.id"), nullable=False, index=True)
+    
+    nome = Column(String(255), nullable=False)
+    descricao = Column(Text)
+    valor_estimado = Column(Float, default=0)
+    probabilidade = Column(Integer, default=0)
+    
+    sales_stage = Column(String(30), default=SalesStage.LEAD.value, index=True)
+    data_prevista_fechamento = Column(DateTime, nullable=True)
+    data_fechamento = Column(DateTime, nullable=True)
+    
+    responsavel_id = Column(String(36), ForeignKey("users.id"), nullable=True)
+    origem = Column(String(100))
+    proximo_passo = Column(String(255))
+    
+    motivo_perda = Column(Text, nullable=True)
+    concorrente = Column(String(200), nullable=True)
+    
+    criado_em = Column(DateTime, default=datetime.utcnow, index=True)
+    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    cliente = relationship("Cliente", back_populates="oportunidades")
+    responsavel = relationship("User", foreign_keys=[responsavel_id])
+    historico_estagios = relationship("OpportunityStageHistory", back_populates="oportunidade", order_by="OpportunityStageHistory.data_mudanca.desc()")
+    interacoes = relationship("CustomerInteraction", back_populates="oportunidade")
+
+
+class OpportunityStageHistory(Base):
+    """Histórico de mudanças de estágio de oportunidades (auditoria)"""
+    __tablename__ = "opportunity_stage_history"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    oportunidade_id = Column(String(8), ForeignKey("opportunities.id"), nullable=False, index=True)
+    
+    estagio_anterior = Column(String(30), nullable=True)
+    estagio_novo = Column(String(30), nullable=False)
+    
+    usuario_id = Column(String(36), ForeignKey("users.id"), nullable=True)
+    motivo = Column(Text, nullable=True)
+    
+    data_mudanca = Column(DateTime, default=datetime.utcnow, index=True)
+    
+    # Relationships
+    oportunidade = relationship("Opportunity", back_populates="historico_estagios")
+    usuario = relationship("User", foreign_keys=[usuario_id])
+
+
+class CustomerInteraction(Base):
+    """Registro de interações com clientes (calls, reuniões, follow-ups)"""
+    __tablename__ = "customer_interactions"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    cliente_id = Column(String(8), ForeignKey("clientes.id"), nullable=False, index=True)
+    oportunidade_id = Column(String(8), ForeignKey("opportunities.id"), nullable=True, index=True)
+    
+    tipo = Column(String(30), nullable=False, index=True)
+    assunto = Column(String(255), nullable=False)
+    descricao = Column(Text)
+    
+    responsavel_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    
+    data_interacao = Column(DateTime, nullable=False, index=True)
+    duracao_minutos = Column(Integer, nullable=True)
+    
+    resultado = Column(String(50), nullable=True)
+    proxima_acao = Column(String(255), nullable=True)
+    data_proxima_acao = Column(DateTime, nullable=True)
+    
+    criado_em = Column(DateTime, default=datetime.utcnow)
+    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    cliente = relationship("Cliente", back_populates="interacoes")
+    oportunidade = relationship("Opportunity", back_populates="interacoes")
+    responsavel = relationship("User", foreign_keys=[responsavel_id])
 
 
 class GPSRoute(Base):
