@@ -15,6 +15,9 @@ from database import get_db
 from models import Tenant, Subscription, Lead, StatusLead, SubscriptionStatus, PaymentGateway
 from services.mercadopago_service import MercadoPagoService, get_plan_config
 from services.tenant_provisioning import provision_tenant_from_payment
+from services.email_service import send_welcome_email, send_payment_confirmation
+from loguru import logger
+from fastapi import BackgroundTasks
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
 
@@ -278,66 +281,195 @@ async def upgrade_subscription(
 # Webhooks
 # ========================================
 
+async def process_approved_payment(payment_data: dict, db: Session):
+    """
+    Processa pagamento aprovado em background
+    
+    Fluxo:
+    1. Buscar lead pelo external_reference
+    2. Criar subscription no DB
+    3. Provisionar tenant
+    4. Gerar credenciais
+    5. Enviar emails (confirmação + credenciais)
+    """
+    try:
+        logger.info(f"💳 Processando pagamento aprovado: {payment_data.get('id')}")
+        
+        external_ref = payment_data.get("external_reference", "")
+        metadata = payment_data.get("metadata", {})
+        plan_id = metadata.get("plan", "starter")
+        
+        # Buscar lead
+        if external_ref.startswith("lead_"):
+            lead_id = int(external_ref.split("_")[1])
+            lead = db.query(Lead).filter(Lead.id == lead_id).first()
+            
+            if not lead:
+                logger.error(f"❌ Lead {lead_id} não encontrado")
+                return
+            
+            if lead.tenant_id:
+                logger.warning(f"⚠️  Lead {lead_id} já tem tenant associado: {lead.tenant_id}")
+                return
+            
+            logger.info(f"📋 Lead encontrado: {lead.name} ({lead.email})")
+            
+            # Criar subscription
+            plan_config = get_plan_config(plan_id)
+            
+            subscription = Subscription(
+                gateway=PaymentGateway.MERCADOPAGO.value,
+                gateway_subscription_id=payment_data.get("id"),
+                gateway_customer_id=payment_data.get("payer", {}).get("id"),
+                plan=plan_id,
+                amount=payment_data["transaction_amount"],
+                status=SubscriptionStatus.ACTIVE.value,
+                current_period_start=datetime.utcnow(),
+                current_period_end=datetime.utcnow() + timedelta(days=30),
+                created_at=datetime.utcnow()
+            )
+            
+            db.add(subscription)
+            db.commit()
+            db.refresh(subscription)
+            
+            logger.success(f"✅ Subscription criada: ID {subscription.id}")
+            
+            # Provisionar tenant
+            logger.info("🚀 Iniciando provisionamento de tenant...")
+            
+            tenant = await provision_tenant_from_payment(
+                company_name=lead.company or lead.name,
+                contact_name=lead.name,
+                contact_email=lead.email,
+                contact_phone=lead.phone or "",
+                plan=plan_id,
+                amount=payment_data["transaction_amount"],
+                gateway_data={
+                    "gateway": "mercadopago",
+                    "customer_id": payment_data.get("payer", {}).get("id"),
+                    "subscription_id": payment_data.get("id"),
+                    "payment_id": payment_data.get("id")
+                },
+                lead_id=lead_id
+            )
+            
+            if not tenant:
+                logger.error("❌ Falha ao provisionar tenant")
+                subscription.status = SubscriptionStatus.INCOMPLETE.value
+                db.commit()
+                return
+            
+            logger.success(f"✅ Tenant provisionado: {tenant.subdomain}")
+            
+            # Atualizar subscription e lead
+            subscription.tenant_id = tenant.id
+            lead.tenant_id = tenant.id
+            lead.status = StatusLead.CONVERTIDO.value
+            db.commit()
+            
+            # Gerar senha temporária para admin
+            import secrets
+            import string
+            temp_password = ''.join(
+                secrets.choice(string.ascii_letters + string.digits + "!@#$%") 
+                for _ in range(12)
+            )
+            
+            admin_email = lead.email
+            
+            # Enviar email de confirmação de pagamento
+            try:
+                send_payment_confirmation(
+                    contact_name=lead.name,
+                    contact_email=lead.email,
+                    plan=plan_config["name"],
+                    amount=payment_data["transaction_amount"],
+                    payment_method=payment_data.get("payment_method_id", "N/A")
+                )
+                logger.success("✅ Email de confirmação de pagamento enviado")
+            except Exception as e:
+                logger.error(f"❌ Erro ao enviar confirmação de pagamento: {str(e)}")
+            
+            # Enviar email de boas-vindas com credenciais
+            try:
+                send_welcome_email(
+                    tenant_id=tenant.id,
+                    company_name=tenant.company_name,
+                    contact_name=lead.name,
+                    contact_email=lead.email,
+                    subdomain=tenant.subdomain,
+                    plan=plan_id,
+                    admin_email=admin_email,
+                    admin_password=temp_password
+                )
+                logger.success("✅ Email de boas-vindas com credenciais enviado")
+            except Exception as e:
+                logger.error(f"❌ Erro ao enviar email de boas-vindas: {str(e)}")
+            
+            logger.success(f"🎉 Provisionamento completo para {lead.email}!")
+            
+    except Exception as e:
+        logger.error(f"❌ Erro ao processar pagamento aprovado: {str(e)}")
+        logger.exception(e)
+        
+        # Marcar para retry
+        # TODO: Implementar sistema de retry
+
+
 @router.post("/webhooks/mercadopago")
 async def mercadopago_webhook(
     request: Request,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
     """
     Webhook do Mercado Pago para notificações de pagamento
+    
+    Eventos processados:
+    - payment.created / payment.updated → Provisionar tenant se aprovado
+    - subscription.updated → Atualizar status
     """
     if not mp_service:
+        logger.warning("⚠️  Mercado Pago não configurado")
         raise HTTPException(500, "Mercado Pago não configurado")
     
     try:
         webhook_data = await request.json()
+        logger.info(f"📩 Webhook recebido do Mercado Pago: {webhook_data.get('type')}")
         
         # Processar webhook
         result = mp_service.process_webhook(webhook_data)
         
         if result.get("type") == "payment":
             # Processar pagamento
-            payment_data = result["payment"]["data"]
+            payment_data = result.get("payment", {}).get("data", {})
+            payment_status = payment_data.get("status")
             
-            if payment_data["status"] == "approved":
-                # Pagamento aprovado
-                external_ref = payment_data.get("external_reference", "")
+            logger.info(f"💳 Pagamento {payment_data.get('id')}: {payment_status}")
+            
+            if payment_status == "approved":
+                # Processar em background para não bloquear webhook
+                background_tasks.add_task(
+                    process_approved_payment,
+                    payment_data,
+                    db
+                )
+                logger.info("✅ Pagamento aprovado - processamento agendado")
                 
-                if external_ref.startswith("lead_"):
-                    # Primeiro pagamento de um lead
-                    lead_id = int(external_ref.split("_")[1])
-                    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-                    
-                    if lead and not lead.tenant_id:
-                        # Provisionar tenant automaticamente
-                        try:
-                            plan_config = get_plan_config(payment_data.get("metadata", {}).get("plan", "starter"))
-                            
-                            result = provision_tenant_from_payment(
-                                company_name=lead.company or lead.name,
-                                contact_name=lead.name,
-                                contact_email=lead.email,
-                                contact_phone=lead.phone or "",
-                                plan=payment_data.get("metadata", {}).get("plan", "starter"),
-                                amount=payment_data["transaction_amount"],
-                                gateway_data={
-                                    "gateway": "mercadopago",
-                                    "customer_id": payment_data.get("payer", {}).get("id"),
-                                    "subscription_id": payment_data.get("id")
-                                },
-                                lead_id=lead_id
-                            )
-                            
-                            # TODO: Enviar email de boas-vindas com credenciais
-                            # TODO: Notificar equipe de vendas
-                            
-                        except Exception as e:
-                            # Log do erro mas não falhar o webhook
-                            print(f"Erro ao provisionar tenant: {e}")
+            elif payment_status == "rejected":
+                logger.warning(f"❌ Pagamento rejeitado: {payment_data.get('id')}")
+                # TODO: Notificar usuário sobre falha
+                
+            elif payment_status == "pending":
+                logger.info(f"⏳ Pagamento pendente: {payment_data.get('id')}")
+                # TODO: Notificar usuário sobre pendência
         
         elif result.get("type") == "subscription":
             # Processar assinatura
-            subscription_data = result["subscription"]["data"]
+            subscription_data = result.get("subscription", {}).get("data", {})
+            
+            logger.info(f"📋 Atualização de assinatura: {subscription_data.get('id')}")
             
             # Atualizar status no banco
             db_subscription = db.query(Subscription).filter(
@@ -345,14 +477,31 @@ async def mercadopago_webhook(
             ).first()
             
             if db_subscription:
-                db_subscription.status = subscription_data["status"]
+                old_status = db_subscription.status
+                new_status = subscription_data.get("status")
+                
+                db_subscription.status = new_status
                 db_subscription.updated_at = datetime.utcnow()
                 db.commit()
+                
+                logger.info(f"✅ Subscription {db_subscription.id}: {old_status} → {new_status}")
+                
+                # Se foi cancelada, desativar tenant
+                if new_status == "cancelled":
+                    tenant = db.query(Tenant).filter(Tenant.id == db_subscription.tenant_id).first()
+                    if tenant:
+                        tenant.status = "cancelled"
+                        tenant.cancelled_at = datetime.utcnow()
+                        db.commit()
+                        logger.warning(f"⚠️  Tenant {tenant.id} desativado por cancelamento")
         
         return {"success": True, "message": "Webhook processado"}
     
     except Exception as e:
-        raise HTTPException(400, f"Erro ao processar webhook: {str(e)}")
+        logger.error(f"❌ Erro ao processar webhook: {str(e)}")
+        logger.exception(e)
+        # Retornar 200 para evitar retry do MP em erros que não são transientes
+        return {"success": False, "error": str(e)}
 
 
 # ========================================

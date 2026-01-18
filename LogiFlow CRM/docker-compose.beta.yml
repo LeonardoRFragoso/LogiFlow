@@ -1,0 +1,82 @@
+services:
+  # Banco de Dados Principal
+  db:
+    image: mariadb:10.6
+    container_name: logiflow_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass123
+      MYSQL_DATABASE: logiflow_crm
+      MYSQL_USER: logiflow
+      MYSQL_PASSWORD: logiflow123
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - logiflow_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpass123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: logiflow_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass redis123
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - logiflow_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis123", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend
+  api:
+    build:
+      context: ./backend
+      dockerfile: ../docker/api/Dockerfile
+    container_name: logiflow_api
+    restart: unless-stopped
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=django-insecure-change-this-in-production
+      - DB_HOST=db
+      - DB_NAME=logiflow_crm
+      - DB_USER=logiflow
+      - DB_PASSWORD=logiflow123
+      - REDIS_URL=redis://:redis123@redis:6379/1
+      - DATABASE_URL=mysql://logiflow:logiflow123@db:3306/logiflow_crm
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - logiflow_network
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mariadb_data:
+  redis_data:
+
+networks:
+  logiflow_network:
+    driver: bridge

@@ -63,6 +63,15 @@ class AutomatedSurveyScheduler:
             replace_existing=True
         )
         
+        # Sincronização SuiteCRM - Executar a cada 10 minutos
+        self.scheduler.add_job(
+            func=self.sincronizar_suitecrm,
+            trigger=CronTrigger(minute='*/10'),
+            id='sync_suitecrm',
+            name='Sincronizar com SuiteCRM',
+            replace_existing=True
+        )
+        
         self.scheduler.start()
         logger.info("✅ Agendador iniciado com sucesso!")
     
@@ -182,6 +191,47 @@ class AutomatedSurveyScheduler:
         except Exception as e:
             db.rollback()
             logger.error(f"Erro ao expirar pesquisas: {e}")
+        finally:
+            db.close()
+    
+    def sincronizar_suitecrm(self):
+        """Sincroniza dados com SuiteCRM (bidirecional)"""
+        logger.info("🔄 Iniciando sincronização automática com SuiteCRM...")
+        
+        db = SessionLocal()
+        try:
+            import asyncio
+            from services.sync_service import sync_service
+            
+            # Criar loop de evento para funções async
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            try:
+                # Sincronizar do SuiteCRM para local
+                result_from = loop.run_until_complete(
+                    sync_service.sync_all_from_suitecrm(db)
+                )
+                
+                # Sincronizar do local para SuiteCRM
+                result_to = loop.run_until_complete(
+                    sync_service.sync_all_to_suitecrm(db)
+                )
+                
+                total_from = result_from.get('total_created', 0) + result_from.get('total_updated', 0)
+                total_to = sum(r.get('synced', 0) for r in result_to.get('results', []))
+                
+                logger.info(
+                    f"✅ Sincronização concluída: "
+                    f"{total_from} registros recebidos, "
+                    f"{total_to} registros enviados"
+                )
+                
+            finally:
+                loop.close()
+        
+        except Exception as e:
+            logger.error(f"❌ Erro na sincronização automática com SuiteCRM: {e}")
         finally:
             db.close()
 

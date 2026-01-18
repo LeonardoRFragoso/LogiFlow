@@ -1,3 +1,0 @@
-"""
-LogiFlow CRM - Integrações
-"""

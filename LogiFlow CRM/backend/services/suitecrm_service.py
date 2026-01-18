@@ -19,7 +19,7 @@ class SuiteCRMService:
         self.client_secret = settings.SUITECRM_CLIENT_SECRET
         self.access_token: Optional[str] = None
         self.token_expires_at: Optional[datetime] = None
-        self.api_url = f"{self.base_url}/Api/V8"
+        self.api_url = f"{self.base_url}/legacy/Api/V8"
     
     async def _get_access_token(self) -> str:
         """Obtém ou renova o access token OAuth2"""
@@ -27,7 +27,7 @@ class SuiteCRMService:
             if datetime.now() < self.token_expires_at - timedelta(minutes=5):
                 return self.access_token
         
-        token_url = f"{self.base_url}/Api/access_token"
+        token_url = f"{self.base_url}/legacy/Api/access_token"
         
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -100,6 +100,11 @@ class SuiteCRMService:
             "page[number]": page_number
         }
         
+        # Campos básicos que não requerem relacionamento com Users
+        # Isso evita o erro "Module id is empty when trying to get Users"
+        if not fields:
+            fields = ["id", "name", "date_entered", "date_modified", "deleted"]
+        
         if fields:
             params[f"fields[{module}]"] = ",".join(fields)
         
@@ -112,6 +117,16 @@ class SuiteCRMService:
     async def get_record(self, module: str, record_id: str) -> Dict[str, Any]:
         """Obtém um registro específico"""
         return await self._request("GET", f"module/{module}/{record_id}")
+    
+    async def create_module_record(self, module: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Cria um novo registro em um módulo"""
+        payload = {
+            "data": {
+                "type": module,
+                "attributes": data
+            }
+        }
+        return await self._request("POST", f"module", data=payload)
     
     async def create_record(self, module: str, attributes: Dict[str, Any]) -> Dict[str, Any]:
         """Cria um novo registro"""
@@ -153,7 +168,7 @@ class SuiteCRMService:
             filters["status"] = status
         
         result = await self.get_module_records(
-            module="LF_Cotacoes",
+            module="Cotacoes",
             filters=filters,
             fields=["name", "cliente_nome", "valor_total", "status", "date_entered"]
         )
@@ -161,7 +176,7 @@ class SuiteCRMService:
     
     async def create_cotacao(self, cotacao_data: Dict) -> Dict:
         """Cria uma nova cotação"""
-        return await self.create_record("LF_Cotacoes", cotacao_data)
+        return await self.create_record("Cotacoes", cotacao_data)
     
     async def get_pedidos(self, status: Optional[str] = None) -> List[Dict]:
         """Lista pedidos do módulo PedidosFrete"""
@@ -170,26 +185,26 @@ class SuiteCRMService:
             filters["status"] = status
         
         result = await self.get_module_records(
-            module="LF_PedidosFrete",
+            module="PedidosFrete",
             filters=filters,
-            fields=["name", "numero", "cliente_nome", "status", "previsao_entrega"]
+            fields=["name", "numero_pedido", "account_name", "status_operacional", "previsao_entrega"]
         )
         return result.get("data", [])
     
     async def create_pedido(self, pedido_data: Dict) -> Dict:
         """Cria um novo pedido de frete"""
-        return await self.create_record("LF_PedidosFrete", pedido_data)
+        return await self.create_record("PedidosFrete", pedido_data)
     
-    async def get_entregas(self, motorista_id: Optional[str] = None) -> List[Dict]:
+    async def get_entregas(self, pedido_id: Optional[str] = None) -> List[Dict]:
         """Lista entregas do módulo Entregas"""
         filters = {}
-        if motorista_id:
-            filters["motorista_id"] = motorista_id
+        if pedido_id:
+            filters["pedido_id"] = pedido_id
         
         result = await self.get_module_records(
-            module="LF_Entregas",
+            module="Entregas",
             filters=filters,
-            fields=["name", "codigo", "status", "endereco_entrega", "previsao"]
+            fields=["name", "numero_rastreio", "status", "local_atual", "data_entrega"]
         )
         return result.get("data", [])
     
@@ -207,36 +222,38 @@ class SuiteCRMService:
         if observacao:
             attributes["observacao_status"] = observacao
         
-        return await self.update_record("LF_Entregas", entrega_id, attributes)
+        return await self.update_record("Entregas", entrega_id, attributes)
     
-    async def get_motoristas(self, ativo: bool = True) -> List[Dict]:
+    async def get_motoristas(self, status: Optional[str] = None) -> List[Dict]:
         """Lista motoristas"""
-        filters = {"ativo": "1" if ativo else "0"}
+        filters = {}
+        if status:
+            filters["status"] = status
         
         result = await self.get_module_records(
-            module="LF_Motoristas",
+            module="Motoristas",
             filters=filters,
-            fields=["name", "cpf", "telefone", "cnh_numero", "status"]
+            fields=["name", "cpf", "celular", "cnh", "categoria_cnh", "status"]
         )
         return result.get("data", [])
     
-    async def get_veiculos(self, disponivel: bool = True) -> List[Dict]:
+    async def get_veiculos(self, status: Optional[str] = None) -> List[Dict]:
         """Lista veículos"""
         filters = {}
-        if disponivel:
-            filters["status"] = "disponivel"
+        if status:
+            filters["status"] = status
         
         result = await self.get_module_records(
-            module="LF_Veiculos",
+            module="Veiculos",
             filters=filters,
-            fields=["name", "placa", "tipo", "capacidade_kg", "status"]
+            fields=["name", "placa", "tipo_veiculo", "capacidade_kg", "status"]
         )
         return result.get("data", [])
     
     async def registrar_ocorrencia(self, ocorrencia_data: Dict) -> Dict:
         """Registra uma nova ocorrência"""
         ocorrencia_data["data_ocorrencia"] = datetime.now().isoformat()
-        return await self.create_record("LF_Ocorrencias", ocorrencia_data)
+        return await self.create_record("Ocorrencias", ocorrencia_data)
     
     # ========== Relacionamentos ==========
     

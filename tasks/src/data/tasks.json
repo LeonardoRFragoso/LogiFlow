@@ -1,10 +1,10 @@
 {
   "projectName": "LogiFlow CRM",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "lastUpdate": "2025-12-15",
   "completionRate": "100%",
-  "totalTasks": 201,
-  "completedTasks": 201,
+  "totalTasks": 219,
+  "completedTasks": 219,
   "categories": [
     {
       "id": "backend",
@@ -118,7 +118,25 @@
         { "id": "d7", "name": "Alinhar proxy /api entre Nginx e frontend (evitar chamadas sem /api)", "status": "done", "priority": "high" },
         { "id": "d8", "name": "Revisar docker/frontend/nginx.conf (proxy para django) e corrigir para FastAPI", "status": "done", "priority": "high" },
         { "id": "d9", "name": "Adicionar healthcheck do container backend (FastAPI) no docker-compose", "status": "done", "priority": "medium" },
-        { "id": "d10", "name": "Rate limiting em /auth/login e /auth/refresh + headers de segurança no Nginx", "status": "done", "priority": "medium" }
+        { "id": "d10", "name": "Rate limiting em /auth/login e /auth/refresh + headers de segurança no Nginx", "status": "done", "priority": "medium" },
+        { "id": "d11", "name": "docker-compose.minimal.yml - Setup essencial (DB, Redis, SuiteCRM, API)", "status": "done", "priority": "high" },
+        { "id": "d12", "name": "start-minimal.bat - Script inicialização modo mínimo", "status": "done", "priority": "high" },
+        { "id": "d13", "name": "docker-compose.completo.yml - Todos os 11 serviços (4 frontends)", "status": "done", "priority": "high" },
+        { "id": "d14", "name": "start-completo.bat - Script inicialização completa", "status": "done", "priority": "high" },
+        { "id": "d15", "name": "Dockerfile Site - Node.js 18→20 (compatibilidade Vite)", "status": "done", "priority": "high" },
+        { "id": "d16", "name": "Dockerfile Frontend - Otimizado multi-stage build", "status": "done", "priority": "high" },
+        { "id": "d17", "name": "Dockerfile App Motorista - Build production com Nginx", "status": "done", "priority": "high" },
+        { "id": "d18", "name": "Dockerfile Portal Cliente - Build production com Nginx", "status": "done", "priority": "high" },
+        { "id": "d19", "name": "Corrigir npm ci → npm install (lockfile sync issues)", "status": "done", "priority": "high" },
+        { "id": "d20", "name": "Integração OAuth2 FastAPI ↔ SuiteCRM (service layer completo)", "status": "done", "priority": "high" },
+        { "id": "d21", "name": "Scripts de validação (validar-integracao.bat)", "status": "done", "priority": "medium" },
+        { "id": "d22", "name": "Documentação Docker completa (EXECUTAR_DOCKER.md)", "status": "done", "priority": "high" },
+        { "id": "d23", "name": "Guia finalização integração OAuth2 (FINALIZAR_INTEGRACAO_AGORA.md)", "status": "done", "priority": "high" },
+        { "id": "d24", "name": "Documentação troubleshooting Docker (CORRIGIR_ERRO_DOCKER.md)", "status": "done", "priority": "medium" },
+        { "id": "d25", "name": "Status componentes Docker (STATUS_COMPONENTES_DOCKER.md)", "status": "done", "priority": "medium" },
+        { "id": "d26", "name": "Guia Docker completo (DOCKER_COMPLETO_PRONTO.md)", "status": "done", "priority": "medium" },
+        { "id": "d27", "name": "Documentação erro npm (CORRIGIR_ERRO_NPM.md)", "status": "done", "priority": "medium" },
+        { "id": "d28", "name": "Environment templates (.env.docker) com todas variáveis", "status": "done", "priority": "high" }
       ]
     },
     {

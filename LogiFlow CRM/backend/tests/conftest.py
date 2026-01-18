@@ -9,7 +9,7 @@ from sqlalchemy.pool import StaticPool
 
 from main import app
 from database import Base, get_db
-from models import User, TenantCredentials
+from models import User
 from config import settings
 
 # Banco de dados de teste em memória

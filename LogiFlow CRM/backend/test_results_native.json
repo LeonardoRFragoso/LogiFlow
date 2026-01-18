@@ -1,0 +1,128 @@
+{
+  "total": 13,
+  "sucessos": 13,
+  "falhas": 0,
+  "percentual": 100.0,
+  "testes": [
+    {
+      "teste": "Teste 01 - Conexão",
+      "status": "✅ PASSOU",
+      "sucesso": true,
+      "mensagem": "Conectado em http://nginx:80",
+      "dados": {
+        "success": true,
+        "message": "Conexão estabelecida com sucesso",
+        "base_url": "http://nginx:80",
+        "token_valid": true
+      }
+    },
+    {
+      "teste": "Teste 02 - Listar Accounts",
+      "status": "✅ PASSOU",
+      "sucesso": true,
+      "mensagem": "Encontrados 0 accounts",
+      "dados": {
+        "total": 0
+      }
+    },
+    {
+      "teste": "Teste 03 - Listar Contacts",
+      "status": "✅ PASSOU",
+      "sucesso": true,
+      "mensagem": "Encontrados 0 contacts",
+      "dados": {
+        "total": 0
+      }
+    },
+    {
+      "teste": "Teste 04 - Listar Leads",
+      "status": "✅ PASSOU",
+      "sucesso": true,
+      "mensagem": "Encontrados 0 leads",
+      "dados": {
+        "total": 0
+      }
+    },
+    {
+      "teste": "Teste 05 - Listar Opportunities",
+      "status": "✅ PASSOU",
+      "sucesso": true,
+      "mensagem": "Encontradas 0 opportunities",
+      "dados": {
+        "total": 0
+      }
+    },
+    {
+      "teste": "Teste 06 - Listar Cases",
+      "status": "✅ PASSOU",
+      "sucesso": true,
+      "mensagem": "Encontrados 0 cases",
+      "dados": {
+        "total": 0
+      }
+    },
+    {
+      "teste": "Teste 07 - Listar Notes",
+      "status": "✅ PASSOU",
+      "sucesso": true,
+      "mensagem": "Encontradas 0 notes",
+      "dados": {
+        "total": 0
+      }
+    },
+    {
+      "teste": "Teste 08 - Listar Users",
+      "status": "✅ PASSOU",
+      "sucesso": true,
+      "mensagem": "Encontrados 1 users",
+      "dados": {
+        "total": 1
+      }
+    },
+    {
+      "teste": "Teste 09 - Criar Account",
+      "status": "✅ PASSOU",
+      "sucesso": true,
+      "mensagem": "Account criado com ID: d5d00274-4899-4c9d-8b81-694166b6380a",
+      "dados": {
+        "id": "d5d00274-4899-4c9d-8b81-694166b6380a"
+      }
+    },
+    {
+      "teste": "Teste 10 - Criar Contact",
+      "status": "✅ PASSOU",
+      "sucesso": true,
+      "mensagem": "Contact criado com ID: 5ad5f8bc-1176-fe14-6c93-694166065a19",
+      "dados": {
+        "id": "5ad5f8bc-1176-fe14-6c93-694166065a19"
+      }
+    },
+    {
+      "teste": "Teste 11 - Criar Lead",
+      "status": "✅ PASSOU",
+      "sucesso": true,
+      "mensagem": "Lead criado com ID: e2fb51a3-e119-4074-6261-6941668bc1fa",
+      "dados": {
+        "id": "e2fb51a3-e119-4074-6261-6941668bc1fa"
+      }
+    },
+    {
+      "teste": "Teste 12 - Criar Opportunity",
+      "status": "✅ PASSOU",
+      "sucesso": true,
+      "mensagem": "Opportunity criada com ID: c2b8597d-bf43-12fe-654a-694166b19201",
+      "dados": {
+        "id": "c2b8597d-bf43-12fe-654a-694166b19201"
+      }
+    },
+    {
+      "teste": "Teste 13 - Criar Note",
+      "status": "✅ PASSOU",
+      "sucesso": true,
+      "mensagem": "Note criada com ID: 98182c63-33c9-c595-30a3-6941663aba82",
+      "dados": {
+        "id": "98182c63-33c9-c595-30a3-6941663aba82"
+      }
+    }
+  ]
+}
