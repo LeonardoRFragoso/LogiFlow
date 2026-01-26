@@ -427,7 +427,7 @@ STRIPE_WEBHOOK_SECRET=your_webhook_secret
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=noreply@logiflow.com.br
-SMTP_PASSWORD=your_password
+SMTP_PASSWORD=<YOUR_PASSWORD_HERE>
 
 # S3/Storage
 AWS_ACCESS_KEY_ID=your_key

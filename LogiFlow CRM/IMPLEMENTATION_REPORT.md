@@ -108,7 +108,7 @@ python backend/scripts/test_email.py
 SMTP_HOST=smtp.gmail.com  # ou SendGrid, AWS SES, Mailgun
 SMTP_PORT=587
 SMTP_USER=seu-email@gmail.com
-SMTP_PASSWORD=senha-de-app-16-caracteres
+SMTP_PASSWORD=<YOUR_GMAIL_APP_PASSWORD_HERE>
 FROM_EMAIL=noreply@logiflow.com.br
 FROM_NAME=LogiFlow CRM
 SALES_EMAIL=vendas@logiflow.com.br
@@ -472,7 +472,7 @@ async def process_approved_payment(payment_data: dict, db: Session):
 1. Criar senha de app no Gmail
 2. Adicionar no .env:
    SMTP_USER=seu-email@gmail.com
-   SMTP_PASSWORD=xxxx-xxxx-xxxx-xxxx
+   SMTP_PASSWORD=<YOUR_APP_PASSWORD_HERE>
 3. Testar: python scripts/test_email.py
 ```
 
