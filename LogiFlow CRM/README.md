@@ -2,7 +2,11 @@
 
 [![CI](https://github.com/LeonardoRFragoso/LogiFlow/actions/workflows/ci.yml/badge.svg)](https://github.com/LeonardoRFragoso/LogiFlow/actions/workflows/ci.yml)
 [![CD](https://github.com/LeonardoRFragoso/LogiFlow/actions/workflows/cd.yml/badge.svg)](https://github.com/LeonardoRFragoso/LogiFlow/actions/workflows/cd.yml)
+[![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104-009688.svg)](https://fastapi.tiangolo.com)
+[![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D.svg)](https://vuejs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
 > Sistema de CRM especializado para transportadoras, com gestão completa de cotações, pedidos, entregas e rastreamento GPS em tempo real.
 
@@ -113,6 +117,8 @@ docker-compose exec api pytest
 | [Design Patterns](docs/patterns/README.md) | Padrões implementados |
 | [Deployment](docs/deployment/production.md) | Guia de deploy |
 | [Security](docs/security/owasp-checklist.md) | Checklist OWASP |
+| [CI/CD](docs/guides/ci-cd.md) | Pipeline de CI/CD |
+| [Observability](docs/observability/monitoring.md) | Logs, métricas, alertas |
 
 ## 🧪 Testes
 
