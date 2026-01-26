@@ -151,27 +151,35 @@ def _get_user_by_id(db: Session, user_id: str) -> Optional[User]:
     return db.query(User).filter(User.id == user_id).first()
 
 
-def _criar_usuario_admin():
-    """Cria usuário admin padrão se não existir (uma vez)."""
-    admin_email = "admin@logiflow.com"
-    with SessionLocal() as db:
-        if _get_user_by_email(db, admin_email):
-            return
-        user = User(
-            email=admin_email,
-            nome="Administrador",
-            senha_hash=_hash_senha("admin123"),
-            tipo=TipoUsuario.ADMIN.value,
-            status=StatusUsuario.ATIVO.value,
-            cargo="Administrador do Sistema",
-        )
-        db.add(user)
-        db.commit()
-        logger.info("Usuário admin criado")
+def criar_usuario_admin_se_necessario():
+    """
+    Cria usuário admin padrão se não existir.
+    IMPORTANTE: Chamado durante startup da aplicação, NÃO no import do módulo.
+    """
+    try:
+        from database import get_session_local
+        SessionLocal = get_session_local()
+        admin_email = "admin@logiflow.com"
+        with SessionLocal() as db:
+            if _get_user_by_email(db, admin_email):
+                return
+            user = User(
+                email=admin_email,
+                nome="Administrador",
+                senha_hash=_hash_senha("admin123"),
+                tipo=TipoUsuario.ADMIN.value,
+                status=StatusUsuario.ATIVO.value,
+                cargo="Administrador do Sistema",
+            )
+            db.add(user)
+            db.commit()
+            logger.info("Usuário admin criado")
+    except Exception as e:
+        logger.warning(f"Não foi possível criar usuário admin: {e}")
 
 
-# Criar admin ao importar módulo
-_criar_usuario_admin()
+# REMOVIDO: Não criar admin no import - isso quebra o build no Render
+# A criação do admin agora é feita no startup da aplicação (main.py lifespan)
 
 
 def criar_refresh_token_db(db: Session, user_id: str) -> str:
