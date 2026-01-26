@@ -45,6 +45,12 @@
 ### 💻 Desenvolvimento
 - [Code Standards](development/code-standards.md) - Padrões de código
 
+### 📈 Observabilidade
+- [Monitoring Guide](observability/monitoring.md) - Logs, métricas e alertas
+
+### ⚙️ CI/CD
+- [CI/CD Pipeline](guides/ci-cd.md) - GitHub Actions e deploy
+
 ---
 
 ## 📚 Guia Completo de Uso
@@ -162,5 +168,5 @@ Para atualizar o guia:
 
 ---
 
-**Última atualização:** 13/12/2024  
-**Versão:** 1.0.0
+**Última atualização:** 26/01/2026  
+**Versão:** 2.0.0
