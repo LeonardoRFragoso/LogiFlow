@@ -9,7 +9,6 @@ from . import veiculos
 from . import auth
 from . import whatsapp
 from . import maps
-from . import suitecrm
 from . import demo
 from . import ocorrencias
 from . import leads

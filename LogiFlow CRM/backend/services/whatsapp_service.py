@@ -13,10 +13,17 @@ class WhatsAppService:
     Documentação: https://doc.evolution-api.com/
     """
     
-    def __init__(self):
-        self.base_url = settings.EVOLUTION_API_URL or "http://localhost:8080"
-        self.api_key = settings.EVOLUTION_API_KEY or ""
-        self.instance_name = settings.EVOLUTION_INSTANCE_NAME or "logiflow"
+    def __init__(self, api_url: str = None, api_key: str = None, instance_name: str = None):
+        """
+        Args:
+            api_url: URL da Evolution API (ex: https://api.evolution-api.com)
+            api_key: Chave de API da Evolution
+            instance_name: Nome da instância
+        """
+        # Se não passar parâmetros, usa settings (fallback para compat.)
+        self.base_url = api_url or getattr(settings, 'EVOLUTION_API_URL', "http://localhost:8080")
+        self.api_key = api_key or getattr(settings, 'EVOLUTION_API_KEY', "")
+        self.instance_name = instance_name or getattr(settings, 'EVOLUTION_INSTANCE_NAME', "logiflow")
         self.timeout = 30.0
         
     @property
@@ -473,5 +480,31 @@ Acesse o app para mais detalhes e iniciar a rota! 📱"""
         return numero
 
 
-# Instância global do serviço
+# Instância global do serviço (deprecated - use get_whatsapp_service_for_tenant)
 whatsapp_service = WhatsAppService()
+
+
+def get_whatsapp_service_for_tenant(tenant_id: int, db) -> Optional[WhatsAppService]:
+    """
+    Obtém WhatsAppService configurado para o tenant
+    
+    Args:
+        tenant_id: ID do tenant
+        db: Sessão do banco
+        
+    Returns:
+        WhatsAppService configurado ou None se não configurado
+    """
+    from services.integration_manager import get_evolution_api_client
+    
+    config = get_evolution_api_client(tenant_id, db)
+    
+    if not config:
+        logger.warning(f"Evolution API não configurado para tenant {tenant_id}")
+        return None
+    
+    return WhatsAppService(
+        api_url=config["api_url"],
+        api_key=config["api_key"],
+        instance_name=config["instance_name"]
+    )

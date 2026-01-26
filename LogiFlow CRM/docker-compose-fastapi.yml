@@ -5,20 +5,19 @@ services:
   # BANCO DE DADOS
   # ===========================================
   db:
-    image: mariadb:10.6
+    image: postgres:15-alpine
     container_name: logiflow_db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass123
-      MYSQL_DATABASE: logiflow_crm
-      MYSQL_USER: logiflow
-      MYSQL_PASSWORD: logiflow123
+      POSTGRES_DB: logiflow
+      POSTGRES_USER: logiflow
+      POSTGRES_PASSWORD: logiflow123
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - logiflow_network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "pg_isready -U logiflow -d logiflow"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -59,27 +58,8 @@ services:
     networks:
       - logiflow_network
 
-  # ===========================================
-  # SUITECRM
-  # ===========================================
-  suitecrm:
-    image: bitnami/apache:latest
-    container_name: logiflow_suitecrm
-    restart: unless-stopped
-    volumes:
-      - ./suitecrm:/app
-    ports:
-      - "8080:8080"
-    environment:
-      - APACHE_HTTP_PORT_NUMBER=8080
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - logiflow_network
-
 volumes:
-  mariadb_data:
+  postgres_data:
   redis_data:
 
 networks:

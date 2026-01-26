@@ -3,15 +3,24 @@ LogiFlow CRM - Router Cotação Automática
 Endpoints para cotação consolidada com múltiplas transportadoras
 """
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List, Dict
+from sqlalchemy.orm import Session
 import logging
 
 from integrations.frete.melhor_envio import MelhorEnvioClient
 from integrations.frete.frenet import FrenetClient
 from integrations.maps.distance_matrix import DistanceMatrixClient
 from config import settings
+from database import get_db
+from models import User
+from auth import get_current_user
+from services.integration_manager import (
+    get_melhor_envio_client,
+    get_frenet_client,
+    check_integration_configured
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -46,7 +55,11 @@ class CotacaoAutomaticaRequest(BaseModel):
 # ========================================
 
 @router.post("/cotar")
-async def cotar_frete_automatico(request: CotacaoAutomaticaRequest):
+async def cotar_frete_automatico(
+    request: CotacaoAutomaticaRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
     Cotação automática consolidada de múltiplas transportadoras
     
@@ -62,24 +75,29 @@ async def cotar_frete_automatico(request: CotacaoAutomaticaRequest):
         todas_cotacoes = []
         erros = []
 
+        # Verificar integrações configuradas para o tenant
+        me_configurado = check_integration_configured(current_user.tenant_id, "melhor_envio", db)
+        frenet_configurado = check_integration_configured(current_user.tenant_id, "frenet", db)
+        
         # Garantir pelo menos uma integração habilitada
         if not any([
-            request.incluir_melhor_envio and settings.MELHOR_ENVIO_TOKEN,
-            request.incluir_frenet and getattr(settings, "FRENET_TOKEN", None),
+            request.incluir_melhor_envio and me_configurado,
+            request.incluir_frenet and frenet_configurado,
             request.incluir_tabela_propria
         ]):
             raise HTTPException(
                 status_code=400,
-                detail="Nenhuma integração de frete disponível. Configure MELHOR_ENVIO_TOKEN/FRENET_TOKEN ou habilite tabela própria."
+                detail="Nenhuma integração de frete disponível. Configure Melhor Envio ou Frenet em Configurações > Integrações."
             )
         
         # 1. Melhor Envio
-        if request.incluir_melhor_envio and settings.MELHOR_ENVIO_TOKEN:
+        if request.incluir_melhor_envio and me_configurado:
             try:
-                me_client = MelhorEnvioClient(
-                    token=settings.MELHOR_ENVIO_TOKEN,
-                    sandbox=settings.MELHOR_ENVIO_SANDBOX
-                )
+                me_client = get_melhor_envio_client(current_user.tenant_id, db)
+                
+                if not me_client:
+                    erros.append({"fonte": "melhor_envio", "erro": "Cliente não disponível"})
+                    raise Exception("Cliente Melhor Envio não disponível")
                 
                 resultado_me = me_client.calcular_frete_simples(
                     origem_cep=request.origem_cep,
@@ -103,9 +121,13 @@ async def cotar_frete_automatico(request: CotacaoAutomaticaRequest):
                 erros.append({"fonte": "melhor_envio", "erro": str(e)})
         
         # 2. Frenet
-        if request.incluir_frenet and hasattr(settings, 'FRENET_TOKEN') and settings.FRENET_TOKEN:
+        if request.incluir_frenet and frenet_configurado:
             try:
-                frenet_client = FrenetClient(token=settings.FRENET_TOKEN)
+                frenet_client = get_frenet_client(current_user.tenant_id, db)
+                
+                if not frenet_client:
+                    erros.append({"fonte": "frenet", "erro": "Cliente não disponível"})
+                    raise Exception("Cliente Frenet não disponível")
                 
                 resultado_frenet = frenet_client.calcular_frete({
                     "cep_origem": request.origem_cep,
@@ -149,9 +171,11 @@ async def cotar_frete_automatico(request: CotacaoAutomaticaRequest):
         else:
             erros.append({"fonte": "tabela_propria", "erro": "Tabela própria desabilitada"})
 
-        # 4. Opcional: distância via Google Distance Matrix (quando chave configurada)
+        # 4. Opcional: distância via Google Distance Matrix (se configurado no tenant)
         distancia_info = None
         try:
+            # Google Maps ainda usa variável global (não é multi-tenant por enquanto)
+            # TODO: Migrar Google Maps para integration_manager no futuro
             dm_client = DistanceMatrixClient.from_settings()
             dm_resp = dm_client.calcular_distancia_por_cep(request.origem_cep, request.destino_cep)
             if dm_resp.get("success"):
@@ -164,10 +188,8 @@ async def cotar_frete_automatico(request: CotacaoAutomaticaRequest):
             else:
                 erros.append({"fonte": "distance_matrix", "erro": dm_resp.get("error", "Erro Distance Matrix")})
         except ValueError as e:
-            # Em produção, sem chave → bloquear; em DEBUG apenas avisa
-            if not settings.DEBUG:
-                raise HTTPException(status_code=400, detail=str(e))
-            erros.append({"fonte": "distance_matrix", "erro": str(e)})
+            # Sem chave configurada - apenas adiciona aos erros
+            erros.append({"fonte": "distance_matrix", "erro": "Google Maps não configurado"})
         except Exception as e:
             logger.error(f"Erro Distance Matrix: {e}")
             erros.append({"fonte": "distance_matrix", "erro": str(e)})
@@ -215,7 +237,9 @@ async def cotar_frenet(
     origem_cep: str = Query(..., description="CEP de origem"),
     destino_cep: str = Query(..., description="CEP de destino"),
     peso_kg: float = Query(..., gt=0, description="Peso em kg"),
-    valor_mercadoria: float = Query(0, ge=0, description="Valor da mercadoria")
+    valor_mercadoria: float = Query(0, ge=0, description="Valor da mercadoria"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     """
     Cotação via Frenet
@@ -230,13 +254,13 @@ async def cotar_frenet(
         Cotações Frenet
     """
     try:
-        if not hasattr(settings, 'FRENET_TOKEN') or not settings.FRENET_TOKEN:
+        frenet_client = get_frenet_client(current_user.tenant_id, db)
+        
+        if not frenet_client:
             raise HTTPException(
                 status_code=400,
-                detail="Token Frenet não configurado. Configure FRENET_TOKEN no .env"
+                detail="Frenet não configurado. Configure em Configurações > Integrações."
             )
-        
-        frenet_client = FrenetClient(token=settings.FRENET_TOKEN)
         resultado = frenet_client.calcular_frete_simplificado(
             cep_origem=origem_cep,
             cep_destino=destino_cep,
@@ -254,7 +278,11 @@ async def cotar_frenet(
 
 
 @router.get("/frenet/rastrear/{codigo}")
-async def rastrear_frenet(codigo: str):
+async def rastrear_frenet(
+    codigo: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
     Rastreia envio via Frenet
     
@@ -265,13 +293,13 @@ async def rastrear_frenet(codigo: str):
         Status do envio
     """
     try:
-        if not hasattr(settings, 'FRENET_TOKEN') or not settings.FRENET_TOKEN:
+        frenet_client = get_frenet_client(current_user.tenant_id, db)
+        
+        if not frenet_client:
             raise HTTPException(
                 status_code=400,
-                detail="Token Frenet não configurado"
+                detail="Frenet não configurado. Configure em Configurações > Integrações."
             )
-        
-        frenet_client = FrenetClient(token=settings.FRENET_TOKEN)
         resultado = frenet_client.rastrear_envio(codigo)
         
         return resultado
@@ -288,7 +316,9 @@ async def comparar_opcoes(
     origem_cep: str = Query(..., description="CEP de origem"),
     destino_cep: str = Query(..., description="CEP de destino"),
     peso_kg: float = Query(..., gt=0, description="Peso em kg"),
-    valor_mercadoria: float = Query(0, ge=0, description="Valor da mercadoria")
+    valor_mercadoria: float = Query(0, ge=0, description="Valor da mercadoria"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     """
     Compara todas as opções de frete disponíveis
@@ -304,7 +334,7 @@ async def comparar_opcoes(
             valor_mercadoria=valor_mercadoria
         )
         
-        resultado = await cotar_frete_automatico(request)
+        resultado = await cotar_frete_automatico(request, current_user, db)
         
         if not resultado.get("success") or not resultado.get("cotacoes"):
             return {

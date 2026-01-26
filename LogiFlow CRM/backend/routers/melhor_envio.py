@@ -10,7 +10,12 @@ from datetime import datetime
 import logging
 
 from integrations.frete.melhor_envio import MelhorEnvioClient
+from sqlalchemy.orm import Session
 from config import settings
+from database import get_db
+from models import User
+from auth import get_current_user
+from services.integration_manager import get_melhor_envio_client as get_tenant_melhor_envio_client
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -96,18 +101,20 @@ class RastreamentoRequest(BaseModel):
 # Dependencies
 # ========================================
 
-def get_melhor_envio_client() -> MelhorEnvioClient:
-    """Retorna cliente Melhor Envio configurado"""
-    token = settings.MELHOR_ENVIO_TOKEN if hasattr(settings, 'MELHOR_ENVIO_TOKEN') else None
-    sandbox = settings.MELHOR_ENVIO_SANDBOX if hasattr(settings, 'MELHOR_ENVIO_SANDBOX') else True
+def get_melhor_envio_client(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> MelhorEnvioClient:
+    """Retorna cliente Melhor Envio configurado para o tenant do usuário"""
+    client = get_tenant_melhor_envio_client(current_user.tenant_id, db)
     
-    if not token:
+    if not client:
         raise HTTPException(
-            status_code=500,
-            detail="Token Melhor Envio não configurado. Configure MELHOR_ENVIO_TOKEN no .env"
+            status_code=400,
+            detail="Melhor Envio não configurado. Configure suas credenciais em Configurações > Integrações."
         )
     
-    return MelhorEnvioClient(token=token, sandbox=sandbox)
+    return client
 
 
 # ========================================
@@ -345,34 +352,18 @@ async def listar_servicos():
 
 
 @router.get("/status")
-async def verificar_status():
+async def verificar_status(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
-    Verifica status da integração com Melhor Envio
+    Verifica status da integração com Melhor Envio para o tenant
     """
-    configurado = hasattr(settings, 'MELHOR_ENVIO_TOKEN') and settings.MELHOR_ENVIO_TOKEN is not None
-    sandbox = settings.MELHOR_ENVIO_SANDBOX if hasattr(settings, 'MELHOR_ENVIO_SANDBOX') else True
+    from services.integration_manager import get_integration_status
     
-    status = {
-        "configurado": configurado,
-        "ambiente": "sandbox" if sandbox else "producao",
-        "ativo": False
-    }
-    
-    # Testar conexão
-    if configurado:
-        try:
-            client = get_melhor_envio_client()
-            # Fazer uma cotação teste simples
-            result = client.calcular_frete_simples(
-                origem_cep="01310100",
-                destino_cep="04101300",
-                peso_kg=1.0
-            )
-            status["ativo"] = result.get("success", False)
-        except:
-            pass
+    status_info = get_integration_status(current_user.tenant_id, "melhor_envio", db)
     
     return {
         "success": True,
-        "data": status
+        "data": status_info
     }

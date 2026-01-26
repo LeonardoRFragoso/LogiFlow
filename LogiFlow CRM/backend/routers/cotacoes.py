@@ -77,7 +77,7 @@ class ItemCotacao(BaseModel):
 
 
 class CriarCotacaoRequest(BaseModel):
-    cliente_id: str = Field(..., description="ID do cliente no SuiteCRM")
+    cliente_id: str = Field(..., description="ID do cliente")
     cliente_nome: Optional[str] = None
     
     origem: EnderecoSchema
@@ -169,7 +169,7 @@ class CotacaoResponse(BaseModel):
 
 
 # ========================================
-# Storage Simulado (substituir por SuiteCRM API)
+# Storage Simulado (substituir por Repository Pattern)
 # ========================================
 
 cotacoes_db: dict = {}

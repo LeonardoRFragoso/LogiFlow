@@ -1,16 +1,15 @@
 services:
   db:
-    image: mariadb:10.6
+    image: postgres:15-alpine
     container_name: logiflow_db
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass123
-      MYSQL_DATABASE: logiflow_crm
-      MYSQL_USER: logiflow
-      MYSQL_PASSWORD: logiflow123
+      POSTGRES_DB: logiflow
+      POSTGRES_USER: logiflow
+      POSTGRES_PASSWORD: logiflow123
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/postgresql/data
     ports:
-      - "3306:3306"
+      - "5432:5432"
 
   redis:
     image: redis:7-alpine

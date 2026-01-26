@@ -8,7 +8,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import redis
-import pymysql
+import psycopg2
 from loguru import logger
 import requests
 
@@ -57,70 +57,42 @@ def test_redis_connection():
 
 
 def test_database_connection():
-    """Testa conexão com MariaDB"""
+    """Testa conexão com PostgreSQL"""
     logger.info("🧪 Testando conexão Database...")
     
     db_host = os.getenv("DB_HOST", "db")
-    db_port = int(os.getenv("DB_PORT", "3306"))
+    db_port = int(os.getenv("DB_PORT", "5432"))
     db_user = os.getenv("DB_USER", "logiflow")
     db_password = os.getenv("DB_PASSWORD", "logiflow123")
-    db_name = os.getenv("DB_NAME", "logiflow_crm")
+    db_name = os.getenv("DB_NAME", "logiflow")
     
     try:
-        connection = pymysql.connect(
+        connection = psycopg2.connect(
             host=db_host,
             port=db_port,
             user=db_user,
             password=db_password,
-            database=db_name,
-            connect_timeout=5
+            dbname=db_name,
+            connect_timeout=5,
         )
-        
+
         with connection.cursor() as cursor:
-            cursor.execute("SELECT VERSION()")
+            cursor.execute("SELECT version()")
             version = cursor.fetchone()
-            
+
         connection.close()
         
         logger.success(f"✅ Database OK em {db_host}:{db_port}")
         logger.info(f"   Versão: {version[0]}")
         return True
         
-    except pymysql.err.OperationalError as e:
+    except psycopg2.OperationalError as e:
         logger.error(f"❌ Database: Não foi possível conectar em {db_host}:{db_port}")
         logger.error(f"   Erro: {str(e)}")
         logger.info("   Verifique se DB_HOST está correto no .env (deve ser 'db' em Docker)")
         return False
     except Exception as e:
         logger.error(f"❌ Database: Erro inesperado: {str(e)}")
-        return False
-
-
-def test_suitecrm_connection():
-    """Testa conexão com SuiteCRM"""
-    logger.info("🧪 Testando conexão SuiteCRM...")
-    
-    suitecrm_url = os.getenv("SUITECRM_URL", "http://suitecrm")
-    
-    try:
-        response = requests.get(
-            f"{suitecrm_url}/index.php",
-            timeout=5
-        )
-        
-        if response.status_code == 200:
-            logger.success(f"✅ SuiteCRM OK em {suitecrm_url}")
-            return True
-        else:
-            logger.warning(f"⚠️  SuiteCRM respondeu com status {response.status_code}")
-            return False
-            
-    except requests.exceptions.ConnectionError:
-        logger.error(f"❌ SuiteCRM: Não foi possível conectar em {suitecrm_url}")
-        logger.info("   Verifique se SUITECRM_URL está correto no .env (deve ser 'http://suitecrm' em Docker)")
-        return False
-    except Exception as e:
-        logger.error(f"❌ SuiteCRM: Erro inesperado: {str(e)}")
         return False
 
 
@@ -133,7 +105,7 @@ def test_celery_imports():
         logger.success("✅ celery_app.py encontrado")
         
         try:
-            from tasks import sync_suitecrm, send_email_async
+            from tasks import send_email_async
             logger.success("✅ tasks.py encontrado e tasks importadas")
             return True
         except ImportError as e:
@@ -175,7 +147,7 @@ def check_environment_variables():
     
     required_vars = {
         "DB_HOST": "db",
-        "DB_NAME": "logiflow_crm",
+        "DB_NAME": "logiflow",
         "DB_USER": "logiflow",
         "REDIS_HOST": "redis",
         "REDIS_PORT": "6379",
@@ -236,11 +208,7 @@ def main():
     results["database"] = test_database_connection()
     print()
     
-    # Teste 4: SuiteCRM
-    results["suitecrm"] = test_suitecrm_connection()
-    print()
-    
-    # Teste 5: Celery
+    # Teste 4: Celery
     results["celery"] = test_celery_imports()
     print()
     
@@ -277,7 +245,6 @@ def main():
             logger.info("2. Verifique se as variáveis usam nomes dos serviços Docker:")
             logger.info("   - DB_HOST=db")
             logger.info("   - REDIS_HOST=redis")
-            logger.info("   - SUITECRM_URL=http://suitecrm")
         
         if "celery" in failed:
             logger.info("3. Certifique-se de que celery_app.py e tasks.py existem")

@@ -1,7 +1,7 @@
 """
 LogiFlow CRM - Database Configuration
 =====================================
-SQLAlchemy + MySQL via PyMySQL
+SQLAlchemy + PostgreSQL via psycopg2
 """
 
 from sqlalchemy import create_engine
@@ -14,7 +14,7 @@ from config import Settings
 
 settings = Settings()
 
-# Usar método que garante PyMySQL
+# Usar método que retorna URL Postgres
 DATABASE_URL = settings.get_database_url()
 
 # Engine com configuração correta
@@ -41,4 +41,9 @@ def get_db():
 
 def init_db():
     """Cria todas as tabelas"""
+    from models.cte import CTe
+    from models.mdfe import MDFe
+    from models.configuracao_fiscal import ConfiguracaoFiscal
+    from models.tenant_credentials import TenantCredentials
+    from models.whatsapp_message import WhatsAppMessage, WhatsAppConversation, WhatsAppConfig
     Base.metadata.create_all(bind=engine)

@@ -27,29 +27,23 @@ class Settings(BaseSettings):
     # Database (suporta DATABASE_URL do Render ou vars individuais)
     DATABASE_URL: Optional[str] = None  # URL completa (Render)
     DB_HOST: str = "db"
-    DB_NAME: str = "logiflow_crm"
+    DB_NAME: str = "logiflow"
     DB_USER: str = "logiflow"
     DB_PASSWORD: str = "logiflow123"
-    DB_PORT: int = 3306
+    DB_PORT: int = 5432
     
     def get_database_url(self) -> str:
-        """Retorna URL do banco com driver PyMySQL"""
+        """Retorna URL do banco com driver psycopg2"""
         if self.DATABASE_URL:
-            # Se DATABASE_URL já está definida, garantir que use pymysql
-            if self.DATABASE_URL.startswith("mysql://"):
-                return self.DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
             return self.DATABASE_URL
-        # Construir URL com PyMySQL
-        return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        # Construir URL com psycopg2
+        return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
     
     # Redis (suporta REDIS_URL do Render ou vars individuais)
     REDIS_URL: Optional[str] = None  # URL completa (Render)
     REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
     REDIS_PASSWORD: str = "redis123"
-    
-    # Focus NFe
-    FOCUSNFE_TOKEN: str = ""
     
     # WhatsApp / Evolution API
     EVOLUTION_API_URL: str = "http://localhost:8080"
@@ -63,10 +57,15 @@ class Settings(BaseSettings):
     # Mercado Pago (Pagamentos)
     MERCADOPAGO_ACCESS_TOKEN: str = ""
     MERCADOPAGO_PUBLIC_KEY: str = ""
+    MERCADOPAGO_WEBHOOK_URL: str = ""
     CHECKOUT_SUCCESS_URL: str = "http://localhost:3001/checkout/success"
     CHECKOUT_FAILURE_URL: str = "http://localhost:3001/checkout/failure"
     CHECKOUT_PENDING_URL: str = "http://localhost:3001/checkout/pending"
 
+    # Focus NFe (CT-e/MDF-e)
+    FOCUSNFE_TOKEN: str = ""
+    FOCUSNFE_ENVIRONMENT: str = "homologacao"  # homologacao ou producao
+    
     # Frete - Melhor Envio / Frenet
     MELHOR_ENVIO_TOKEN: str = ""
     MELHOR_ENVIO_SANDBOX: bool = True
@@ -89,6 +88,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"  # Ignorar variáveis extras no .env
 
 
 settings = Settings()
