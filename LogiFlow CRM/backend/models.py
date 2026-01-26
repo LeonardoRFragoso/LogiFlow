@@ -819,6 +819,49 @@ class CustomerInteraction(Base):
     responsavel = relationship("User", foreign_keys=[responsavel_id])
 
 
+class TenantIntegration(Base):
+    """Configurações de Integrações por Tenant"""
+    __tablename__ = "tenant_integrations"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
+    
+    # Tipo de integração
+    integration_type = Column(String(50), nullable=False, index=True)
+    
+    # Credenciais (criptografadas)
+    api_key = Column(Text, nullable=True)
+    api_secret = Column(Text, nullable=True)
+    access_token = Column(Text, nullable=True)
+    refresh_token = Column(Text, nullable=True)
+    
+    # Configurações específicas (JSON)
+    config = Column(Text, nullable=True)
+    
+    # Status
+    is_active = Column(Boolean, default=True)
+    is_valid = Column(Boolean, default=False)
+    last_validation = Column(DateTime, nullable=True)
+    validation_error = Column(Text, nullable=True)
+    
+    # Ambiente
+    environment = Column(String(20), default="production")
+    
+    # Uso e limites
+    request_count = Column(Integer, default=0)
+    last_request = Column(DateTime, nullable=True)
+    monthly_limit = Column(Integer, nullable=True)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    
+    # Relationships
+    tenant = relationship("Tenant", backref="integrations")
+    creator = relationship("User", foreign_keys=[created_by])
+
+
 class GPSRoute(Base):
     """Rotas GPS (histórico consolidado)"""
     __tablename__ = "gps_routes"

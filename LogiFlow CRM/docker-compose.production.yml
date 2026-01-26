@@ -7,29 +7,27 @@ version: '3.8'
 
 services:
   # ===========================================
-  # BANCO DE DADOS - MariaDB
+  # BANCO DE DADOS - PostgreSQL
   # ===========================================
   db:
-    image: mariadb:10.6
+    image: postgres:15-alpine
     container_name: logiflow_db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpass123}
-      MYSQL_DATABASE: ${DB_NAME:-logiflow_crm}
-      MYSQL_USER: ${DB_USER:-logiflow}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-logiflow123}
+      POSTGRES_DB: ${POSTGRES_DB:-logiflow}
+      POSTGRES_USER: ${POSTGRES_USER:-logiflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-logiflow123}
     volumes:
-      - mariadb_data:/var/lib/mysql
-      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - logiflow_network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootpass123}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-logiflow} -d ${POSTGRES_DB:-logiflow}"]
       interval: 10s
       timeout: 5s
       retries: 5
     ports:
-      - "3306:3306"
+      - "5432:5432"
 
   # ===========================================
   # CACHE - Redis
@@ -52,59 +50,6 @@ services:
       - "6379:6379"
 
   # ===========================================
-  # SUITECRM - PHP-FPM
-  # ===========================================
-  suitecrm:
-    build:
-      context: ./docker/suitecrm
-      dockerfile: Dockerfile
-    container_name: logiflow_suitecrm
-    restart: unless-stopped
-    environment:
-      - DB_HOST=db
-      - DB_NAME=${DB_NAME:-logiflow_crm}
-      - DB_USER=${DB_USER:-logiflow}
-      - DB_PASSWORD=${DB_PASSWORD:-logiflow123}
-      - SITE_URL=${SITE_URL:-http://localhost:8080}
-    volumes:
-      - ./suitecrm:/var/www/html
-      - ./docker/suitecrm/php.ini:/usr/local/etc/php/conf.d/custom.ini
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - logiflow_network
-
-  # ===========================================
-  # WEB SERVER - Nginx (SuiteCRM)
-  # ===========================================
-  nginx:
-    image: nginx:stable-alpine
-    container_name: logiflow_nginx
-    restart: unless-stopped
-    ports:
-      - "8080:80"
-      - "8443:443"
-    volumes:
-      - ./suitecrm:/var/www/html:ro
-      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./docker/nginx/sites:/etc/nginx/conf.d:ro
-      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
-      - nginx_logs:/var/log/nginx
-    depends_on:
-      - suitecrm
-    networks:
-      - logiflow_network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  # ===========================================
   # BACKEND API - FastAPI
   # ===========================================
   api:
@@ -119,16 +64,13 @@ services:
       - SECRET_KEY=${SECRET_KEY:-change-this-in-production}
       - ALLOWED_ORIGINS=http://localhost:3001,http://localhost:5173,http://localhost:8080
       - DB_HOST=db
-      - DB_NAME=${DB_NAME:-logiflow_crm}
-      - DB_USER=${DB_USER:-logiflow}
-      - DB_PASSWORD=${DB_PASSWORD:-logiflow123}
-      - DB_PORT=3306
+      - DB_NAME=${POSTGRES_DB:-logiflow}
+      - DB_USER=${POSTGRES_USER:-logiflow}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-logiflow123}
+      - DB_PORT=5432
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis123}
-      - SUITECRM_URL=http://nginx:80
-      - SUITECRM_CLIENT_ID=${SUITECRM_CLIENT_ID:-}
-      - SUITECRM_CLIENT_SECRET=${SUITECRM_CLIENT_SECRET:-}
       - FOCUSNFE_TOKEN=${FOCUSNFE_TOKEN:-}
     volumes:
       - ./backend:/app
@@ -163,7 +105,6 @@ services:
     restart: unless-stopped
     environment:
       - VITE_API_URL=http://localhost:8000
-      - VITE_SUITECRM_URL=http://localhost:8080
     ports:
       - "3001:80"
     depends_on:
@@ -259,9 +200,10 @@ services:
       - DEBUG=${DEBUG:-True}
       - SECRET_KEY=${SECRET_KEY:-change-this-in-production}
       - DB_HOST=db
-      - DB_NAME=${DB_NAME:-logiflow_crm}
-      - DB_USER=${DB_USER:-logiflow}
-      - DB_PASSWORD=${DB_PASSWORD:-logiflow123}
+      - DB_NAME=${POSTGRES_DB:-logiflow}
+      - DB_USER=${POSTGRES_USER:-logiflow}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-logiflow123}
+      - DB_PORT=5432
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis123}
@@ -291,9 +233,10 @@ services:
       - DEBUG=${DEBUG:-True}
       - SECRET_KEY=${SECRET_KEY:-change-this-in-production}
       - DB_HOST=db
-      - DB_NAME=${DB_NAME:-logiflow_crm}
-      - DB_USER=${DB_USER:-logiflow}
-      - DB_PASSWORD=${DB_PASSWORD:-logiflow123}
+      - DB_NAME=${POSTGRES_DB:-logiflow}
+      - DB_USER=${POSTGRES_USER:-logiflow}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-logiflow123}
+      - DB_PORT=5432
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis123}
@@ -301,6 +244,8 @@ services:
       - ./backend:/app
     depends_on:
       redis:
+        condition: service_healthy
+      db:
         condition: service_healthy
     networks:
       - logiflow_network
@@ -346,11 +291,9 @@ services:
 # VOLUMES PERSISTENTES
 # ===========================================
 volumes:
-  mariadb_data:
+  postgres_data:
     driver: local
   redis_data:
-    driver: local
-  nginx_logs:
     driver: local
   static_volume:
     driver: local

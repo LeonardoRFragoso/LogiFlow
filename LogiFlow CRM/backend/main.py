@@ -17,6 +17,18 @@ from config import settings
 from database import init_db
 from middleware.correlation import correlation_middleware
 from middleware.tenant import TenantMiddleware
+
+# Importar novos routers v2 (Clean Architecture)
+try:
+    from presentation.api import clientes_router as clientes_v2
+    from presentation.api import cotacoes_router as cotacoes_v2
+    from presentation.api import pedidos_router as pedidos_v2
+    V2_ROUTERS_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Routers v2 não disponíveis: {e}")
+    V2_ROUTERS_AVAILABLE = False
+    clientes_v2 = cotacoes_v2 = pedidos_v2 = None
+
 # Importar routers
 try:
     from routers import (
@@ -241,6 +253,21 @@ include_router_with_version(entregas, prefix="/entregas", tags=["Entregas"])
 include_router_with_version(dashboard, prefix="/dashboard", tags=["Dashboard"])
 include_router_with_version(features, prefix="", tags=["Feature Flags"])
 include_router_with_version(crm_enterprise, prefix="", tags=["CRM Enterprise"])
+
+# ===========================================
+# Routers v2 - Clean Architecture
+# ===========================================
+if V2_ROUTERS_AVAILABLE:
+    if clientes_v2:
+        app.include_router(clientes_v2)
+        api_router.include_router(clientes_v2)
+    if cotacoes_v2:
+        app.include_router(cotacoes_v2)
+        api_router.include_router(cotacoes_v2)
+    if pedidos_v2:
+        app.include_router(pedidos_v2)
+        api_router.include_router(pedidos_v2)
+    logger.info("Routers v2 (Clean Architecture) carregados")
 
 # Admin routers (protegidos por RBAC)
 include_router_with_version(quota_router, prefix="/admin", tags=["Admin - Quotas"])

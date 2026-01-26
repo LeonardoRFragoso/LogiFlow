@@ -1,22 +1,21 @@
 services:
   # Banco de Dados Principal
   db:
-    image: mariadb:10.6
+    image: postgres:15-alpine
     container_name: logiflow_db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass123
-      MYSQL_DATABASE: logiflow_crm
-      MYSQL_USER: logiflow
-      MYSQL_PASSWORD: logiflow123
+      POSTGRES_DB: logiflow
+      POSTGRES_USER: logiflow
+      POSTGRES_PASSWORD: logiflow123
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     ports:
-      - "3306:3306"
+      - "5432:5432"
     networks:
       - logiflow_network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpass123"]
+      test: ["CMD-SHELL", "pg_isready -U logiflow -d logiflow"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -50,11 +49,12 @@ services:
       - DEBUG=True
       - SECRET_KEY=django-insecure-change-this-in-production
       - DB_HOST=db
-      - DB_NAME=logiflow_crm
+      - DB_NAME=logiflow
       - DB_USER=logiflow
       - DB_PASSWORD=logiflow123
+      - DB_PORT=5432
       - REDIS_URL=redis://:redis123@redis:6379/1
-      - DATABASE_URL=mysql://logiflow:logiflow123@db:3306/logiflow_crm
+      - DATABASE_URL=postgresql://logiflow:logiflow123@db:5432/logiflow
     volumes:
       - ./backend:/app
     ports:
@@ -74,7 +74,7 @@ services:
       retries: 3
 
 volumes:
-  mariadb_data:
+  postgres_data:
   redis_data:
 
 networks:

@@ -21,6 +21,21 @@ const routes = [
       { path: 'veiculos', name: 'Veiculos', component: () => import('@/views/frota/VeiculosListView.vue') },
       { path: 'ocorrencias', name: 'Ocorrencias', component: () => import('@/views/ocorrencias/OcorrenciasListView.vue') },
       { path: 'pedidos/:id/emitir-cte', name: 'EmitirCTe', component: () => import('@/views/fiscal/EmitirCTeView.vue') },
+      
+      // Rotas Fiscais
+      { path: 'fiscal/cte', name: 'ListarCTe', component: () => import('@/views/fiscal/ListarCTeView.vue') },
+      { path: 'fiscal/cte/:ref', name: 'DetalhesCTe', component: () => import('@/views/fiscal/DetalhesCTeView.vue') },
+      { path: 'fiscal/mdfe', name: 'ListarMDFe', component: () => import('@/views/fiscal/ListarMDFeView.vue') },
+      { path: 'fiscal/mdfe/emitir', name: 'EmitirMDFe', component: () => import('@/views/fiscal/EmitirMDFeView.vue') },
+      { path: 'fiscal/mdfe/:ref', name: 'DetalhesMDFe', component: () => import('@/views/fiscal/DetalhesMDFeView.vue') },
+      { path: 'fiscal/dashboard', name: 'DashboardFiscal', component: () => import('@/views/fiscal/DashboardFiscalView.vue') },
+      { path: 'configuracoes/fiscal', name: 'ConfiguracoesFiscais', component: () => import('@/views/fiscal/ConfiguracoesFiscaisView.vue') },
+      
+      // Rotas WhatsApp
+      { path: 'whatsapp/dashboard', name: 'DashboardWhatsApp', component: () => import('@/views/whatsapp/DashboardWhatsAppView.vue') },
+      { path: 'whatsapp/conversas', name: 'ConversasWhatsApp', component: () => import('@/views/whatsapp/ConversasWhatsAppView.vue') },
+      { path: 'whatsapp/config', name: 'ConfiguracaoWhatsApp', component: () => import('@/views/whatsapp/ConfiguracaoWhatsAppView.vue') },
+      
       { path: 'customer-success', name: 'CustomerSuccess', component: () => import('@/views/CustomerSuccessView.vue') },
       { path: 'leads', name: 'Leads', component: () => import('@/views/LeadsView.vue') },
       { path: 'checkout', name: 'Checkout', component: () => import('@/views/CheckoutView.vue') },

@@ -349,3 +349,56 @@ class FocusNFeClient:
         except requests.exceptions.RequestException as e:
             logger.error(f"Erro ao baixar XML {tipo}/{ref}: {e}")
             return None
+    
+    def consultar_mdfe(self, ref: str) -> Dict:
+        """Consulta status de um MDF-e"""
+        try:
+            response = requests.get(
+                f"{self.base_url}/v2/mdfe/{ref}",
+                headers=self.headers,
+                timeout=15
+            )
+            response.raise_for_status()
+            
+            return {
+                "success": True,
+                "data": response.json()
+            }
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Erro ao consultar MDF-e {ref}: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    def cancelar_mdfe(self, ref: str, justificativa: str) -> Dict:
+        """Cancela um MDF-e"""
+        try:
+            if len(justificativa) < 15:
+                return {
+                    "success": False,
+                    "error": "Justificativa deve ter no mínimo 15 caracteres"
+                }
+            
+            payload = {"justificativa": justificativa}
+            
+            response = requests.delete(
+                f"{self.base_url}/v2/mdfe/{ref}",
+                json=payload,
+                headers=self.headers,
+                timeout=30
+            )
+            response.raise_for_status()
+            
+            return {
+                "success": True,
+                "data": response.json()
+            }
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Erro ao cancelar MDF-e {ref}: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }

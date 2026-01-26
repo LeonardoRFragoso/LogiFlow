@@ -76,10 +76,6 @@ class BetaFeatureFlags:
     MERCADO_PAGO = FeatureStatus.BETA
     ASSINATURAS = FeatureStatus.BETA
     
-    # ========== SUITECRM (BETA) ==========
-    SUITECRM_SYNC = FeatureStatus.BETA
-    SUITECRM_OAUTH2 = FeatureStatus.BETA
-    
     @classmethod
     def is_enabled(cls, feature: str) -> bool:
         """Verifica se feature está habilitada (ENABLED ou BETA)"""

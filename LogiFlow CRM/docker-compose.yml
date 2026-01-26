@@ -1,23 +1,21 @@
 services:
   # ===========================================
-  # BANCO DE DADOS - MariaDB
+  # BANCO DE DADOS - PostgreSQL
   # ===========================================
   db:
-    image: mariadb:10.6
+    image: postgres:15-alpine
     container_name: logiflow_db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpass123}
-      MYSQL_DATABASE: ${DB_NAME:-logiflow_crm}
-      MYSQL_USER: ${DB_USER:-logiflow}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-logiflow123}
+      POSTGRES_DB: ${DB_NAME:-logiflow}
+      POSTGRES_USER: ${DB_USER:-logiflow}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-logiflow123}
     volumes:
-      - mariadb_data:/var/lib/mysql
-      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - logiflow_network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootpass123}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-logiflow} -d ${DB_NAME:-logiflow}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -55,9 +53,10 @@ services:
       - SECRET_KEY=${SECRET_KEY:-django-insecure-change-this-in-production}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
       - DB_HOST=db
-      - DB_NAME=${DB_NAME:-logiflow_crm}
+      - DB_NAME=${DB_NAME:-logiflow}
       - DB_USER=${DB_USER:-logiflow}
       - DB_PASSWORD=${DB_PASSWORD:-logiflow123}
+      - DB_PORT=${DB_PORT:-5432}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/1
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/0
       - FOCUSNFE_TOKEN=${FOCUSNFE_TOKEN:-}
@@ -128,7 +127,7 @@ services:
       - DEBUG=${DEBUG:-True}
       - SECRET_KEY=${SECRET_KEY:-django-insecure-change-this-in-production}
       - DB_HOST=db
-      - DB_NAME=${DB_NAME:-logiflow_crm}
+      - DB_NAME=${DB_NAME:-logiflow}
       - DB_USER=${DB_USER:-logiflow}
       - DB_PASSWORD=${DB_PASSWORD:-logiflow123}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/1
@@ -156,7 +155,7 @@ services:
       - DEBUG=${DEBUG:-True}
       - SECRET_KEY=${SECRET_KEY:-django-insecure-change-this-in-production}
       - DB_HOST=db
-      - DB_NAME=${DB_NAME:-logiflow_crm}
+      - DB_NAME=${DB_NAME:-logiflow}
       - DB_USER=${DB_USER:-logiflow}
       - DB_PASSWORD=${DB_PASSWORD:-logiflow123}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/1
@@ -189,7 +188,7 @@ services:
 # VOLUMES PERSISTENTES
 # ===========================================
 volumes:
-  mariadb_data:
+  postgres_data:
     driver: local
   redis_data:
     driver: local

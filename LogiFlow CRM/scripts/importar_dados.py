@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 LogiFlow CRM - Script de Importação de Dados
-Importa dados de arquivos CSV para o SuiteCRM
+Importa dados de arquivos CSV para o LogiFlow CRM
 """
 
 import csv
@@ -109,8 +109,7 @@ class ImportadorDados:
                             'description': row.get('observacoes', '')
                         }
                         
-                        # TODO: Enviar para SuiteCRM API
-                        # suitecrm_client.create_account(cliente)
+                        # TODO: Persistir via Repository Pattern
                         
                         logger.info(f"Linha {linha_num}: Cliente '{row['nome']}' importado com sucesso")
                         self.estatisticas['sucesso'] += 1
@@ -170,8 +169,7 @@ class ImportadorDados:
                             'observacoes': row.get('observacoes', '')
                         }
                         
-                        # TODO: Enviar para SuiteCRM API
-                        # suitecrm_client.create_motorista(motorista)
+                        # TODO: Persistir via Repository Pattern
                         
                         logger.info(f"Linha {linha_num}: Motorista '{row['nome']}' importado com sucesso")
                         self.estatisticas['sucesso'] += 1
@@ -226,8 +224,7 @@ class ImportadorDados:
                             'observacoes': row.get('observacoes', '')
                         }
                         
-                        # TODO: Enviar para SuiteCRM API
-                        # suitecrm_client.create_veiculo(veiculo)
+                        # TODO: Persistir via Repository Pattern
                         
                         logger.info(f"Linha {linha_num}: Veículo '{row['placa']}' importado com sucesso")
                         self.estatisticas['sucesso'] += 1
@@ -284,11 +281,9 @@ class ImportadorDados:
                         }
                         
                         # TODO: Buscar cliente por CNPJ e associar
-                        # cliente = suitecrm_client.find_account_by_cnpj(cotacao['cliente_cnpj'])
                         # cotacao['cliente_id'] = cliente['id']
                         
-                        # TODO: Enviar para SuiteCRM API
-                        # suitecrm_client.create_cotacao(cotacao)
+                        # TODO: Persistir via Repository Pattern
                         
                         logger.info(f"Linha {linha_num}: Cotação importada com sucesso")
                         self.estatisticas['sucesso'] += 1

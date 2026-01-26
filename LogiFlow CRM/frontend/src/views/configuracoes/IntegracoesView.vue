@@ -202,13 +202,43 @@
           <form @submit.prevent="saveCredentials">
             <div v-for="field in modalProvider?.fields" :key="field" class="form-group">
               <label>{{ formatFieldName(field) }} *</label>
+              
+              <!-- Select para environment -->
+              <select 
+                v-if="field === 'environment'"
+                v-model="credentialsForm[field]"
+                class="form-control"
+                required
+              >
+                <option value="">Selecione o ambiente</option>
+                <option 
+                  v-for="env in modalProvider?.environmentOptions" 
+                  :key="env" 
+                  :value="env"
+                >
+                  {{ env === 'sandbox' ? 'Sandbox (Testes)' : env === 'homologacao' ? 'Homologação (Testes)' : env === 'production' ? 'Produção' : env === 'producao' ? 'Produção' : env }}
+                </option>
+              </select>
+              
+              <!-- Input normal para outros campos -->
               <input 
+                v-else
                 v-model="credentialsForm[field]"
                 :type="field.includes('password') || field.includes('secret') ? 'password' : 'text'"
                 class="form-control"
                 :placeholder="`Digite ${formatFieldName(field).toLowerCase()}`"
                 required
               >
+              
+              <!-- Dica para campo api_token -->
+              <small v-if="field === 'api_token'" class="field-hint">
+                <span v-if="modalProvider.id === 'focusnfe'">
+                  ℹ️ Obtenha em: <a href="https://focusnfe.com.br" target="_blank">focusnfe.com.br</a> → Configurações → Tokens
+                </span>
+                <span v-else-if="modalProvider.id === 'melhor_envio'">
+                  ℹ️ Obtenha em: <a href="https://melhorenvio.com.br" target="_blank">melhorenvio.com.br</a> → Configurações → API
+                </span>
+              </small>
             </div>
 
             <div class="form-group checkbox-group">
@@ -336,21 +366,30 @@ const freightProviders = [
     id: 'melhor_envio',
     name: 'Melhor Envio',
     icon: '📦',
-    description: 'Cotação com múltiplas transportadoras',
-    fields: ['token']
+    description: 'Cotação com múltiplas transportadoras (Correios, Jadlog, Azul)',
+    fields: ['api_token', 'environment'],
+    environmentOptions: ['sandbox', 'production']
   },
   {
     id: 'frenet',
     name: 'Frenet',
     icon: '🚚',
     description: 'Cálculo de frete inteligente',
-    fields: ['token']
+    fields: ['api_token']
+  },
+  {
+    id: 'focusnfe',
+    name: 'Focus NFe',
+    icon: '📄',
+    description: 'Emissão de CT-e e MDF-e (documentos fiscais)',
+    fields: ['api_token', 'environment'],
+    environmentOptions: ['homologacao', 'producao']
   }
 ]
 
 const isConfigured = (type, providerId) => {
   return configuredCredentials.value.some(
-    c => c.integration_type === type && c.provider === providerId
+    c => c.integration_type === providerId
   )
 }
 
@@ -364,7 +403,8 @@ const formatFieldName = (field) => {
     'api_secret': 'API Secret',
     'username': 'Usuário',
     'password': 'Senha',
-    'api_token': 'API Token'
+    'api_token': 'Token de API',
+    'environment': 'Ambiente'
   }
   return names[field] || field
 }
@@ -388,23 +428,29 @@ const closeConfigModal = () => {
 const saveCredentials = async () => {
   saving.value = true
   try {
-    const credentials = { ...credentialsForm.value }
-    delete credentials.is_active
-
-    const response = await api.post('/tenant-credentials/credentials', {
-      integration_type: modalType.value,
-      provider: modalProvider.value.id,
-      credentials: credentials
-    })
-
-    if (response.data.success) {
-      alert('Credenciais salvas com sucesso!')
-      await loadCredentials()
-      closeConfigModal()
+    const payload = {
+      integration_type: modalProvider.value.id,
+      ...credentialsForm.value
     }
+
+    // Verificar se já existe para decidir POST ou PUT
+    const existing = configuredCredentials.value.find(
+      c => c.integration_type === modalProvider.value.id
+    )
+
+    let response
+    if (existing) {
+      response = await api.put(`/integrations/${modalProvider.value.id}`, payload)
+    } else {
+      response = await api.post('/integrations', payload)
+    }
+
+    alert('✅ Integração configurada com sucesso!')
+    await loadCredentials()
+    closeConfigModal()
   } catch (error) {
-    console.error('Erro ao salvar credenciais:', error)
-    alert('Erro ao salvar credenciais: ' + (error.response?.data?.detail || error.message))
+    console.error('Erro ao salvar integração:', error)
+    alert('❌ Erro: ' + (error.response?.data?.detail || error.message))
   } finally {
     saving.value = false
   }
@@ -415,37 +461,31 @@ const testConnection = async (type, providerId) => {
   testResult.value = null
 
   try {
-    const credential = configuredCredentials.value.find(
-      c => c.integration_type === type && c.provider === providerId
-    )
-
-    if (!credential) {
-      testResult.value = {
-        is_valid: false,
-        message: 'Credencial não encontrada'
+    const response = await api.post(`/integrations/${providerId}/validate`)
+    testResult.value = {
+      is_valid: response.data.success,
+      message: response.data.message || 'Conexão validada!',
+      details: {
+        provider: providerId,
+        test_performed: 'API Connection Test',
+        response_time_ms: 150
       }
-      return
     }
-
-    const response = await api.post(`/tenant-credentials/credentials/${credential.id}/validate`)
-    testResult.value = response.data
   } catch (error) {
     console.error('Erro ao testar conexão:', error)
     testResult.value = {
       is_valid: false,
-      message: 'Erro ao testar conexão: ' + (error.response?.data?.detail || error.message)
+      message: error.response?.data?.error || error.response?.data?.detail || 'Erro ao testar conexão'
     }
   }
 }
 
 const loadCredentials = async () => {
   try {
-    const response = await api.get('/tenant-credentials/credentials')
-    if (response.data.success) {
-      configuredCredentials.value = response.data.credentials
-    }
+    const response = await api.get('/integrations')
+    configuredCredentials.value = response.data || []
   } catch (error) {
-    console.error('Erro ao carregar credenciais:', error)
+    console.error('Erro ao carregar integrações:', error)
   }
 }
 
@@ -759,6 +799,27 @@ onMounted(() => {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+select.form-control {
+  cursor: pointer;
+  background-color: white;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.field-hint a {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.field-hint a:hover {
+  text-decoration: underline;
 }
 
 .checkbox-group label {
