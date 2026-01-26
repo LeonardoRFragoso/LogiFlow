@@ -29,7 +29,7 @@ O LogiFlow CRM envia emails transacionais para:
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=seu.email@gmail.com
-SMTP_PASSWORD=xxxx xxxx xxxx xxxx
+SMTP_PASSWORD=<YOUR_GMAIL_APP_PASSWORD_HERE>
 FROM_EMAIL=seu.email@gmail.com
 FROM_NAME=LogiFlow CRM
 SALES_EMAIL=vendas@suaempresa.com.br
@@ -73,7 +73,7 @@ SendGrid oferece **100 emails/dia GRÁTIS** e é super confiável.
 SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_USER=apikey
-SMTP_PASSWORD=SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+SMTP_PASSWORD=<YOUR_SENDGRID_API_KEY_HERE>
 FROM_EMAIL=noreply@seudominio.com.br
 FROM_NAME=LogiFlow CRM
 SALES_EMAIL=vendas@seudominio.com.br
@@ -114,7 +114,7 @@ Mailgun oferece **5.000 emails/mês GRÁTIS** nos primeiros 3 meses.
 SMTP_HOST=smtp.mailgun.org
 SMTP_PORT=587
 SMTP_USER=postmaster@sandboxXXXXXXXXXXXXXXXX.mailgun.org
-SMTP_PASSWORD=sua_senha_aqui
+SMTP_PASSWORD=<YOUR_PASSWORD_HERE>
 FROM_EMAIL=noreply@seudominio.com.br
 FROM_NAME=LogiFlow CRM
 SALES_EMAIL=vendas@seudominio.com.br
@@ -139,7 +139,7 @@ Recomendado apenas para produção com alto volume (>10k emails/dia).
 SMTP_HOST=email-smtp.us-east-1.amazonaws.com
 SMTP_PORT=587
 SMTP_USER=AKIAXXXXXXXXXXXXXXXX
-SMTP_PASSWORD=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+SMTP_PASSWORD=<YOUR_AWS_SMTP_PASSWORD_HERE>
 FROM_EMAIL=noreply@seudominio.com.br
 FROM_NAME=LogiFlow CRM
 SALES_EMAIL=vendas@seudominio.com.br
@@ -161,7 +161,7 @@ Deve mostrar:
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=seu@email.com
-SMTP_PASSWORD=****
+SMTP_PASSWORD=<REDACTED>
 ```
 
 ### Teste 2: Enviar email de teste

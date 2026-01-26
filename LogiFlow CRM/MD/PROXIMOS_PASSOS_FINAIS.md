@@ -59,7 +59,7 @@ Este documento detalha os **próximos passos finais** que foram implementados e 
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=seu-email@gmail.com
-SMTP_PASSWORD=sua-senha-de-app
+SMTP_PASSWORD=<YOUR_GMAIL_APP_PASSWORD_HERE>
 FROM_EMAIL=noreply@logiflow.com.br
 FROM_NAME=LogiFlow CRM
 SALES_EMAIL=vendas@logiflow.com.br

@@ -98,7 +98,7 @@ Copiar `.env.example` para `.env` e preencher:
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=seu-email@gmail.com
-SMTP_PASSWORD=xxxx-xxxx-xxxx-xxxx  # Senha de app
+SMTP_PASSWORD=<YOUR_GMAIL_APP_PASSWORD_HERE>
 FROM_EMAIL=noreply@logiflow.com.br
 FROM_NAME=LogiFlow CRM
 SALES_EMAIL=vendas@logiflow.com.br

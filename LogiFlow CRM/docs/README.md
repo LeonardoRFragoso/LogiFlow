@@ -1,4 +1,51 @@
-# Documentação LogiFlow CRM
+# LogiFlow CRM - Documentation Index
+
+> Central de documentação técnica do projeto
+
+## 📁 Estrutura da Documentação
+
+### 🏗️ Arquitetura
+- [C4 Context Diagram](architecture/c4-context.md) - Visão geral do sistema
+- [C4 Container Diagram](architecture/c4-container.md) - Containers e tecnologias
+- [C4 Component Diagram](architecture/c4-component.md) - Componentes internos
+- [Data Flow Diagram](architecture/data-flow.md) - Fluxos de dados
+- [Clean Architecture Layers](architecture/layers.md) - Camadas da arquitetura
+
+### 📋 ADRs (Architecture Decision Records)
+- [ADR-001](adr/ADR-001-integracao-suitecrm.md) - Integração SuiteCRM (Obsoleta)
+- [ADR-002](adr/ADR-002-fastapi-backend.md) - Escolha do FastAPI
+- [ADR-003](adr/ADR-003-postgresql-database.md) - Escolha do PostgreSQL
+- [ADR-004](adr/ADR-004-jwt-authentication.md) - Autenticação JWT
+- [ADR-005](adr/ADR-005-clean-architecture.md) - Clean Architecture
+- [ADR-006](adr/ADR-006-project-structure.md) - Estrutura do Projeto
+
+### 🎨 Design Patterns
+- [Repository Pattern](patterns/repository.md)
+- [Dependency Injection](patterns/dependency-injection.md)
+- [DTO Pattern](patterns/dto.md)
+- [Factory Pattern](patterns/factory.md)
+- [Strategy Pattern](patterns/strategy.md)
+
+### 🔌 API
+- [Getting Started](api/getting-started.md) - Quick start da API
+- [Endpoints Reference](api/endpoints.md) - Todos os endpoints
+
+### 📊 Análise
+- [Current State](analysis/current-state.md) - Análise do estado atual
+
+### 🚀 Deployment
+- [Local Development](deployment/local.md) - Setup local
+- [Production](deployment/production.md) - Deploy em produção
+- [Docker Guide](deployment/docker.md) - Guia de Docker
+
+### 🔒 Segurança
+- [OWASP Checklist](security/owasp-checklist.md) - Checklist de segurança
+- [Secrets Management](security/secrets.md) - Gerenciamento de secrets
+
+### 💻 Desenvolvimento
+- [Code Standards](development/code-standards.md) - Padrões de código
+
+---
 
 ## 📚 Guia Completo de Uso
 
