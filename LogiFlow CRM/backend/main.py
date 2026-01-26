@@ -133,6 +133,13 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Erro ao inicializar banco: {e}")
     
+    # Criar usuário admin padrão se não existir
+    try:
+        from routers.auth import criar_usuario_admin_se_necessario
+        criar_usuario_admin_se_necessario()
+    except Exception as e:
+        logger.warning(f"Não foi possível criar admin: {e}")
+    
     # Inicializar monitoramento de quotas
     try:
         from utils.quota_monitor import init_quota_monitoring
