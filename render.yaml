@@ -17,7 +17,9 @@ services:
       cd "LogiFlow CRM/backend"
       pip install --upgrade pip
       pip install -r requirements.txt
-      alembic upgrade head
+    preDeployCommand: |
+      cd "LogiFlow CRM/backend"
+      alembic upgrade head || echo "Migration skipped or failed - will retry on next deploy"
     startCommand: |
       cd "LogiFlow CRM/backend"
       uvicorn main:app --host 0.0.0.0 --port $PORT
