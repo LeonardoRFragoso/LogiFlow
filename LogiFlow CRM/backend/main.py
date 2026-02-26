@@ -114,17 +114,14 @@ async def lifespan(app: FastAPI):
     
     # Testar conexão Redis
     try:
-        redis_client = redis.Redis(
-            host=settings.REDIS_HOST,
-            port=settings.REDIS_PORT,
-            password=settings.REDIS_PASSWORD,
-            decode_responses=True
-        )
+        redis_config = settings.get_redis_config()
+        redis_client = redis.Redis(**redis_config)
         redis_client.ping()
         logger.info("Redis conectado com sucesso")
         app.state.redis = redis_client
     except Exception as e:
-        logger.error(f"Erro ao conectar Redis: {e}")
+        logger.warning(f"Redis não disponível: {e}. Continuando sem cache...")
+        app.state.redis = None
 
     # Garantir que as tabelas do banco existam
     try:

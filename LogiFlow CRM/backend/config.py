@@ -39,11 +39,30 @@ class Settings(BaseSettings):
         # Construir URL com psycopg2
         return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
     
-    # Redis (suporta REDIS_URL do Render ou vars individuais)
-    REDIS_URL: Optional[str] = None  # URL completa (Render)
+    # Redis (suporta REDIS_URL do Railway/Render ou vars individuais)
+    REDIS_URL: Optional[str] = None  # URL completa (Railway/Render)
     REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
     REDIS_PASSWORD: str = "redis123"
+    
+    def get_redis_config(self) -> dict:
+        """Retorna configuração do Redis parseando REDIS_URL se disponível"""
+        if self.REDIS_URL:
+            # Parse redis://default:password@host:port
+            from urllib.parse import urlparse
+            parsed = urlparse(self.REDIS_URL)
+            return {
+                "host": parsed.hostname or "localhost",
+                "port": parsed.port or 6379,
+                "password": parsed.password or None,
+                "decode_responses": True
+            }
+        return {
+            "host": self.REDIS_HOST,
+            "port": self.REDIS_PORT,
+            "password": self.REDIS_PASSWORD if self.REDIS_PASSWORD else None,
+            "decode_responses": True
+        }
     
     # WhatsApp / Evolution API
     EVOLUTION_API_URL: str = "http://localhost:8080"
