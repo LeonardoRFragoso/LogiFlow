@@ -16,7 +16,15 @@ Este guia detalha o processo completo de deploy do backend FastAPI do LogiFlow C
 2. Clique em **"New Project"**
 3. Selecione **"Deploy from GitHub repo"**
 4. Escolha o repositório `LogiFlow`
-5. Selecione a pasta `LogiFlow CRM/backend` como root directory
+
+**IMPORTANTE - Configurar Root Directory:**
+
+Após criar o serviço `logiflow-api`:
+1. Vá em **Settings** do serviço
+2. Em **Source** → **Root Directory**, configure: `LogiFlow CRM/backend`
+3. Salve as alterações
+
+Isso garante que o Railway execute o build dentro da pasta correta do backend.
 
 ### 2. Adicionar Serviços de Banco de Dados
 
