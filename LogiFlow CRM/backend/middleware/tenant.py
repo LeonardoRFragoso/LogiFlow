@@ -33,6 +33,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
         "/openapi.json",
         "/api/v1/tenants/",  # Criação de tenant
         "/api/v1/leads/",    # Captura de leads público
+        "/demo",             # Endpoints públicos de demo/landing page
     ]
     
     async def dispatch(self, request: Request, call_next):
