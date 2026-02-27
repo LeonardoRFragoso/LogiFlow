@@ -143,8 +143,12 @@ def _verificar_senha(senha: str, senha_hash: str) -> bool:
         return False
 
 
-def _get_user_by_email(db: Session, email: str) -> Optional[User]:
-    return db.query(User).filter(User.email == email).first()
+def _get_user_by_email(db: Session, email: str, tenant_id: Optional[int] = None) -> Optional[User]:
+    """Busca usuário por email, opcionalmente filtrando por tenant"""
+    query = db.query(User).filter(User.email == email)
+    if tenant_id:
+        query = query.filter(User.tenant_id == tenant_id)
+    return query.first()
 
 
 def _get_user_by_id(db: Session, user_id: str) -> Optional[User]:
@@ -343,9 +347,11 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
 
         access_token = criar_access_token(data={
             "sub": usuario.id,
+            "user_id": usuario.id,
             "email": usuario.email,
             "tipo": usuario.tipo,
-            "nome": usuario.nome
+            "nome": usuario.nome,
+            "tenant_id": usuario.tenant_id
         })
 
         refresh_token = criar_refresh_token_db(db, usuario.id)
