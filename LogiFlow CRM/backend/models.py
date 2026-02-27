@@ -186,7 +186,10 @@ class Cliente(Base):
     id = Column(String(8), primary_key=True, default=generate_uuid)
     razao_social = Column(String(200), nullable=False)
     nome_fantasia = Column(String(200))
-    cnpj = Column(String(20), unique=True)
+    cnpj = Column(String(20))
+    
+    # Multi-tenant
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
     inscricao_estadual = Column(String(20))
     email = Column(String(100))
     telefone = Column(String(20))
@@ -247,7 +250,10 @@ class Motorista(Base):
     
     id = Column(String(8), primary_key=True, default=generate_uuid)
     nome = Column(String(100), nullable=False)
-    cpf = Column(String(14), unique=True)
+    cpf = Column(String(14))
+    
+    # Multi-tenant
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
     telefone = Column(String(20))
     email = Column(String(100))
     cnh_numero = Column(String(20))
@@ -272,7 +278,10 @@ class Veiculo(Base):
     __tablename__ = "veiculos"
     
     id = Column(String(8), primary_key=True, default=generate_uuid)
-    placa = Column(String(10), unique=True, nullable=False)
+    placa = Column(String(10), nullable=False)
+    
+    # Multi-tenant
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
     tipo = Column(String(50))
     marca = Column(String(50))
     modelo = Column(String(50))
@@ -295,8 +304,11 @@ class Pedido(Base):
     __tablename__ = "pedidos"
     
     id = Column(String(8), primary_key=True, default=generate_uuid)
-    numero = Column(String(20), unique=True, nullable=False)
+    numero = Column(String(20), nullable=False)
     cliente_id = Column(String(8), ForeignKey("clientes.id"))
+    
+    # Multi-tenant
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
     motorista_id = Column(String(8), ForeignKey("motoristas.id"), nullable=True)
     
     origem_endereco = Column(String(200))
@@ -332,8 +344,11 @@ class Entrega(Base):
     __tablename__ = "entregas"
     
     id = Column(String(8), primary_key=True, default=generate_uuid)
-    codigo = Column(String(20), unique=True, nullable=False)
+    codigo = Column(String(20), nullable=False)
     pedido_id = Column(String(8), ForeignKey("pedidos.id"))
+    
+    # Multi-tenant
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
     motorista_id = Column(String(8), ForeignKey("motoristas.id"), nullable=True)
     
     cliente_nome = Column(String(200))
