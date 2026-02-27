@@ -16,27 +16,6 @@ def generate_uuid():
     return str(uuid.uuid4())[:8].upper()
 
 
-class ClienteFieldHistory(Base):
-    """Histórico de alterações de campos críticos do cliente (auditoria)"""
-    __tablename__ = "cliente_field_history"
-    
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    cliente_id = Column(String(8), ForeignKey("clientes.id"), nullable=False, index=True)
-    
-    campo_alterado = Column(String(100), nullable=False)
-    valor_anterior = Column(Text)
-    valor_novo = Column(Text)
-    
-    usuario_id = Column(String(36), ForeignKey("users.id"), nullable=True)
-    data_alteracao = Column(DateTime, default=datetime.utcnow, index=True)
-    
-    motivo = Column(Text, nullable=True)
-    
-    # Relationships
-    cliente = relationship("Cliente", back_populates="campo_historico")
-    usuario = relationship("User", foreign_keys=[usuario_id])
-
-
 class LeadStatusHistory(Base):
     """Histórico de mudanças de status de leads (auditoria)"""
     __tablename__ = "lead_status_history"

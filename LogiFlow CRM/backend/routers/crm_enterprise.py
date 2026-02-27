@@ -18,7 +18,7 @@ from models import (
 )
 from models_crm_enterprise import (
     OpportunityNote, OpportunityProduct, SalesActivity,
-    ClienteFieldHistory, LeadStatusHistory
+    LeadStatusHistory
 )
 from services.crm_metrics_service import CRMMetricsService
 from services.crm_alerts_service import CRMAlertsService
