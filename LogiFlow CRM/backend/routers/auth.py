@@ -139,20 +139,7 @@ class UsuarioResponse(BaseModel):
 # ========================================
 # Storage Simulado (substituir por DB)
 # ========================================
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 tokens_reset: dict = {}
-
-
-def _hash_senha(senha: str) -> str:
-    """Hash seguro com bcrypt"""
-    return pwd_context.hash(senha)
-
-
-def _verificar_senha(senha: str, senha_hash: str) -> bool:
-    try:
-        return pwd_context.verify(senha, senha_hash)
-    except Exception:
-        return False
 
 
 def _get_user_by_email(db: Session, email: str, tenant_id: Optional[int] = None) -> Optional[User]:
