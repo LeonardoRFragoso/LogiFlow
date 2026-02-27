@@ -9,9 +9,13 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
+import secrets
+import string
 
 from database import get_db
-from models import Lead, StatusLead
+from models import Lead, StatusLead, Tenant, User
+from routers.auth import _hash_senha
+from loguru import logger
 
 router = APIRouter(prefix="/api/leads", tags=["leads"])
 
@@ -206,3 +210,145 @@ async def get_leads_stats(db: Session = Depends(get_db)):
         "perdidos": perdidos,
         "taxa_conversao": round(taxa_conversao, 2)
     }
+
+
+# ========================================
+# Endpoints de Aprovação de Leads (Multi-Tenant)
+# ========================================
+
+class ApproveLeadRequest(BaseModel):
+    plan: str = "starter"
+    observacoes: Optional[str] = None
+
+
+class RejectLeadRequest(BaseModel):
+    motivo: str
+    observacoes: Optional[str] = None
+
+
+def generate_subdomain(company_name: str) -> str:
+    """Gera subdomínio único a partir do nome da empresa"""
+    import re
+    subdomain = re.sub(r'[^a-z0-9]', '', company_name.lower())[:20]
+    return subdomain or "tenant"
+
+
+def generate_temp_password() -> str:
+    """Gera senha temporária segura"""
+    chars = string.ascii_letters + string.digits + "!@#$%"
+    return ''.join(secrets.choice(chars) for _ in range(12))
+
+
+@router.post("/{lead_id}/approve", response_model=dict)
+async def approve_lead(
+    lead_id: int,
+    request: ApproveLeadRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Aprova um lead e cria tenant + usuário admin
+    """
+    try:
+        lead = db.query(Lead).filter(Lead.id == lead_id).first()
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead não encontrado")
+        
+        if lead.status != StatusLead.NOVO.value:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Lead já foi {lead.status}"
+            )
+        
+        # Gerar senha temporária
+        temp_password = generate_temp_password()
+        
+        # Criar tenant
+        subdomain = generate_subdomain(lead.company)
+        tenant = Tenant(
+            company_name=lead.company,
+            contact_name=lead.name,
+            contact_email=lead.email,
+            contact_phone=lead.phone,
+            subdomain=subdomain,
+            status="active",
+            plan=request.plan
+        )
+        db.add(tenant)
+        db.flush()
+        
+        # Criar usuário admin
+        user = User(
+            email=lead.email,
+            nome=lead.name,
+            senha_hash=_hash_senha(temp_password),
+            tipo="admin",
+            status="ativo",
+            tenant_id=tenant.id
+        )
+        db.add(user)
+        
+        # Marcar lead como convertido
+        lead.status = StatusLead.CONVERTIDO.value
+        lead.tenant_id = tenant.id
+        lead.converted_at = datetime.utcnow()
+        
+        db.commit()
+        
+        logger.success(f"✅ Lead {lead.id} aprovado - Tenant {tenant.id} criado")
+        
+        return {
+            "success": True,
+            "message": "Lead aprovado com sucesso",
+            "tenant_id": tenant.id,
+            "user_id": user.id,
+            "email": lead.email,
+            "temp_password": temp_password,
+            "subdomain": subdomain
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Erro ao aprovar lead: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{lead_id}/reject", response_model=dict)
+async def reject_lead(
+    lead_id: int,
+    request: RejectLeadRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Rejeita um lead
+    """
+    try:
+        lead = db.query(Lead).filter(Lead.id == lead_id).first()
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead não encontrado")
+        
+        if lead.status != StatusLead.NOVO.value:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Lead já foi {lead.status}"
+            )
+        
+        lead.status = StatusLead.PERDIDO.value
+        lead.message = request.motivo
+        
+        db.commit()
+        
+        logger.info(f"Lead {lead.id} rejeitado: {request.motivo}")
+        
+        return {
+            "success": True,
+            "message": "Lead rejeitado com sucesso"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Erro ao rejeitar lead: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
