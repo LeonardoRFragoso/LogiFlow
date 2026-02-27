@@ -143,27 +143,17 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    email = Column(String(120), nullable=False, index=True)
-    nome = Column(String(120), nullable=False)
-    senha_hash = Column(String(255), nullable=False)
-    tipo = Column(String(50), default="operador")
+    email = Column(String(255), nullable=False, index=True)
+    nome = Column(String(255), nullable=True)
+    senha_hash = Column(String(255), nullable=True)
+    tipo = Column(String(50), nullable=True)
     status = Column(String(50), default="ativo")
-    telefone = Column(String(30))
-    cargo = Column(String(100))
-    ultimo_acesso = Column(DateTime)
-    criado_em = Column(DateTime, default=datetime.utcnow)
-    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Multi-tenant
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
-    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
     # Relationships
     tenant = relationship("Tenant", back_populates="users")
-    
-    # Índice único por tenant
-    __table_args__ = (
-        UniqueConstraint('email', 'tenant_id', name='uq_user_email_tenant'),
-    )
 
 
 class RefreshToken(Base):
@@ -176,6 +166,7 @@ class RefreshToken(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+
 # ========================================
 # Models
 # ========================================
@@ -183,232 +174,123 @@ class RefreshToken(Base):
 class Cliente(Base):
     __tablename__ = "clientes"
     
-    id = Column(String(8), primary_key=True, default=generate_uuid)
-    razao_social = Column(String(200), nullable=False)
-    nome_fantasia = Column(String(200))
-    cnpj = Column(String(20))
-    
-    # Multi-tenant
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nome = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=True)
+    telefone = Column(String(20), nullable=True)
+    cnpj = Column(String(20), nullable=True)
+    endereco = Column(Text, nullable=True)
+    cidade = Column(String(100), nullable=True)
+    uf = Column(String(2), nullable=True)
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
-    inscricao_estadual = Column(String(20))
-    email = Column(String(100))
-    telefone = Column(String(20))
-    celular = Column(String(20))
-    endereco = Column(String(200))
-    bairro = Column(String(100))
-    cidade = Column(String(100))
-    uf = Column(String(2))
-    cep = Column(String(10))
-    contato_nome = Column(String(100))
-    cargo_contato = Column(String(100))
-    email_contato_secundario = Column(String(100))
-    telefone_contato_secundario = Column(String(20))
-    
-    ativo = Column(Boolean, default=True)
-    
-    segmento = Column(String(100))
-    porte = Column(String(50))
-    status_comercial = Column(String(50), default="ativo", index=True)
-    classificacao = Column(String(20), default="B")
-    
-    health_score = Column(Float, default=75.0, index=True)
-    health_score_anterior = Column(Float)
-    health_score_atualizado_em = Column(DateTime)
-    
-    responsavel_comercial_id = Column(String(36), ForeignKey("users.id"), index=True)
-    responsavel_cs_id = Column(String(36), ForeignKey("users.id"))
-    
-    data_primeira_compra = Column(DateTime)
-    data_ultima_compra = Column(DateTime)
-    data_ultimo_contato = Column(DateTime, index=True)
-    
-    valor_total_gasto = Column(Float, default=0)
-    ticket_medio = Column(Float, default=0)
-    frequencia_compra_dias = Column(Integer)
-    
-    sla_resposta_horas = Column(Integer, default=24)
-    prioridade_atendimento = Column(String(20), default="normal")
-    
-    tags = Column(Text)
-    observacoes_internas = Column(Text)
-    
-    criado_em = Column(DateTime, default=datetime.utcnow)
-    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
     # Relationships
     pedidos = relationship("Pedido", back_populates="cliente")
     cotacoes = relationship("Cotacao", back_populates="cliente")
     oportunidades = relationship("Opportunity", back_populates="cliente")
     interacoes = relationship("CustomerInteraction", back_populates="cliente")
-    responsavel_comercial = relationship("User", foreign_keys=[responsavel_comercial_id])
-    responsavel_cs = relationship("User", foreign_keys=[responsavel_cs_id])
 
 
 class Motorista(Base):
     __tablename__ = "motoristas"
     
-    id = Column(String(8), primary_key=True, default=generate_uuid)
-    nome = Column(String(100), nullable=False)
-    cpf = Column(String(14))
-    
-    # Multi-tenant
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nome = Column(String(255), nullable=False)
+    cpf = Column(String(20), nullable=True)
+    cnh = Column(String(20), nullable=True)
+    email = Column(String(255), nullable=True)
+    telefone = Column(String(20), nullable=True)
+    status = Column(String(50), nullable=True)
+    disponibilidade = Column(String(50), nullable=True)
+    tipo_contrato = Column(String(50), nullable=True)
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
-    telefone = Column(String(20))
-    email = Column(String(100))
-    cnh_numero = Column(String(20))
-    cnh_categoria = Column(String(5))
-    cnh_validade = Column(String(10))
-    status = Column(String(20), default=StatusMotorista.DISPONIVEL.value)
-    foto_url = Column(String(500))
-    entregas_hoje = Column(Integer, default=0)
-    avaliacao = Column(Float, default=5.0)
-    ativo = Column(Boolean, default=True)
-    criado_em = Column(DateTime, default=datetime.utcnow)
-    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
     # Relationships
-    veiculo_id = Column(String(8), ForeignKey("veiculos.id"), nullable=True)
-    veiculo = relationship("Veiculo", back_populates="motorista")
-    entregas = relationship("Entrega", back_populates="motorista")
     pedidos = relationship("Pedido", back_populates="motorista")
 
 
 class Veiculo(Base):
     __tablename__ = "veiculos"
     
-    id = Column(String(8), primary_key=True, default=generate_uuid)
-    placa = Column(String(10), nullable=False)
-    
-    # Multi-tenant
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    placa = Column(String(20), nullable=False, unique=True)
+    marca = Column(String(100), nullable=True)
+    modelo = Column(String(100), nullable=True)
+    ano = Column(Integer, nullable=True)
+    status = Column(String(50), nullable=True)
+    disponibilidade = Column(String(50), nullable=True)
+    tipo = Column(String(50), nullable=True)
+    tipo_carroceria = Column(String(50), nullable=True)
+    tipo_propriedade = Column(String(50), nullable=True)
+    capacidade_kg = Column(Float, nullable=True)
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
-    tipo = Column(String(50))
-    marca = Column(String(50))
-    modelo = Column(String(50))
-    ano = Column(Integer)
-    capacidade_kg = Column(Float)
-    capacidade_m3 = Column(Float)
-    status = Column(String(20), default=StatusVeiculo.DISPONIVEL.value)
-    km_atual = Column(Integer, default=0)
-    ultima_manutencao = Column(String(10))
-    proxima_manutencao = Column(String(10))
-    ativo = Column(Boolean, default=True)
-    criado_em = Column(DateTime, default=datetime.utcnow)
-    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
-    motorista = relationship("Motorista", back_populates="veiculo", uselist=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class Pedido(Base):
     __tablename__ = "pedidos"
     
-    id = Column(String(8), primary_key=True, default=generate_uuid)
-    numero = Column(String(20), nullable=False)
-    cliente_id = Column(String(8), ForeignKey("clientes.id"))
-    
-    # Multi-tenant
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
-    motorista_id = Column(String(8), ForeignKey("motoristas.id"), nullable=True)
-    
-    origem_endereco = Column(String(200))
-    origem_cidade = Column(String(100))
-    origem_uf = Column(String(2))
-    destino_endereco = Column(String(200))
-    destino_cidade = Column(String(100))
-    destino_uf = Column(String(2))
-    destino_cep = Column(String(10))
-    
-    peso_kg = Column(Float, default=0)
-    volumes = Column(Integer, default=0)
-    valor_mercadoria = Column(Float, default=0)
-    valor_frete = Column(Float, default=0)
-    
-    status = Column(String(20), default=StatusPedido.AGUARDANDO.value)
-    sla_status = Column(String(20), default="verde")
-    previsao_entrega = Column(DateTime)
-    data_coleta = Column(DateTime)
-    data_entrega = Column(DateTime)
-    observacoes = Column(Text)
-    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=True)
+    cliente_nome = Column(String(255), nullable=True)
+    status = Column(String(50), nullable=True)
+    prioridade = Column(String(50), nullable=True)
+    tipo_frete = Column(String(50), nullable=True)
+    peso_total_kg = Column(Float, nullable=True)
+    volume_total_m3 = Column(Float, nullable=True)
+    valor_mercadoria = Column(Float, nullable=True)
+    motorista_id = Column(Integer, ForeignKey("motoristas.id"), nullable=True)
+    veiculo_id = Column(Integer, ForeignKey("veiculos.id"), nullable=True)
     criado_em = Column(DateTime, default=datetime.utcnow)
-    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
+
     # Relationships
     cliente = relationship("Cliente", back_populates="pedidos")
     motorista = relationship("Motorista", back_populates="pedidos")
-    entregas = relationship("Entrega", back_populates="pedido")
 
 
 class Entrega(Base):
     __tablename__ = "entregas"
     
-    id = Column(String(8), primary_key=True, default=generate_uuid)
-    codigo = Column(String(20), nullable=False)
-    pedido_id = Column(String(8), ForeignKey("pedidos.id"))
-    
-    # Multi-tenant
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    codigo = Column(String(100), nullable=True)
+    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=True)
+    cliente_nome = Column(String(255), nullable=True)
+    endereco_entrega = Column(Text, nullable=True)
+    cidade = Column(String(100), nullable=True)
+    uf = Column(String(2), nullable=True)
+    status = Column(String(50), nullable=True)
+    data_entrega = Column(DateTime, nullable=True)
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
-    motorista_id = Column(String(8), ForeignKey("motoristas.id"), nullable=True)
-    
-    cliente_nome = Column(String(200))
-    cliente_telefone = Column(String(20))
-    
-    endereco_rua = Column(String(200))
-    endereco_bairro = Column(String(100))
-    endereco_cidade = Column(String(100))
-    endereco_uf = Column(String(2))
-    endereco_cep = Column(String(10))
-    latitude = Column(Float)
-    longitude = Column(Float)
-    
-    volumes = Column(Integer, default=0)
-    peso = Column(Float, default=0)
-    valor_mercadoria = Column(Float, default=0)
-    valor_frete = Column(Float, default=0)
-    
-    status = Column(String(30), default=StatusEntrega.AGUARDANDO_COLETA.value)
-    progresso = Column(Integer, default=0)
-    previsao_entrega = Column(DateTime)
-    data_coleta = Column(DateTime)
-    data_entrega = Column(DateTime)
-    
-    assinatura_recebedor = Column(Text)
-    foto_comprovante = Column(String(500))
-    observacoes = Column(Text)
-    atrasada = Column(Boolean, default=False)
-    
-    criado_em = Column(DateTime, default=datetime.utcnow)
-    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
-    pedido = relationship("Pedido", back_populates="entregas")
-    motorista = relationship("Motorista", back_populates="entregas")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 
 
 class Cotacao(Base):
     __tablename__ = "cotacoes"
     
-    id = Column(String(8), primary_key=True, default=generate_uuid)
-    numero = Column(String(20), unique=True, nullable=False)
-    cliente_id = Column(String(8), ForeignKey("clientes.id"))
-    
-    origem_cidade = Column(String(100))
-    origem_uf = Column(String(2))
-    destino_cidade = Column(String(100))
-    destino_uf = Column(String(2))
-    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    numero = Column(String(20), unique=True, nullable=True)
+    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=True)
+    origem_cidade = Column(String(100), nullable=True)
+    origem_uf = Column(String(2), nullable=True)
+    destino_cidade = Column(String(100), nullable=True)
+    destino_uf = Column(String(2), nullable=True)
     peso_kg = Column(Float, default=0)
     valor_mercadoria = Column(Float, default=0)
     valor_frete = Column(Float, default=0)
     prazo_dias = Column(Integer, default=0)
-    
     status = Column(String(20), default=StatusCotacao.PENDENTE.value)
-    validade = Column(DateTime)
-    observacoes = Column(Text)
-    
+    validade = Column(DateTime, nullable=True)
+    observacoes = Column(Text, nullable=True)
     criado_em = Column(DateTime, default=datetime.utcnow)
     atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+
     # Relationships
     cliente = relationship("Cliente", back_populates="cotacoes")
 
@@ -416,8 +298,8 @@ class Cotacao(Base):
 class Ocorrencia(Base):
     __tablename__ = "ocorrencias"
     
-    id = Column(String(8), primary_key=True, default=generate_uuid)
-    entrega_id = Column(String(8), ForeignKey("entregas.id"))
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    entrega_id = Column(Integer, ForeignKey("entregas.id"), nullable=True)
     tipo = Column(String(50))
     titulo = Column(String(200))
     descricao = Column(Text)
@@ -458,7 +340,7 @@ class Lead(Base):
     lead_score = Column(Integer, default=0, index=True)
     estagio_maturidade = Column(String(50), default="frio")
     
-    assigned_to = Column(String(36), ForeignKey("users.id"), nullable=True, index=True)
+    assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     
     primeiro_contato_em = Column(DateTime, nullable=True)
     ultimo_contato_em = Column(DateTime, nullable=True)
@@ -467,7 +349,7 @@ class Lead(Base):
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     converted_at = Column(DateTime, nullable=True)
-    converted_to_cliente_id = Column(String(8), ForeignKey("clientes.id"), nullable=True)
+    converted_to_cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=True)
     
     motivo_descarte = Column(Text, nullable=True)
     
