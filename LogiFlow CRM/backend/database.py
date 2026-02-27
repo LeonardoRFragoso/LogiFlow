@@ -8,6 +8,7 @@ Lazy connection - only connects when needed (not at import time)
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import QueuePool, NullPool
 import os
 
 # Importar configurações
@@ -28,12 +29,28 @@ def get_engine():
     global _engine
     if _engine is None:
         DATABASE_URL = settings.get_database_url()
-        _engine = create_engine(
-            DATABASE_URL,
-            pool_pre_ping=True,  # Verificar conexão antes de usar
-            pool_recycle=3600,   # Reciclar conexões a cada 1h
-            echo=False  # True para debug SQL
-        )
+        
+        # Configurar pool baseado no ambiente
+        is_production = os.getenv("ENVIRONMENT", "development") == "production"
+        
+        if is_production:
+            # Produção: usar QueuePool com limite de conexões
+            pool_config = {
+                "poolclass": QueuePool,
+                "pool_size": 10,           # Conexões permanentes
+                "max_overflow": 20,        # Conexões adicionais
+                "pool_pre_ping": True,     # Verificar conexão antes de usar
+                "pool_recycle": 3600,      # Reciclar a cada 1h
+                "pool_timeout": 30,        # Timeout para obter conexão
+            }
+        else:
+            # Desenvolvimento: usar NullPool (sem limite)
+            pool_config = {
+                "poolclass": NullPool,
+                "echo": False
+            }
+        
+        _engine = create_engine(DATABASE_URL, **pool_config)
     return _engine
 
 
