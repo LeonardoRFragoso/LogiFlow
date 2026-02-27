@@ -26,7 +26,7 @@ class LeadStatusHistory(Base):
     status_anterior = Column(String(20), nullable=True)
     status_novo = Column(String(20), nullable=False)
     
-    usuario_id = Column(String(36), ForeignKey("users.id"), nullable=True)
+    usuario_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     motivo = Column(Text, nullable=True)
     
     data_mudanca = Column(DateTime, default=datetime.utcnow, index=True)

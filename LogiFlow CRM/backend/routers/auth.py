@@ -173,7 +173,6 @@ def criar_usuario_admin_se_necessario():
                 senha_hash=_hash_senha("admin123"),
                 tipo=TipoUsuario.ADMIN.value,
                 status=StatusUsuario.ATIVO.value,
-                cargo="Administrador do Sistema",
             )
             db.add(user)
             db.commit()
@@ -445,9 +444,7 @@ async def get_me(current_user: User = Depends(get_current_user)):
             "email": current_user.email,
             "nome": current_user.nome,
             "tipo": current_user.tipo,
-            "telefone": current_user.telefone,
-            "cargo": current_user.cargo,
-            "ultimo_acesso": current_user.ultimo_acesso
+            "status": current_user.status
         }
     }
 
@@ -462,10 +459,6 @@ async def update_me(
     """Atualiza dados do próprio usuário"""
     if nome:
         current_user.nome = nome
-    if telefone:
-        current_user.telefone = telefone
-    
-    current_user.atualizado_em = datetime.utcnow()
     db.add(current_user)
     db.commit()
     
@@ -473,8 +466,7 @@ async def update_me(
         "success": True,
         "message": "Dados atualizados",
         "data": {
-            "nome": current_user.nome,
-            "telefone": current_user.telefone
+            "nome": current_user.nome
         }
     }
 
@@ -579,8 +571,7 @@ async def listar_usuarios(
             "nome": u.nome,
             "tipo": u.tipo,
             "status": u.status,
-            "ultimo_acesso": u.ultimo_acesso,
-            "criado_em": u.criado_em
+            "created_at": u.created_at
         })
 
     return {
@@ -611,8 +602,6 @@ async def criar_usuario(
         senha_hash=_hash_senha(request.senha),
         tipo=request.tipo.value,
         status=StatusUsuario.ATIVO.value,
-        telefone=request.telefone,
-        cargo=request.cargo,
     )
     
     db.add(usuario)
