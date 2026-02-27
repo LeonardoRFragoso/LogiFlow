@@ -41,12 +41,12 @@ class OpportunityNote(Base):
     __tablename__ = "opportunity_notes"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    oportunidade_id = Column(String(8), ForeignKey("opportunities.id"), nullable=False, index=True)
+    oportunidade_id = Column(Integer, ForeignKey("opportunities.id"), nullable=False, index=True)
     
     conteudo = Column(Text, nullable=False)
     tipo = Column(String(30), default="note")
     
-    autor_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    autor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     
     criado_em = Column(DateTime, default=datetime.utcnow, index=True)
     editado_em = Column(DateTime, nullable=True)
@@ -61,7 +61,7 @@ class OpportunityProduct(Base):
     __tablename__ = "opportunity_products"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    oportunidade_id = Column(String(8), ForeignKey("opportunities.id"), nullable=False, index=True)
+    oportunidade_id = Column(Integer, ForeignKey("opportunities.id"), nullable=False, index=True)
     
     produto_nome = Column(String(255), nullable=False)
     descricao = Column(Text)
@@ -83,15 +83,15 @@ class SalesActivity(Base):
     __tablename__ = "sales_activities"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    oportunidade_id = Column(String(8), ForeignKey("opportunities.id"), nullable=True, index=True)
-    cliente_id = Column(String(8), ForeignKey("clientes.id"), nullable=True, index=True)
+    oportunidade_id = Column(Integer, ForeignKey("opportunities.id"), nullable=True, index=True)
+    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=True, index=True)
     lead_id = Column(Integer, ForeignKey("leads.id"), nullable=True, index=True)
     
     tipo = Column(String(30), nullable=False, index=True)
     assunto = Column(String(255), nullable=False)
     descricao = Column(Text)
     
-    responsavel_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    responsavel_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     
     data_planejada = Column(DateTime, nullable=False, index=True)
     data_conclusao = Column(DateTime, nullable=True)
@@ -120,7 +120,7 @@ class SalesForecast(Base):
     ano = Column(Integer, nullable=False, index=True)
     mes = Column(Integer, nullable=False, index=True)
     
-    responsavel_id = Column(String(36), ForeignKey("users.id"), nullable=True, index=True)
+    responsavel_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     
     valor_previsto = Column(Float, nullable=False)
     valor_comprometido = Column(Float, default=0)
@@ -141,7 +141,7 @@ class CustomerHealthScoreLog(Base):
     __tablename__ = "customer_health_score_log"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    cliente_id = Column(String(8), ForeignKey("clientes.id"), nullable=False, index=True)
+    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False, index=True)
     
     score_anterior = Column(Float, nullable=True)
     score_novo = Column(Float, nullable=False)
@@ -160,7 +160,7 @@ class OpportunitySLALog(Base):
     __tablename__ = "opportunity_sla_log"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    oportunidade_id = Column(String(8), ForeignKey("opportunities.id"), nullable=False, index=True)
+    oportunidade_id = Column(Integer, ForeignKey("opportunities.id"), nullable=False, index=True)
     
     estagio = Column(String(30), nullable=False)
     dias_no_estagio = Column(Integer, nullable=False)
@@ -179,7 +179,7 @@ class ClienteSegmentacao(Base):
     __tablename__ = "cliente_segmentacao"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    cliente_id = Column(String(8), ForeignKey("clientes.id"), nullable=False, unique=True, index=True)
+    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False, unique=True, index=True)
     
     rfm_score = Column(Integer, default=0)
     recency_score = Column(Integer, default=0)
@@ -219,7 +219,7 @@ class EmailTemplate(Base):
     
     ativo = Column(Boolean, default=True)
     
-    criado_por = Column(String(36), ForeignKey("users.id"), nullable=True)
+    criado_por = Column(Integer, ForeignKey("users.id"), nullable=True)
     criado_em = Column(DateTime, default=datetime.utcnow)
     atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
