@@ -142,7 +142,7 @@ class InteractionType(str, enum.Enum):
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = Column(Integer, primary_key=True, autoincrement=True)
     email = Column(String(120), nullable=False, index=True)
     nome = Column(String(120), nullable=False)
     senha_hash = Column(String(255), nullable=False)
@@ -170,7 +170,7 @@ class RefreshToken(Base):
     __tablename__ = "refresh_tokens"
 
     token = Column(String(255), primary_key=True, index=True)
-    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     expire_at = Column(DateTime, nullable=False)
     revoked = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
