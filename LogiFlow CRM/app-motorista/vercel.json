@@ -7,7 +7,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://logiflow-backend.railway.app/api/:path*"
+      "destination": "https://logiflow-api-production-3447.up.railway.app/api/:path*"
     },
     {
       "source": "/(.*)",
