@@ -1,13 +1,23 @@
 """
-Router para gerenciamento de entregas
+LogiFlow CRM - Router Entregas
+Endpoints para gestão de entregas
 """
-from fastapi import APIRouter, HTTPException, Depends
-from typing import List, Optional
-from pydantic import BaseModel
-from datetime import datetime, timedelta
-from sqlalchemy.orm import Session
-from database import get_db
 
+from fastapi import APIRouter, HTTPException, Query, Path, Request, Depends
+from pydantic import BaseModel, Field
+from typing import Optional, List
+from datetime import datetime, date
+from enum import Enum
+from sqlalchemy.orm import Session
+import logging
+import uuid
+
+from database import get_db
+from models import Entrega
+from middleware.tenant import get_current_tenant_id
+from loguru import logger
+
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -103,26 +113,59 @@ entregas_mock = [
 ]
 
 
-@router.get("/", response_model=List[EntregaResponse])
+@router.get("")
 async def listar_entregas(
+    request: Request,
     status: Optional[str] = None,
-    motorista_id: Optional[int] = None,
     cliente_id: Optional[int] = None,
+    data_inicio: Optional[date] = None,
+    data_fim: Optional[date] = None,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
-    """Lista todas as entregas"""
-    entregas = entregas_mock.copy()
-    
-    if status:
-        entregas = [e for e in entregas if e.get("status") == status]
-    
-    if motorista_id:
-        entregas = [e for e in entregas if e.get("motorista_id") == motorista_id]
-    
-    if cliente_id:
-        entregas = [e for e in entregas if e.get("cliente_id") == cliente_id]
-    
-    return {"data": entregas, "total": len(entregas)}
+    """Lista entregas do tenant atual com filtros"""
+    try:
+        tenant_id = get_current_tenant_id(request)
+        
+        # Construir query base filtrando por tenant
+        query = db.query(Entrega).filter(Entrega.tenant_id == tenant_id)
+        
+        # Aplicar filtros adicionais
+        if status:
+            query = query.filter(Entrega.status == status)
+        if cliente_id:
+            query = query.filter(Entrega.cliente_id == cliente_id)
+        if data_inicio:
+            query = query.filter(Entrega.data_entrega >= datetime.combine(data_inicio, datetime.min.time()))
+        if data_fim:
+            query = query.filter(Entrega.data_entrega <= datetime.combine(data_fim, datetime.max.time()))
+        
+        # Ordenar por data
+        query = query.order_by(Entrega.data_entrega.desc())
+        
+        # Paginação
+        total = query.count()
+        entregas = query.offset((page - 1) * per_page).limit(per_page).all()
+        
+        logger.info(f"✅ Listadas {len(entregas)} entregas do tenant {tenant_id}")
+        
+        return {
+            "success": True,
+            "data": entregas,
+            "pagination": {
+                "page": page,
+                "per_page": per_page,
+                "total": total,
+                "pages": (total + per_page - 1) // per_page
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Erro ao listar entregas: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/stats")
