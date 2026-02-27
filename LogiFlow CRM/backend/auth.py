@@ -8,7 +8,7 @@ from routers.auth import (
     get_current_admin,
     get_current_gerente_ou_admin,
     verificar_token,
-    criar_token_acesso,
+    criar_access_token,
 )
 
 __all__ = [
@@ -16,5 +16,5 @@ __all__ = [
     "get_current_admin",
     "get_current_gerente_ou_admin",
     "verificar_token",
-    "criar_token_acesso",
+    "criar_access_token",
 ]
