@@ -143,7 +143,7 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    email = Column(String(120), unique=True, nullable=False, index=True)
+    email = Column(String(120), nullable=False, index=True)
     nome = Column(String(120), nullable=False)
     senha_hash = Column(String(255), nullable=False)
     tipo = Column(String(50), default="operador")
@@ -153,6 +153,17 @@ class User(Base):
     ultimo_acesso = Column(DateTime)
     criado_em = Column(DateTime, default=datetime.utcnow)
     atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Multi-tenant
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
+    
+    # Relationships
+    tenant = relationship("Tenant", back_populates="users")
+    
+    # Índice único por tenant
+    __table_args__ = (
+        UniqueConstraint('email', 'tenant_id', name='uq_user_email_tenant'),
+    )
 
 
 class RefreshToken(Base):
@@ -490,6 +501,7 @@ class Tenant(Base):
     cancelled_at = Column(DateTime, nullable=True)
     
     # Relationships
+    users = relationship("User", back_populates="tenant")
     leads = relationship("Lead", back_populates="tenant")
     subscriptions = relationship("Subscription", back_populates="tenant")
 
