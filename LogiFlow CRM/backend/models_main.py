@@ -4,7 +4,7 @@ LogiFlow CRM - SQLAlchemy Models
 Modelos de dados persistentes
 """
 
-from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Text, ForeignKey, Enum
+from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Text, ForeignKey, Enum, UniqueConstraint
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
@@ -477,7 +477,7 @@ class Lead(Base):
     tenant = relationship("Tenant", back_populates="leads")
     assigned_user = relationship("User", foreign_keys=[assigned_to])
     converted_cliente = relationship("Cliente", foreign_keys=[converted_to_cliente_id])
-    historico_status = relationship("LeadStatusHistory", back_populates="lead", order_by="LeadStatusHistory.data_mudanca.desc()")
+    historico_status = relationship("LeadStatusHistory", back_populates="lead", foreign_keys="LeadStatusHistory.lead_id")
 
 
 class Tenant(Base):

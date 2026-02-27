@@ -99,9 +99,12 @@ def get_db():
 
 def init_db():
     """Cria todas as tabelas"""
+    import models_main
+    import models_crm_enterprise
     from models.cte import CTe
     from models.mdfe import MDFe
     from models.configuracao_fiscal import ConfiguracaoFiscal
     from models.tenant_credentials import TenantCredentials
     from models.whatsapp_message import WhatsAppMessage, WhatsAppConversation, WhatsAppConfig
+    from models_crm_enterprise import LeadStatusHistory, OpportunityNote, OpportunityProduct, SalesActivity, SalesForecast, CustomerHealthScoreLog, OpportunitySLALog, ClienteSegmentacao, EmailTemplate
     Base.metadata.create_all(bind=get_engine())
