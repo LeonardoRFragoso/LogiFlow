@@ -152,8 +152,8 @@ class WhatsAppCRMSync:
             # Buscar mensagens não sincronizadas
             mensagens = self.db.query(WhatsAppMessage).filter(
                 WhatsAppMessage.conversation_id == conversa_id,
-                WhatsAppMessage.metadata.is_(None) | 
-                ~WhatsAppMessage.metadata.has_key("synced_to_crm")
+                WhatsAppMessage.extra_metadata.is_(None) | 
+                ~WhatsAppMessage.extra_metadata.has_key("synced_to_crm")
             ).order_by(WhatsAppMessage.timestamp.asc()).all()
             
             synced_count = 0
@@ -182,10 +182,10 @@ class WhatsAppCRMSync:
                     response.raise_for_status()
                     
                     # Marcar como sincronizada
-                    if msg.metadata is None:
-                        msg.metadata = {}
-                    msg.metadata["synced_to_crm"] = True
-                    msg.metadata["synced_at"] = datetime.utcnow().isoformat()
+                    if msg.extra_metadata is None:
+                        msg.extra_metadata = {}
+                    msg.extra_metadata["synced_to_crm"] = True
+                    msg.extra_metadata["synced_at"] = datetime.utcnow().isoformat()
                     
                     synced_count += 1
                     

@@ -66,7 +66,7 @@ class WhatsAppMessage(Base):
     
     # Metadados
     quoted_message_id = Column(String(255), nullable=True)  # Resposta a outra mensagem
-    metadata = Column(JSON, nullable=True)  # Dados adicionais
+    extra_metadata = Column(JSON, nullable=True)  # Dados adicionais
     
     # Relacionamentos com CRM
     cliente_id = Column(String(36), nullable=True, index=True)
