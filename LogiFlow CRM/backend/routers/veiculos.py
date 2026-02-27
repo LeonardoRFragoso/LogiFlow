@@ -3,14 +3,20 @@ LogiFlow CRM - Router Veículos
 Endpoints para gestão de frota de veículos
 """
 
-from fastapi import APIRouter, HTTPException, Query, Path
+from fastapi import APIRouter, HTTPException, Query, Path, Request, Depends
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List
 from datetime import datetime, date, timedelta
 from enum import Enum
+from sqlalchemy.orm import Session
 import logging
 import uuid
 import re
+
+from database import get_db
+from models import Veiculo
+from middleware.tenant import get_current_tenant_id
+from loguru import logger
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -210,6 +216,7 @@ manutencoes_db: dict = {}
 
 @router.get("")
 async def listar_veiculos(
+    request: Request,
     status: Optional[StatusVeiculo] = None,
     disponibilidade: Optional[DisponibilidadeVeiculo] = None,
     tipo: Optional[TipoVeiculo] = None,
@@ -217,43 +224,46 @@ async def listar_veiculos(
     tipo_propriedade: Optional[TipoPropriedade] = None,
     busca: Optional[str] = None,
     page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100)
+    per_page: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db)
 ):
-    """Lista veículos com filtros"""
+    """Lista veículos do tenant atual com filtros"""
     try:
-        veiculos = list(veiculos_db.values())
+        tenant_id = get_current_tenant_id(request)
         
-        # Filtros
+        # Construir query base filtrando por tenant
+        query = db.query(Veiculo).filter(Veiculo.tenant_id == tenant_id)
+        
+        # Aplicar filtros adicionais
         if status:
-            veiculos = [v for v in veiculos if v["status"] == status.value]
+            query = query.filter(Veiculo.status == status.value)
         if disponibilidade:
-            veiculos = [v for v in veiculos if v.get("disponibilidade") == disponibilidade.value]
+            query = query.filter(Veiculo.disponibilidade == disponibilidade.value)
         if tipo:
-            veiculos = [v for v in veiculos if v["tipo"] == tipo.value]
+            query = query.filter(Veiculo.tipo == tipo.value)
         if tipo_carroceria:
-            veiculos = [v for v in veiculos if v["tipo_carroceria"] == tipo_carroceria.value]
+            query = query.filter(Veiculo.tipo_carroceria == tipo_carroceria.value)
         if tipo_propriedade:
-            veiculos = [v for v in veiculos if v["tipo_propriedade"] == tipo_propriedade.value]
+            query = query.filter(Veiculo.tipo_propriedade == tipo_propriedade.value)
         if busca:
-            busca_upper = busca.upper()
-            veiculos = [
-                v for v in veiculos
-                if busca_upper in v["placa"] or 
-                   busca_upper in v["modelo"].upper() or
-                   busca_upper in v["marca"].upper()
-            ]
+            query = query.filter(
+                (Veiculo.placa.ilike(f"%{busca}%")) |
+                (Veiculo.modelo.ilike(f"%{busca}%")) |
+                (Veiculo.marca.ilike(f"%{busca}%"))
+            )
         
         # Ordenar por placa
-        veiculos.sort(key=lambda x: x["placa"])
+        query = query.order_by(Veiculo.placa)
         
         # Paginação
-        total = len(veiculos)
-        start = (page - 1) * per_page
-        veiculos_paginados = veiculos[start:start + per_page]
+        total = query.count()
+        veiculos = query.offset((page - 1) * per_page).limit(per_page).all()
+        
+        logger.info(f"✅ Listados {len(veiculos)} veículos do tenant {tenant_id}")
         
         return {
             "success": True,
-            "data": veiculos_paginados,
+            "data": veiculos,
             "pagination": {
                 "page": page,
                 "per_page": per_page,
@@ -262,8 +272,10 @@ async def listar_veiculos(
             }
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Erro ao listar veículos: {e}")
+        logger.error(f"❌ Erro ao listar veículos: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
