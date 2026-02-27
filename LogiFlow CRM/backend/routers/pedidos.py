@@ -3,13 +3,19 @@ LogiFlow CRM - Router Pedidos de Frete
 Endpoints para gestão de pedidos/ordens de transporte
 """
 
-from fastapi import APIRouter, HTTPException, Query, Path
+from fastapi import APIRouter, HTTPException, Query, Path, Request, Depends
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, date, timedelta
 from enum import Enum
+from sqlalchemy.orm import Session
 import logging
 import uuid
+
+from database import get_db
+from models import Pedido
+from middleware.tenant import get_current_tenant_id
+from loguru import logger
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -185,6 +191,7 @@ def gerar_codigo_rastreio() -> str:
 
 @router.get("")
 async def listar_pedidos(
+    request: Request,
     status: Optional[StatusPedido] = None,
     cliente_id: Optional[str] = None,
     motorista_id: Optional[str] = None,
@@ -192,41 +199,43 @@ async def listar_pedidos(
     data_inicio: Optional[date] = None,
     data_fim: Optional[date] = None,
     page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100)
+    per_page: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db)
 ):
-    """Lista pedidos com filtros"""
+    """Lista pedidos do tenant atual com filtros"""
     try:
-        pedidos = list(pedidos_db.values())
+        tenant_id = get_current_tenant_id(request)
         
-        # Filtros
+        # Construir query base filtrando por tenant
+        query = db.query(Pedido).filter(Pedido.tenant_id == tenant_id)
+        
+        # Aplicar filtros adicionais
         if status:
-            pedidos = [p for p in pedidos if p["status"] == status.value]
+            query = query.filter(Pedido.status == status.value)
         if cliente_id:
-            pedidos = [p for p in pedidos if p["cliente_id"] == cliente_id]
+            query = query.filter(Pedido.cliente_id == cliente_id)
         if motorista_id:
-            pedidos = [p for p in pedidos if p.get("motorista_id") == motorista_id]
+            query = query.filter(Pedido.motorista_id == motorista_id)
         if prioridade:
-            pedidos = [p for p in pedidos if p["prioridade"] == prioridade.value]
+            query = query.filter(Pedido.prioridade == prioridade.value)
         if data_inicio:
-            pedidos = [p for p in pedidos if p["criado_em"].date() >= data_inicio]
+            query = query.filter(Pedido.criado_em >= datetime.combine(data_inicio, datetime.min.time()))
         if data_fim:
-            pedidos = [p for p in pedidos if p["criado_em"].date() <= data_fim]
+            query = query.filter(Pedido.criado_em <= datetime.combine(data_fim, datetime.max.time()))
         
         # Ordenar por prioridade e data
         prioridade_ordem = {"urgente": 0, "alta": 1, "normal": 2, "baixa": 3}
-        pedidos.sort(key=lambda x: (
-            prioridade_ordem.get(x["prioridade"], 2),
-            x["criado_em"]
-        ), reverse=True)
+        query = query.order_by(Pedido.criado_em.desc())
         
         # Paginação
-        total = len(pedidos)
-        start = (page - 1) * per_page
-        pedidos_paginados = pedidos[start:start + per_page]
+        total = query.count()
+        pedidos = query.offset((page - 1) * per_page).limit(per_page).all()
+        
+        logger.info(f"✅ Listados {len(pedidos)} pedidos do tenant {tenant_id}")
         
         return {
             "success": True,
-            "data": pedidos_paginados,
+            "data": pedidos,
             "pagination": {
                 "page": page,
                 "per_page": per_page,
@@ -235,8 +244,10 @@ async def listar_pedidos(
             }
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Erro ao listar pedidos: {e}")
+        logger.error(f"❌ Erro ao listar pedidos: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
