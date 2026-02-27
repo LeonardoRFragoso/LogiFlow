@@ -242,7 +242,6 @@ class Cliente(Base):
     interacoes = relationship("CustomerInteraction", back_populates="cliente")
     responsavel_comercial = relationship("User", foreign_keys=[responsavel_comercial_id])
     responsavel_cs = relationship("User", foreign_keys=[responsavel_cs_id])
-    campo_historico = relationship("ClienteFieldHistory", back_populates="cliente", order_by="ClienteFieldHistory.data_alteracao.desc()")
 
 
 class Motorista(Base):
