@@ -3,14 +3,20 @@ LogiFlow CRM - Router Motoristas
 Endpoints para gestão de motoristas
 """
 
-from fastapi import APIRouter, HTTPException, Query, Path, UploadFile, File
+from fastapi import APIRouter, HTTPException, Query, Path, UploadFile, File, Request, Depends
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List
 from datetime import datetime, date, timedelta
 from enum import Enum
+from sqlalchemy.orm import Session
 import logging
 import uuid
 import re
+
+from database import get_db
+from models import Motorista
+from middleware.tenant import get_current_tenant_id
+from loguru import logger
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -149,45 +155,48 @@ motoristas_db: dict = {}
 
 @router.get("")
 async def listar_motoristas(
+    request: Request,
     status: Optional[StatusMotorista] = None,
     disponibilidade: Optional[DisponibilidadeMotorista] = None,
     tipo_contrato: Optional[TipoContrato] = None,
     categoria_cnh: Optional[CategoriaCNH] = None,
     busca: Optional[str] = None,
     page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100)
+    per_page: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db)
 ):
-    """Lista motoristas com filtros"""
+    """Lista motoristas do tenant atual com filtros"""
     try:
-        motoristas = list(motoristas_db.values())
+        tenant_id = get_current_tenant_id(request)
         
-        # Filtros
+        # Construir query base filtrando por tenant
+        query = db.query(Motorista).filter(Motorista.tenant_id == tenant_id)
+        
+        # Aplicar filtros adicionais
         if status:
-            motoristas = [m for m in motoristas if m["status"] == status.value]
+            query = query.filter(Motorista.status == status.value)
         if disponibilidade:
-            motoristas = [m for m in motoristas if m.get("disponibilidade") == disponibilidade.value]
+            query = query.filter(Motorista.disponibilidade == disponibilidade.value)
         if tipo_contrato:
-            motoristas = [m for m in motoristas if m["tipo_contrato"] == tipo_contrato.value]
-        if categoria_cnh:
-            motoristas = [m for m in motoristas if m["cnh"]["categoria"] == categoria_cnh.value]
+            query = query.filter(Motorista.tipo_contrato == tipo_contrato.value)
         if busca:
-            busca_lower = busca.lower()
-            motoristas = [
-                m for m in motoristas
-                if busca_lower in m["nome"].lower() or busca_lower in m["cpf"]
-            ]
+            query = query.filter(
+                (Motorista.nome.ilike(f"%{busca}%")) |
+                (Motorista.cpf.ilike(f"%{busca}%"))
+            )
         
         # Ordenar por nome
-        motoristas.sort(key=lambda x: x["nome"])
+        query = query.order_by(Motorista.nome)
         
         # Paginação
-        total = len(motoristas)
-        start = (page - 1) * per_page
-        motoristas_paginados = motoristas[start:start + per_page]
+        total = query.count()
+        motoristas = query.offset((page - 1) * per_page).limit(per_page).all()
+        
+        logger.info(f"✅ Listados {len(motoristas)} motoristas do tenant {tenant_id}")
         
         return {
             "success": True,
-            "data": motoristas_paginados,
+            "data": motoristas,
             "pagination": {
                 "page": page,
                 "per_page": per_page,
@@ -196,8 +205,10 @@ async def listar_motoristas(
             }
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Erro ao listar motoristas: {e}")
+        logger.error(f"❌ Erro ao listar motoristas: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
