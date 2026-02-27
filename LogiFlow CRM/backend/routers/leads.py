@@ -15,6 +15,7 @@ import string
 from database import get_db
 from models import Lead, StatusLead, Tenant, User
 from routers.auth import _hash_senha
+from services.email_service import send_welcome_email
 from loguru import logger
 
 router = APIRouter(prefix="/api/leads", tags=["leads"])
@@ -293,6 +294,22 @@ async def approve_lead(
         lead.converted_at = datetime.utcnow()
         
         db.commit()
+        
+        # Enviar email com credenciais
+        try:
+            send_welcome_email(
+                tenant_id=tenant.id,
+                company_name=lead.company,
+                contact_name=lead.name,
+                contact_email=lead.email,
+                subdomain=subdomain,
+                plan=request.plan,
+                admin_email=lead.email,
+                admin_password=temp_password
+            )
+            logger.success(f"✅ Email de boas-vindas enviado para {lead.email}")
+        except Exception as e:
+            logger.error(f"⚠️ Erro ao enviar email: {e}")
         
         logger.success(f"✅ Lead {lead.id} aprovado - Tenant {tenant.id} criado")
         
