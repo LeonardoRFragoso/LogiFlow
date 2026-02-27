@@ -14,7 +14,7 @@ import uuid
 import secrets
 
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from sqlalchemy.orm import Session
 
 from config import settings
@@ -33,6 +33,18 @@ SECRET_KEY = settings.SECRET_KEY
 if SECRET_KEY == "change-this-in-production":
     logger.warning("SECRET_KEY está usando valor padrão. Defina via variável de ambiente em produção.")
 ALGORITHM = "HS256"
+
+
+def _hash_senha(senha: str) -> str:
+    return bcrypt.hashpw(senha.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+
+def _verificar_senha(senha: str, senha_hash: str) -> bool:
+    try:
+        return bcrypt.checkpw(senha.encode("utf-8"), senha_hash.encode("utf-8"))
+    except Exception:
+        return False
+
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 8  # 8 horas
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
