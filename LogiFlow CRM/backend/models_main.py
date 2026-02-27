@@ -648,8 +648,8 @@ class Opportunity(Base):
     """Oportunidades de venda (CRM nativo)"""
     __tablename__ = "opportunities"
     
-    id = Column(String(8), primary_key=True, default=generate_uuid)
-    cliente_id = Column(String(8), ForeignKey("clientes.id"), nullable=False, index=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False, index=True)
     
     nome = Column(String(255), nullable=False)
     descricao = Column(Text)
@@ -660,7 +660,7 @@ class Opportunity(Base):
     data_prevista_fechamento = Column(DateTime, nullable=True)
     data_fechamento = Column(DateTime, nullable=True)
     
-    responsavel_id = Column(String(36), ForeignKey("users.id"), nullable=True)
+    responsavel_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     origem = Column(String(100))
     proximo_passo = Column(String(255))
     
@@ -682,12 +682,12 @@ class OpportunityStageHistory(Base):
     __tablename__ = "opportunity_stage_history"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    oportunidade_id = Column(String(8), ForeignKey("opportunities.id"), nullable=False, index=True)
+    oportunidade_id = Column(Integer, ForeignKey("opportunities.id"), nullable=False, index=True)
     
     estagio_anterior = Column(String(30), nullable=True)
     estagio_novo = Column(String(30), nullable=False)
     
-    usuario_id = Column(String(36), ForeignKey("users.id"), nullable=True)
+    usuario_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     motivo = Column(Text, nullable=True)
     
     data_mudanca = Column(DateTime, default=datetime.utcnow, index=True)
@@ -702,14 +702,14 @@ class CustomerInteraction(Base):
     __tablename__ = "customer_interactions"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    cliente_id = Column(String(8), ForeignKey("clientes.id"), nullable=False, index=True)
-    oportunidade_id = Column(String(8), ForeignKey("opportunities.id"), nullable=True, index=True)
+    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False, index=True)
+    oportunidade_id = Column(Integer, ForeignKey("opportunities.id"), nullable=True, index=True)
     
     tipo = Column(String(30), nullable=False, index=True)
     assunto = Column(String(255), nullable=False)
     descricao = Column(Text)
     
-    responsavel_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    responsavel_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     
     data_interacao = Column(DateTime, nullable=False, index=True)
     duracao_minutos = Column(Integer, nullable=True)
