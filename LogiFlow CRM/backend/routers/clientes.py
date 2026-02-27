@@ -1,12 +1,15 @@
 """
 Router para gerenciamento de clientes
 """
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List, Optional
 from pydantic import BaseModel
 from datetime import datetime
 from sqlalchemy.orm import Session
 from database import get_db
+from models import Cliente
+from middleware.tenant import get_current_tenant_id
+from loguru import logger
 
 router = APIRouter()
 
@@ -90,87 +93,171 @@ clientes_mock = [
 
 @router.get("/", response_model=List[ClienteResponse])
 async def listar_clientes(
+    request: Request,
     status: Optional[str] = None,
     cidade: Optional[str] = None,
     uf: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
     db: Session = Depends(get_db)
 ):
-    """Lista todos os clientes"""
-    # TODO: Implementar consulta real ao banco de dados
-    clientes = clientes_mock.copy()
-    
-    # Filtros
-    if status == "ativo":
-        clientes = [c for c in clientes if c.get("ativo", True)]
-    elif status == "inativo":
-        clientes = [c for c in clientes if not c.get("ativo", True)]
-    
-    if cidade:
-        clientes = [c for c in clientes if c.get("cidade", "").lower() == cidade.lower()]
-    
-    if uf:
-        clientes = [c for c in clientes if c.get("uf", "").upper() == uf.upper()]
-    
-    return {"data": clientes, "total": len(clientes)}
+    """Lista clientes do tenant atual"""
+    try:
+        tenant_id = get_current_tenant_id(request)
+        
+        # Construir query base filtrando por tenant
+        query = db.query(Cliente).filter(Cliente.tenant_id == tenant_id)
+        
+        # Aplicar filtros adicionais
+        if status == "ativo":
+            query = query.filter(Cliente.ativo == True)
+        elif status == "inativo":
+            query = query.filter(Cliente.ativo == False)
+        
+        if cidade:
+            query = query.filter(Cliente.cidade.ilike(f"%{cidade}%"))
+        
+        if uf:
+            query = query.filter(Cliente.uf.ilike(f"%{uf}%"))
+        
+        # Aplicar paginação
+        total = query.count()
+        clientes = query.offset(skip).limit(limit).all()
+        
+        logger.info(f"✅ Listados {len(clientes)} clientes do tenant {tenant_id}")
+        
+        return clientes
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Erro ao listar clientes: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{cliente_id}", response_model=ClienteResponse)
-async def obter_cliente(cliente_id: int, db: Session = Depends(get_db)):
-    """Obtém detalhes de um cliente específico"""
-    # TODO: Implementar consulta real ao banco de dados
-    cliente = next((c for c in clientes_mock if c["id"] == cliente_id), None)
-    
-    if not cliente:
-        raise HTTPException(status_code=404, detail="Cliente não encontrado")
-    
-    return cliente
+async def obter_cliente(
+    cliente_id: str,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Obtém detalhes de um cliente específico do tenant atual"""
+    try:
+        tenant_id = get_current_tenant_id(request)
+        
+        cliente = db.query(Cliente).filter(
+            Cliente.id == cliente_id,
+            Cliente.tenant_id == tenant_id
+        ).first()
+        
+        if not cliente:
+            raise HTTPException(status_code=404, detail="Cliente não encontrado")
+        
+        logger.info(f"✅ Cliente {cliente_id} obtido do tenant {tenant_id}")
+        return cliente
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Erro ao obter cliente: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/", response_model=ClienteResponse, status_code=201)
-async def criar_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
-    """Cria um novo cliente"""
-    # TODO: Implementar criação real no banco de dados
-    novo_cliente = {
-        "id": len(clientes_mock) + 1,
-        **cliente.dict(),
-        "created_at": datetime.now().isoformat(),
-        "updated_at": None
-    }
-    
-    clientes_mock.append(novo_cliente)
-    return novo_cliente
+async def criar_cliente(
+    cliente: ClienteCreate,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Cria um novo cliente para o tenant atual"""
+    try:
+        tenant_id = get_current_tenant_id(request)
+        
+        novo_cliente = Cliente(
+            **cliente.dict(),
+            tenant_id=tenant_id
+        )
+        
+        db.add(novo_cliente)
+        db.commit()
+        db.refresh(novo_cliente)
+        
+        logger.info(f"✅ Cliente {novo_cliente.id} criado para tenant {tenant_id}")
+        return novo_cliente
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Erro ao criar cliente: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.put("/{cliente_id}", response_model=ClienteResponse)
 async def atualizar_cliente(
-    cliente_id: int,
-    cliente: ClienteUpdate,
+    cliente_id: str,
+    cliente_data: ClienteUpdate,
+    request: Request,
     db: Session = Depends(get_db)
 ):
-    """Atualiza um cliente existente"""
-    # TODO: Implementar atualização real no banco de dados
-    cliente_existente = next((c for c in clientes_mock if c["id"] == cliente_id), None)
-    
-    if not cliente_existente:
-        raise HTTPException(status_code=404, detail="Cliente não encontrado")
-    
-    cliente_existente.update(cliente.dict())
-    cliente_existente["updated_at"] = datetime.now().isoformat()
-    
-    return cliente_existente
+    """Atualiza um cliente do tenant atual"""
+    try:
+        tenant_id = get_current_tenant_id(request)
+        
+        cliente = db.query(Cliente).filter(
+            Cliente.id == cliente_id,
+            Cliente.tenant_id == tenant_id
+        ).first()
+        
+        if not cliente:
+            raise HTTPException(status_code=404, detail="Cliente não encontrado")
+        
+        # Atualizar campos
+        for key, value in cliente_data.dict(exclude_unset=True).items():
+            setattr(cliente, key, value)
+        
+        db.commit()
+        db.refresh(cliente)
+        
+        logger.info(f"✅ Cliente {cliente_id} atualizado no tenant {tenant_id}")
+        return cliente
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Erro ao atualizar cliente: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/{cliente_id}", status_code=204)
-async def excluir_cliente(cliente_id: int, db: Session = Depends(get_db)):
-    """Exclui um cliente (soft delete)"""
-    # TODO: Implementar exclusão real no banco de dados
-    cliente = next((c for c in clientes_mock if c["id"] == cliente_id), None)
-    
-    if not cliente:
-        raise HTTPException(status_code=404, detail="Cliente não encontrado")
-    
-    cliente["ativo"] = False
-    cliente["updated_at"] = datetime.now().isoformat()
-    
-    return None
+async def excluir_cliente(
+    cliente_id: str,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Deleta um cliente do tenant atual (soft delete)"""
+    try:
+        tenant_id = get_current_tenant_id(request)
+        
+        cliente = db.query(Cliente).filter(
+            Cliente.id == cliente_id,
+            Cliente.tenant_id == tenant_id
+        ).first()
+        
+        if not cliente:
+            raise HTTPException(status_code=404, detail="Cliente não encontrado")
+        
+        cliente.ativo = False
+        db.commit()
+        
+        logger.info(f"✅ Cliente {cliente_id} deletado (soft delete) do tenant {tenant_id}")
+        return None
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Erro ao deletar cliente: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
