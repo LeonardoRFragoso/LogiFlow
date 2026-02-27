@@ -7,15 +7,15 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://logiflow-api.onrender.com/api/:path*"
+      "destination": "https://logiflow-backend.railway.app/api/:path*"
     },
     {
       "source": "/auth/:path*",
-      "destination": "https://logiflow-api.onrender.com/auth/:path*"
+      "destination": "https://logiflow-backend.railway.app/auth/:path*"
     },
     {
       "source": "/demo/:path*",
-      "destination": "https://logiflow-api.onrender.com/demo/:path*"
+      "destination": "https://logiflow-backend.railway.app/demo/:path*"
     },
     {
       "source": "/(.*)",
