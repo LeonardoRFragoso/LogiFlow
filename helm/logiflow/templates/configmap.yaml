@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "logiflow.fullname" . }}-config
+  labels:
+    {{- include "logiflow.labels" . | nindent 4 }}
+data:
+  API_PREFIX: {{ .Values.backend.env.API_PREFIX | quote }}
+  API_VERSION: {{ .Values.backend.env.API_VERSION | quote }}
+  DEBUG: {{ .Values.backend.env.DEBUG | quote }}
+  ENVIRONMENT: {{ .Values.backend.env.ENVIRONMENT | quote }}
+  VUE_APP_API_URL: {{ .Values.frontend.env.VUE_APP_API_URL | quote }}
+  NODE_ENV: {{ .Values.frontend.env.NODE_ENV | quote }}
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "logiflow.fullname" . }}-secrets
+  labels:
+    {{- include "logiflow.labels" . | nindent 4 }}
+type: Opaque
+data:
+  # These should be populated from external secret management
+  # Use sealed-secrets, external-secrets, or AWS Secrets Manager in production
+  database-url: {{ .Values.postgresql.auth.password | b64enc }}
+  redis-url: {{ .Values.redis.auth.password | b64enc }}
+  secret-key: {{ .Values.backend.env.DEBUG | b64enc }}
+  sendgrid-api-key: {{ "" | b64enc }}
+  google-api-key: {{ "" | b64enc }}

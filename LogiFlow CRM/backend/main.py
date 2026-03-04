@@ -188,20 +188,26 @@ app = FastAPI(
 )
 
 # Configurar CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+from middleware.cors_security import setup_cors
+setup_cors(app)
 
 # Middleware de Tenant (Multi-Tenancy)
 app.add_middleware(TenantMiddleware)
 
 # Rate Limiting
 from middleware.rate_limit import RateLimitMiddleware
+from middleware.rate_limiter import limiter, setup_rate_limiter
 app.add_middleware(RateLimitMiddleware)
+setup_rate_limiter(app)
+app.state.limiter = limiter
+
+# Prometheus Metrics
+from middleware.prometheus import PrometheusMiddleware, get_metrics
+setup_prometheus_metrics(app)
+
+def setup_prometheus_metrics(app):
+    """Setup Prometheus middleware"""
+    app.add_middleware(PrometheusMiddleware, group_paths=True)
 
 # Correlation ID
 app.middleware("http")(correlation_middleware)
@@ -319,6 +325,13 @@ async def readiness(request: Request):
         "status": status,
         "redis": redis_ok
     }
+
+
+@app.get("/metrics", tags=["Monitoring"])
+async def metrics():
+    """Expõe métricas Prometheus"""
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(get_metrics())
 
 
 # ===========================================

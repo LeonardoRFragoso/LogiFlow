@@ -1,0 +1,264 @@
+# Default values for logiflow helm chart
+# Environment: development (override with -f values-staging.yaml or values-production.yaml)
+
+# Global settings
+global:
+  environment: development
+  domain: localhost
+  namespace: default
+  imagePullSecrets: []
+  
+# Image configuration
+image:
+  registry: ghcr.io
+  repository: leonardorfragoso/logiflow
+
+# Backend API deployment
+backend:
+  enabled: true
+  replicaCount: 2
+  
+  image:
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  
+  nameOverride: ""
+  fullnameOverride: ""
+  
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+    annotations: {}
+  
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    hosts:
+      - host: api.localhost
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: logiflow-api-tls
+        hosts:
+          - api.localhost
+  
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  
+  env:
+    DEBUG: "false"
+    ENVIRONMENT: "development"
+    API_PREFIX: "/api"
+    API_VERSION: "v1"
+  
+  envFrom: []
+    # - configMapRef:
+    #     name: logiflow-config
+    # - secretRef:
+    #     name: logiflow-secrets
+  
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: 8000
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 2
+  
+  nodeSelector: {}
+  tolerations: []
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                    - logiflow-backend
+            topologyKey: kubernetes.io/hostname
+
+# Frontend deployment (Vue.js)
+frontend:
+  enabled: true
+  replicaCount: 2
+  
+  image:
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+  
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/gzip: "on"
+    hosts:
+      - host: logiflow.localhost
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: logiflow-web-tls
+        hosts:
+          - logiflow.localhost
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 256Mi
+    requests:
+      cpu: 250m
+      memory: 128Mi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+  
+  env:
+    VUE_APP_API_URL: "http://api.localhost/api"
+    NODE_ENV: "production"
+
+# Database - PostgreSQL (via Helm chart dependency)
+postgresql:
+  enabled: true
+  auth:
+    username: logiflow
+    password: "logiflow"  # CHANGE IN PRODUCTION!
+    database: logiflow
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+  metrics:
+    enabled: true
+
+# Cache - Redis (via Helm chart dependency)
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: "redis12345"  # CHANGE IN PRODUCTION!
+  master:
+    persistence:
+      enabled: true
+      size: 2Gi
+  metrics:
+    enabled: true
+
+# Monitoring - Prometheus
+prometheus:
+  enabled: true
+  retention: 30d
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+# Monitoring - Grafana
+grafana:
+  enabled: true
+  adminPassword: "grafana123"  # CHANGE IN PRODUCTION!
+  datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus:9090
+      access: proxy
+      isDefault: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Network Policies
+networkPolicy:
+  enabled: false  # Enable for production
+  policyTypes:
+    - Ingress
+    - Egress
+
+# Pod Disruption Budget (for high availability)
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Service Account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# RBAC
+rbac:
+  create: true
+
+# Security Context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+# Persistent Volumes
+persistence:
+  enabled: true
+  storageClass: "standard"
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+# Configurable feature flags
+features:
+  rateLimit:
+    enabled: true
+    requestsPerMinute: 100
+  multiTenancy:
+    enabled: true
+  cors:
+    enabled: true
+    restrictive: true
+  monitoring:
+    enabled: true

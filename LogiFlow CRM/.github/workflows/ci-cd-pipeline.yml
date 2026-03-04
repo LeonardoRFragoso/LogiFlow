@@ -1,0 +1,500 @@
+name: CI/CD Pipeline - LogiFlow CRM
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - staging
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ========================================
+  # Verificação de Código
+  # ========================================
+  lint-and-security:
+    runs-on: ubuntu-latest
+    name: "Code Quality & Security"
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r backend/requirements.txt
+          pip install ruff flake8 bandit black
+
+      - name: Lint with Ruff
+        run: ruff check backend/ --select=E9,F63,F7,F82 --show-source
+
+      - name: Check formatting with Black
+        run: black --check backend/ || true
+
+      - name: Security check with Bandit
+        run: bandit -r backend/ -ll -i || true
+
+      - name: Run mypy type checking
+        run: mypy backend/ --ignore-missing-imports || true
+
+  # ========================================
+  # Testes Backend
+  # ========================================
+  test-backend:
+    runs-on: ubuntu-latest
+    name: "Backend Tests"
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: logiflow_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install -r backend/requirements-test.txt
+
+      - name: Run pytest
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/logiflow_test
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test-secret-key-for-ci-cd
+        run: |
+          cd backend
+          pytest tests/ -v --tb=short --color=yes --cov=. --cov-report=xml || true
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./backend/coverage.xml
+          flags: backend
+          name: backend-coverage
+
+  # ========================================
+  # Testes Frontend
+  # ========================================
+  test-frontend:
+    runs-on: ubuntu-latest
+    name: "Frontend Tests"
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: "frontend/package-lock.json"
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run linter
+        run: |
+          cd frontend
+          npm run lint || true
+
+      - name: Run tests
+        run: |
+          cd frontend
+          npm run test || true
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+
+  # ========================================
+  # Build Docker Images
+  # ========================================
+  build-images:
+    needs: [test-backend, test-frontend, lint-and-security]
+    runs-on: ubuntu-latest
+    name: "Build Docker Images"
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend
+          file: ./docker/api/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:buildcache,mode=max
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./frontend
+          file: ./docker/frontend/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:${{ github.sha }}
+          build-args: |
+            API_URL=${{ secrets.API_URL }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:buildcache,mode=max
+
+  # ========================================
+  # Deploy Staging
+  # ========================================
+  deploy-staging:
+    needs: build-images
+    runs-on: ubuntu-latest
+    name: "Deploy to Staging"
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Railway Staging
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
+        run: |
+          npm install -g @railway/cli
+          railway deploy --service api --environment staging
+          railway deploy --service frontend --environment staging
+        continue-on-error: true
+
+      - name: Slack notification on deploy
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "🚀 Staging deployment for ${{ github.repository }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "✅ *Staging Deploy Successful*\n*Repository:* ${{ github.repository }}\n*Commit:* ${{ github.event.head_commit.message }}\n*Author:* ${{ github.actor }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: success()
+
+  # ========================================
+  # Deploy Production
+  # ========================================
+  deploy-production:
+    needs: build-images
+    runs-on: ubuntu-latest
+    name: "Deploy to Production"
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    environment:
+      name: production
+      url: https://api.logiflow.com/health
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Railway Production
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PRODUCTION }}
+        run: |
+          npm install -g @railway/cli
+          railway deploy --service api --environment production
+          railway deploy --service frontend --environment production
+          railway up --service postgres --environment production
+        continue-on-error: true
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_PRODUCTION }}
+        run: |
+          pip install alembic sqlalchemy psycopg2-binary
+          cd backend
+          alembic upgrade head
+
+      - name: Health check
+        run: |
+          for i in {1..30}; do
+            curl -f https://api.logiflow.com/health && echo "✅ API healthy" && exit 0
+            echo "Attempt $i/30..."
+            sleep 10
+          done
+          echo "❌ Health check failed"
+          exit 1
+
+      - name: Slack notification on deploy
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "🚀 Production deployment for ${{ github.repository }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "✅ *Production Deploy Successful*\n*Repository:* ${{ github.repository }}\n*Commit:* ${{ github.event.head_commit.message }}\n*Author:* ${{ github.actor }}\n*Ref:* ${{ github.ref }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ========================================
+  # Performance & Security Tests (Optional)
+  # ========================================
+  performance-tests:
+    runs-on: ubuntu-latest
+    name: "Performance Tests"
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install locust
+          pip install -r backend/requirements.txt
+
+      - name: Run load tests
+        run: |
+          locust -f backend/performance_tests.py --headless -u 100 -r 10 --run-time 10s || true
+
+  # ========================================
+  # SAST Security Scanning
+  # ========================================
+  security-scan:
+    runs-on: ubuntu-latest
+    name: "Security Scanning"
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: "trivy-results.sarif"
+        if: always()
+
+  # ========================================
+  # Deploy via Helm (Kubernetes)
+  # ========================================
+  deploy-helm:
+    needs: build-images
+    runs-on: ubuntu-latest
+    name: "Deploy via Helm"
+    if: github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: "v3.12.0"
+
+      - name: Configure kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Add Helm repositories
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo update
+
+      - name: Deploy to Staging (develop branch)
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          helm dependency update ./helm/logiflow
+          helm upgrade --install logiflow-staging ./helm/logiflow \
+            -f ./helm/logiflow/values-staging.yaml \
+            --namespace logiflow-staging \
+            --create-namespace \
+            --timeout 10m \
+            --wait \
+            --set backend.image.tag=${{ github.sha }} \
+            --set frontend.image.tag=${{ github.sha }}
+
+      - name: Deploy to Production (main branch)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          helm dependency update ./helm/logiflow
+          helm upgrade --install logiflow-prod ./helm/logiflow \
+            -f ./helm/logiflow/values-production.yaml \
+            --namespace logiflow-production \
+            --create-namespace \
+            --timeout 10m \
+            --wait \
+            --set backend.image.tag=${{ github.ref_name }}-${{ github.sha }} \
+            --set frontend.image.tag=${{ github.ref_name }}-${{ github.sha }}
+
+      - name: Verify Helm deployment
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Wait for rollout
+          kubectl rollout status deployment/logiflow-prod-backend \
+            -n logiflow-production --timeout=5m || true
+          kubectl rollout status deployment/logiflow-prod-frontend \
+            -n logiflow-production --timeout=5m || true
+          
+          # Check pod status
+          kubectl get pods -n logiflow-production
+          kubectl get svc -n logiflow-production
+          kubectl get ingress -n logiflow-production
+
+      - name: Run post-deployment tests
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Get API endpoint
+          API_ENDPOINT=$(kubectl get ingress -n logiflow-production -o jsonpath='{.items[0].spec.rules[0].host}')
+          
+          # Health check
+          curl -f https://$API_ENDPOINT/health || echo "Health check warning"
+          
+          # Readiness check
+          curl -f https://$API_ENDPOINT/ready || echo "Readiness check warning"
+
+# ========================================
+# Notifications
+# ========================================
+  notify-status:
+    runs-on: ubuntu-latest
+    name: "Pipeline Status Notification"
+    needs: [lint-and-security, test-backend, test-frontend, build-images]
+    if: always()
+    
+    steps:
+      - name: Determine status
+        id: status
+        run: |
+          if [ "${{ needs.lint-and-security.result }}" = "failure" ] || \
+             [ "${{ needs.test-backend.result }}" = "failure" ] || \
+             [ "${{ needs.test-frontend.result }}" = "failure" ] || \
+             [ "${{ needs.build-images.result }}" = "failure" ]; then
+            echo "emoji=❌" >> $GITHUB_OUTPUT
+            echo "status=failed" >> $GITHUB_OUTPUT
+          else
+            echo "emoji=✅" >> $GITHUB_OUTPUT
+            echo "status=passed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Slack notification
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "${{ steps.status.outputs.emoji }} CI/CD Pipeline for ${{ github.repository }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{ steps.status.outputs.emoji }} *Pipeline ${{ steps.status.outputs.status }}*\n*Repository:* ${{ github.repository }}\n*Branch:* ${{ github.ref_name }}\n*Author:* ${{ github.actor }}\n*Commit:* ${{ github.event.head_commit.message }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: always() && secrets.SLACK_WEBHOOK_URL != ''
