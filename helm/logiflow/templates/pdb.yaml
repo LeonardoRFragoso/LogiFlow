@@ -1,0 +1,31 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "logiflow.fullname" . }}-backend
+  labels:
+    {{- include "logiflow.labels" . | nindent 4 }}
+    component: backend
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "logiflow.selectorLabels" . | nindent 6 }}
+      component: backend
+
+---
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "logiflow.fullname" . }}-frontend
+  labels:
+    {{- include "logiflow.labels" . | nindent 4 }}
+    component: frontend
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      {{- include "logiflow.selectorLabels" . | nindent 6 }}
+      component: frontend
+{{- end }}

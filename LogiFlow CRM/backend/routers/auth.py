@@ -3,7 +3,7 @@ LogiFlow CRM - Router Autenticação
 Endpoints para autenticação JWT
 """
 
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field, EmailStr
 from typing import Optional
@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session
 from config import settings
 from database import get_db, SessionLocal
 from models import User, RefreshToken
+from middleware.rate_limiter import limiter
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -320,7 +321,8 @@ async def get_current_gerente_ou_admin(current_user: User = Depends(get_current_
 # ========================================
 
 @router.post("/login", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """
     Login com email e senha.
     Retorna access_token e refresh_token.

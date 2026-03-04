@@ -1,0 +1,98 @@
+# Staging environment values
+global:
+  environment: staging
+  domain: beta.logiflow.com
+  namespace: logiflow-staging
+
+backend:
+  replicaCount: 2
+  image:
+    tag: "latest"
+  env:
+    DEBUG: "false"
+    ENVIRONMENT: "staging"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+  resources:
+    limits:
+      cpu: 1500m
+      memory: 768Mi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/rate-limit: "100"
+    hosts:
+      - host: api.beta.logiflow.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: logiflow-api-staging-tls
+        hosts:
+          - api.beta.logiflow.com
+
+frontend:
+  replicaCount: 2
+  image:
+    tag: "latest"
+  env:
+    VUE_APP_API_URL: "https://api.beta.logiflow.com"
+    NODE_ENV: "production"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 3
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/gzip: "on"
+    hosts:
+      - host: beta.logiflow.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: logiflow-frontend-staging-tls
+        hosts:
+          - beta.logiflow.com
+
+postgresql:
+  enabled: true
+  auth:
+    username: logiflow
+    database: logiflow_staging
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+
+redis:
+  enabled: true
+  master:
+    persistence:
+      enabled: true
+      size: 2Gi
+
+prometheus:
+  enabled: true
+  retention: 30d
+
+grafana:
+  enabled: true
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: false

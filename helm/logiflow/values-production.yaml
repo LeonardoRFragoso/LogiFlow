@@ -1,0 +1,161 @@
+# Production environment values
+global:
+  environment: production
+  domain: logiflow.com
+  namespace: logiflow-production
+
+backend:
+  replicaCount: 3
+  image:
+    tag: "1.0.0"  # Use specific version in production
+  env:
+    DEBUG: "false"
+    ENVIRONMENT: "production"
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 1Gi
+    requests:
+      cpu: 1000m
+      memory: 512Mi
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/rate-limit: "100"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    hosts:
+      - host: api.logiflow.com
+        paths:
+          - path: /
+            pathType: Prefix
+      - host: api.app.logiflow.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: logiflow-api-prod-tls
+        hosts:
+          - api.logiflow.com
+          - api.app.logiflow.com
+
+frontend:
+  replicaCount: 3
+  image:
+    tag: "1.0.0"  # Use specific version in production
+  env:
+    VUE_APP_API_URL: "https://api.logiflow.com"
+    NODE_ENV: "production"
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+  resources:
+    limits:
+      cpu: 500m
+      memory: 256Mi
+    requests:
+      cpu: 250m
+      memory: 128Mi
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/gzip: "on"
+      nginx.ingress.kubernetes.io/gzip-min-length: "1000"
+    hosts:
+      - host: logiflow.com
+        paths:
+          - path: /
+            pathType: Prefix
+      - host: www.logiflow.com
+        paths:
+          - path: /
+            pathType: Prefix
+      - host: app.logiflow.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: logiflow-frontend-prod-tls
+        hosts:
+          - logiflow.com
+          - www.logiflow.com
+          - app.logiflow.com
+
+postgresql:
+  enabled: true
+  auth:
+    username: logiflow
+    database: logiflow_prod
+  primary:
+    persistence:
+      enabled: true
+      size: 100Gi  # Larger storage for production
+      storageClassName: "fast-ssd"  # Use faster storage
+  metrics:
+    enabled: true
+  backup:
+    enabled: true
+    cronjob:
+      schedule: "0 2 * * *"  # Daily backup at 2 AM
+
+redis:
+  enabled: true
+  master:
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClassName: "fast-ssd"
+  replica:
+    replicaCount: 2  # HA setup
+
+prometheus:
+  enabled: true
+  retention: 90d  # Longer retention for prod
+  storageSize: 50Gi
+
+grafana:
+  enabled: true
+  replicas: 2  # HA
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2  # Stricter for production
+
+networkPolicy:
+  enabled: true  # Enable network policies in production
+  policyTypes:
+    - Ingress
+    - Egress
+
+publicCertificates:
+  - name: logiflow-api-prod-tls
+    issuer: letsencrypt-prod
+  - name: logiflow-frontend-prod-tls
+    issuer: letsencrypt-prod
+
+# Use external secrets in production
+externalSecrets:
+  enabled: true
+  backend: aws-secrects-manager  # or vault, or external-secrets
+  region: us-east-1
+
+# Monitoring and alerts
+monitoring:
+  enabled: true
+  alertmanager: true
+  rules:
+    enabled: true
