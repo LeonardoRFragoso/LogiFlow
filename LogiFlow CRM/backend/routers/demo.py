@@ -48,30 +48,38 @@ async def solicitar_demo(request: DemoRequest, db: Session = Depends(get_db)):
     Recebe solicitação de demonstração da landing page
     Salva no banco de dados como Lead
     """
-    # Verificar se email já existe
-    existing = db.query(Lead).filter(Lead.email == request.email).first()
-    if existing:
-        return {
-            "success": True,
-            "message": "Já recebemos sua solicitação! Nossa equipe entrará em contato em breve.",
-            "lead_id": existing.id
-        }
-    
-    # Criar novo lead
-    lead = Lead(
-        name=request.name,
-        email=request.email,
-        phone=request.phone,
-        company=request.company,
-        vehicles=request.vehicles,
-        message=request.message,
-        source="site",
-        status=StatusLead.NOVO.value
-    )
-    
-    db.add(lead)
-    db.commit()
-    db.refresh(lead)
+    try:
+        # Verificar se email já existe
+        existing = db.query(Lead).filter(Lead.email == request.email).first()
+        if existing:
+            return {
+                "success": True,
+                "message": "Já recebemos sua solicitação! Nossa equipe entrará em contato em breve.",
+                "lead_id": existing.id
+            }
+        
+        # Criar novo lead
+        lead = Lead(
+            name=request.name,
+            email=request.email,
+            phone=request.phone,
+            company=request.company,
+            vehicles=request.vehicles,
+            message=request.message,
+            source="site",
+            status=StatusLead.NOVO.value
+        )
+        
+        db.add(lead)
+        db.commit()
+        db.refresh(lead)
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Erro ao criar lead: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Erro ao processar solicitação: {str(e)}"
+        )
     
     logger.info(f"📩 Nova solicitação de demo recebida:")
     logger.info(f"   ID: {lead.id}")
