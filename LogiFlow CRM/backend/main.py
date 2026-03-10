@@ -12,7 +12,7 @@ from fastapi.exceptions import RequestValidationError
 from contextlib import asynccontextmanager
 import redis
 import os
-import loguru
+from loguru import logger
 from pathlib import Path
 
 from config import settings
