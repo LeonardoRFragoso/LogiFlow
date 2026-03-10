@@ -43,7 +43,6 @@ try:
         auth,
         whatsapp,
         maps,
-        cases,
         demo,
         ocorrencias,
         leads,
@@ -67,7 +66,7 @@ try:
     )
     from routers.admin import quota_router
 except ImportError as e:
-    logger.warning(f"Erro ao importar routers: {e}")
+    print(f"WARNING: Erro ao importar routers: {e}")
     fiscal = None
     rastreamento = None
     cotacoes = None
@@ -77,7 +76,6 @@ except ImportError as e:
     auth = None
     whatsapp = None
     maps = None
-    cases = None
     demo = None
     ocorrencias = None
     leads = None
