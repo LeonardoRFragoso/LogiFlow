@@ -4,13 +4,15 @@ LogiFlow CRM - FastAPI Backend
 API principal para orquestração do LogiFlow CRM
 """
 
-from fastapi import FastAPI, HTTPException, Depends, Request, APIRouter
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import RequestValidationError
 from contextlib import asynccontextmanager
 import redis
-from loguru import logger
+import os
+import loguru
 from pathlib import Path
 
 from config import settings
@@ -338,6 +340,25 @@ async def metrics():
 # ===========================================
 # Exception Handlers
 # ===========================================
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handler para erros de validação do Pydantic"""
+    body = await request.body()
+    logger.error(f"❌ Erro de validação na requisição {request.method} {request.url.path}")
+    logger.error(f"📦 Body recebido: {body.decode('utf-8')}")
+    logger.error(f"🔍 Erros de validação: {exc.errors()}")
+    
+    return JSONResponse(
+        status_code=422,
+        content={
+            "success": False,
+            "error": "Erro de validação dos dados",
+            "details": exc.errors(),
+            "status_code": 422
+        }
+    )
+
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
     return JSONResponse(
