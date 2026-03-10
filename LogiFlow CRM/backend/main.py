@@ -189,6 +189,7 @@ app = FastAPI(
 
 # Configurar CORS
 from middleware.cors_security import setup_cors
+logger.info(f"🔧 Configurando CORS com origins: {settings.ALLOWED_ORIGINS}")
 setup_cors(app)
 
 # Middleware de Tenant (Multi-Tenancy)
