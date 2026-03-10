@@ -213,6 +213,23 @@ setup_prometheus_metrics(app)
 # Correlation ID
 app.middleware("http")(correlation_middleware)
 
+# Debug middleware para capturar body do demo request
+@app.middleware("http")
+async def log_demo_requests(request: Request, call_next):
+    if request.url.path.endswith("/demo/request"):
+        body = await request.body()
+        logger.info(f"🔍 DEBUG - Demo Request Raw Body: {body.decode('utf-8')}")
+        logger.info(f"🔍 DEBUG - Content-Type: {request.headers.get('content-type')}")
+        logger.info(f"🔍 DEBUG - Headers: {dict(request.headers)}")
+        
+        # Recriar request com body para próximo middleware
+        async def receive():
+            return {"type": "http.request", "body": body}
+        request._receive = receive
+    
+    response = await call_next(request)
+    return response
+
 
 # ===========================================
 # Prefixos e Routers
