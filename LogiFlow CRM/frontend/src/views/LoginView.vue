@@ -73,13 +73,16 @@
 
         <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
           <p class="text-center text-gray-500 dark:text-gray-400 text-sm">
-            Novo por aqui? <a href="#" class="text-blue-600 hover:underline dark:text-blue-400 font-medium">Solicite uma demonstração</a>
+            Novo por aqui? <a href="#" @click.prevent="showDemoModal = true" class="text-blue-600 hover:underline dark:text-blue-400 font-medium">Solicite uma demonstração</a>
           </p>
         </div>
 
         <p class="text-center text-gray-400 text-xs mt-6">© 2025 LogiFlow CRM - Todos os direitos reservados</p>
       </div>
     </div>
+
+    <!-- Demo Modal -->
+    <DemoModal v-if="showDemoModal" @close="showDemoModal = false" />
   </div>
 </template>
 
@@ -87,6 +90,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import DemoModal from '@/components/DemoModal.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -94,6 +98,7 @@ const authStore = useAuthStore()
 const form = reactive({ username: '', password: '' })
 const loading = ref(false)
 const error = ref('')
+const showDemoModal = ref(false)
 
 async function handleLogin() {
   loading.value = true
