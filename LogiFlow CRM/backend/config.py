@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "change-this-in-production"
     API_PREFIX: str = "/api"
     API_VERSION: str = "v1"
-    ALLOWED_ORIGINS: Union[List[str], str] = "http://localhost:3000,http://localhost:8080"
+    ALLOWED_ORIGINS: Union[List[str], str] = "http://localhost:3000,http://localhost:8080,https://logi-flow-blush.vercel.app"
     
     @field_validator('ALLOWED_ORIGINS', mode='before')
     @classmethod
