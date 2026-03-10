@@ -6,7 +6,7 @@ Endpoints para gestão de entregas
 from fastapi import APIRouter, HTTPException, Query, Path, Request, Depends
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from enum import Enum
 from sqlalchemy.orm import Session
 import logging
