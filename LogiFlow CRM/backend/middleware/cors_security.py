@@ -24,24 +24,29 @@ def setup_cors(app, allowed_origins: List[str] = None):
     if allowed_origins is None:
         allowed_origins = settings.ALLOWED_ORIGINS
     
+    # TEMPORÁRIO: Permitir todas as origens para debug
+    logger.warning("⚠️ CORS DEBUG MODE: Permitindo todas as origens temporariamente")
+    allowed_origins = ["*"]
+    use_credentials = False  # Cannot use credentials with wildcard
+    
     # Validar que não é allow_origins=["*"] em produção
-    if not settings.DEBUG and "*" in allowed_origins:
-        logger.warning(
-            "CORS com allow_origins=['*'] detectado em PRODUCTION! "
-            "Configurando apenas origins explícitas."
-        )
-        # Usar origins específicas
-        allowed_origins = [
-            "http://localhost:3000",
-            "http://localhost:5173",
-            "http://localhost:8080",
-        ]
+    # if not settings.DEBUG and "*" in allowed_origins:
+    #     logger.warning(
+    #         "CORS com allow_origins=['*'] detectado em PRODUCTION! "
+    #         "Configurando apenas origins explícitas."
+    #     )
+    #     # Usar origins específicas
+    #     allowed_origins = [
+    #         "http://localhost:3000",
+    #         "http://localhost:5173",
+    #         "http://localhost:8080",
+    #     ]
     
     # Aplicar middleware CORS
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins,
-        allow_credentials=True,
+        allow_credentials=use_credentials,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=[
             "Accept",
