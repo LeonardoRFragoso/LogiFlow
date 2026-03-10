@@ -67,7 +67,8 @@ async def solicitar_demo(request: DemoRequest, db: Session = Depends(get_db)):
             vehicles=request.vehicles,
             message=request.message,
             source="site",
-            status=StatusLead.NOVO.value
+            status=StatusLead.NOVO.value,
+            tenant_id=None  # Demo requests não têm tenant associado inicialmente
         )
         
         db.add(lead)
