@@ -203,11 +203,12 @@ app.state.limiter = limiter
 
 # Prometheus Metrics
 from middleware.prometheus import PrometheusMiddleware, get_metrics
-setup_prometheus_metrics(app)
 
 def setup_prometheus_metrics(app):
     """Setup Prometheus middleware"""
     app.add_middleware(PrometheusMiddleware, group_paths=True)
+
+setup_prometheus_metrics(app)
 
 # Correlation ID
 app.middleware("http")(correlation_middleware)
