@@ -15,7 +15,7 @@ O banco de dados do Railway (`logiflow-db.railway.internal`) não é acessível 
    # Selecionar: luminous-heart > production > logiflow-api
    ```
 
-2. **Executar migrations dentro do container:**
+2. **Executar migrations dentro dos container:**
    ```bash
    railway run alembic upgrade head
    ```
