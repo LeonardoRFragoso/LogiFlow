@@ -4,7 +4,7 @@ LogiFlow CRM - FastAPI Backend
 API principal para orquestração do LogiFlow CRM
 """
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, APIRouter
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
