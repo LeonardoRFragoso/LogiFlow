@@ -48,7 +48,13 @@ async def solicitar_demo(request: DemoRequest, db: Session = Depends(get_db)):
     Recebe solicitação de demonstração da landing page
     Salva no banco de dados como Lead
     """
-    logger.info(f"📥 Recebendo solicitação de demo: {request.name} ({request.email})")
+    logger.info(f"📥 Recebendo solicitação de demo")
+    logger.info(f"   Nome: {request.name}")
+    logger.info(f"   Email: {request.email}")
+    logger.info(f"   Telefone: {request.phone}")
+    logger.info(f"   Empresa: {request.company}")
+    logger.info(f"   Veículos: {request.vehicles}")
+    logger.info(f"   Mensagem: {request.message}")
     
     try:
         # Verificar se email já existe
