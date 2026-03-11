@@ -115,7 +115,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 key=client_ip,
                 endpoint=path,
                 limit=limit,
-                window=window
+                window_seconds=window
             )
             
             if not is_allowed:
