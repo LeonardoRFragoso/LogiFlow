@@ -325,40 +325,40 @@ class Lead(Base):
     phone = Column(String(20), nullable=False)
     company = Column(String(150), nullable=False)
     
-    # cargo = Column(String(100))  # Commented out - column doesn't exist in DB yet
-    # website = Column(String(255))  # Commented out - column doesn't exist in DB yet
-    # linkedin = Column(String(255))  # Commented out - column doesn't exist in DB yet
+    cargo = Column(String(100))
+    website = Column(String(255))
+    linkedin = Column(String(255))
     
     vehicles = Column(String(20))
     message = Column(Text)
-    # necessidade_descrita = Column(Text)  # Commented out - column doesn't exist in DB yet
+    necessidade_descrita = Column(Text)
     
     status = Column(String(20), default=StatusLead.NOVO.value, index=True)
     source = Column(String(50), default="site", index=True)
-    # source_details = Column(String(255))  # Commented out - column doesn't exist in DB yet
+    source_details = Column(String(255))
     
-    # lead_score = Column(Integer, default=0, index=True)  # Commented out - column doesn't exist in DB yet
-    # estagio_maturidade = Column(String(50), default="frio")  # Commented out - column doesn't exist in DB yet
+    lead_score = Column(Integer, default=0, index=True)
+    estagio_maturidade = Column(String(50), default="frio")
     
-    # assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)  # Commented out - column doesn't exist in DB yet
+    assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     
-    # primeiro_contato_em = Column(DateTime, nullable=True)  # Commented out - column doesn't exist in DB yet
-    # ultimo_contato_em = Column(DateTime, nullable=True)  # Commented out - column doesn't exist in DB yet
-    # proximo_followup_em = Column(DateTime, nullable=True, index=True)  # Commented out - column doesn't exist in DB yet
+    primeiro_contato_em = Column(DateTime, nullable=True)
+    ultimo_contato_em = Column(DateTime, nullable=True)
+    proximo_followup_em = Column(DateTime, nullable=True, index=True)
     
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    # converted_at = Column(DateTime, nullable=True)  # Commented out - column doesn't exist in DB yet
-    # converted_to_cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=True)  # Commented out - column doesn't exist in DB yet
+    converted_at = Column(DateTime, nullable=True)
+    converted_to_cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=True)
     
-    # motivo_descarte = Column(Text, nullable=True)  # Commented out - column doesn't exist in DB yet
+    motivo_descarte = Column(Text, nullable=True)
     
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True)
     
     # Relationships
     tenant = relationship("Tenant", back_populates="leads")
-    # assigned_user = relationship("User", foreign_keys=[assigned_to])  # Commented out - assigned_to doesn't exist
-    # converted_cliente = relationship("Cliente", foreign_keys=[converted_to_cliente_id])  # Commented out - converted_to_cliente_id doesn't exist
+    assigned_user = relationship("User", foreign_keys=[assigned_to])
+    converted_cliente = relationship("Cliente", foreign_keys=[converted_to_cliente_id])
     historico_status = relationship("LeadStatusHistory", back_populates="lead", foreign_keys="LeadStatusHistory.lead_id")
 
 
