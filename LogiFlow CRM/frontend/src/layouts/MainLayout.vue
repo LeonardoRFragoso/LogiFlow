@@ -63,6 +63,15 @@
             <span class="nav-text">SLA</span>
           </router-link>
         </div>
+
+        <div class="nav-section" v-if="isAdmin">
+          <span class="nav-section-title">Admin</span>
+          <router-link to="/admin/leads" class="nav-item" active-class="active">
+            <span class="nav-icon">🎯</span>
+            <span class="nav-text">Leads</span>
+            <span v-if="newLeadsCount > 0" class="badge-count">{{ newLeadsCount }}</span>
+          </router-link>
+        </div>
       </nav>
 
       <!-- Sidebar Footer -->
@@ -175,6 +184,9 @@ const searchQuery = ref('')
 const showNotifications = ref(false)
 const showUserMenu = ref(false)
 
+// Admin
+const newLeadsCount = ref(0)
+
 // Mock notifications (replace with real data later)
 const notifications = ref([
   { icon: '📦', text: 'Novo pedido PED-2024-001 criado', time: 'Há 5 min' },
@@ -189,6 +201,7 @@ const userInitial = computed(() => {
   const name = authStore.user?.first_name || authStore.user?.username || 'U'
   return name.charAt(0).toUpperCase()
 })
+const isAdmin = computed(() => authStore.user?.tipo === 'admin' || authStore.user?.is_admin === true)
 
 function toggleNotifications() {
   showNotifications.value = !showNotifications.value
@@ -364,6 +377,18 @@ onUnmounted(() => {
 .nav-text {
   font-size: 0.9rem;
   font-weight: 500;
+}
+
+.badge-count {
+  margin-left: auto;
+  background: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  min-width: 20px;
+  text-align: center;
 }
 
 .sidebar-footer {
