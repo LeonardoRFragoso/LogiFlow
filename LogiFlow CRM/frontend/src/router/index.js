@@ -54,6 +54,9 @@ const routes = [
       { path: 'crm/contatos', name: 'Contatos', component: () => import('@/views/crm/ContactsView.vue') },
       { path: 'crm/oportunidades', name: 'Oportunidades', component: () => import('@/views/crm/OpportunitiesView.vue') },
       { path: 'crm/casos', name: 'Casos', component: () => import('@/views/crm/CasesView.vue') },
+      
+      // Admin
+      { path: 'admin/leads', name: 'AdminLeads', component: () => import('@/views/admin/AdminLeadsView.vue'), meta: { requiresAdmin: true } },
     ],
   },
 ]

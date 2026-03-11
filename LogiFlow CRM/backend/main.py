@@ -65,7 +65,7 @@ try:
         crm_enterprise,  # CRM Enterprise nativo - ÚNICO CRM
         notifications,  # Sistema de notificações
     )
-    from routers.admin import quota_router
+    from routers.admin import quota_router, leads as admin_leads_router
 except ImportError as e:
     print(f"WARNING: Erro ao importar routers: {e}")
     fiscal = None
@@ -98,6 +98,7 @@ except ImportError as e:
     quota_router = None
     crm_enterprise = None
     notifications = None
+    admin_leads_router = None
 
 # Configurar logging
 logger.add(
@@ -329,6 +330,7 @@ if V2_ROUTERS_AVAILABLE:
 
 # Admin routers (protegidos por RBAC)
 include_router_with_version(quota_router, prefix="/admin", tags=["Admin - Quotas"])
+include_router_with_version(admin_leads_router)  # Gestão de leads
 
 app.include_router(api_router)
 
