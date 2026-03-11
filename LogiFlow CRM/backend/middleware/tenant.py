@@ -43,6 +43,10 @@ class TenantMiddleware(BaseHTTPMiddleware):
         """
         path = request.url.path
         
+        # Permitir requisições OPTIONS (CORS preflight) sem validação de tenant
+        if request.method == "OPTIONS":
+            return await call_next(request)
+        
         # Verificar se a rota está isenta
         if self._is_exempt_path(path):
             return await call_next(request)
