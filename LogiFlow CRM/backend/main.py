@@ -63,6 +63,7 @@ try:
         dashboard,
         features,  # Feature Flags para BETA
         crm_enterprise,  # CRM Enterprise nativo - ÚNICO CRM
+        notifications,  # Sistema de notificações
     )
     from routers.admin import quota_router
 except ImportError as e:
@@ -96,6 +97,7 @@ except ImportError as e:
     features = None
     quota_router = None
     crm_enterprise = None
+    notifications = None
 
 # Configurar logging
 logger.add(
@@ -129,6 +131,15 @@ async def lifespan(app: FastAPI):
         logger.info("✅ Usuários criados com sucesso")
     except Exception as e:
         logger.error(f"❌ Erro ao criar usuários: {e}")
+    
+    # Adicionar tabela de notificações
+    try:
+        logger.info("🔔 Verificando tabela de notificações...")
+        from add_notifications_table import add_notifications_table
+        add_notifications_table()
+        logger.info("✅ Tabela de notificações verificada")
+    except Exception as e:
+        logger.error(f"❌ Erro ao verificar tabela de notificações: {e}")
     
     # Testar conexão Redis
     try:
@@ -299,6 +310,7 @@ include_router_with_version(entregas, prefix="/entregas", tags=["Entregas"])
 include_router_with_version(dashboard, prefix="/dashboard", tags=["Dashboard"])
 include_router_with_version(features, prefix="", tags=["Feature Flags"])
 include_router_with_version(crm_enterprise, prefix="", tags=["CRM Enterprise"])
+include_router_with_version(notifications)  # Sistema de notificações
 
 # ===========================================
 # Routers v2 - Clean Architecture
