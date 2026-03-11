@@ -13,7 +13,9 @@ import random
 
 from database import get_db
 from models import Lead, StatusLead
+from models_main import TipoNotificacao
 from services.email_service import send_demo_confirmation, send_lead_notification
+from services.system_notifications import notification_service
 from loguru import logger
 
 router = APIRouter(prefix="/demo", tags=["Demo Data"])
@@ -115,7 +117,7 @@ async def solicitar_demo(request: DemoRequest, db: Session = Depends(get_db)):
         logger.error(f"❌ Erro ao enviar email de confirmação: {str(e)}")
         # Não falhar o request mesmo se email falhar
     
-    # ✅ Notificar equipe de vendas
+    # ✅ Notificar equipe de vendas via email
     try:
         send_lead_notification(
             lead_name=request.name,
@@ -123,11 +125,24 @@ async def solicitar_demo(request: DemoRequest, db: Session = Depends(get_db)):
             lead_company=request.company,
             lead_phone=request.phone
         )
-        logger.success(f"✅ Notificação enviada para equipe de vendas")
+        logger.success(f"✅ Notificação por email enviada para equipe de vendas")
     except Exception as e:
         logger.error(f"❌ Erro ao notificar equipe de vendas: {str(e)}")
     
-    # TODO: Notificação no Slack/Discord (próxima etapa)
+    # ✅ Criar notificação no sistema para todos os admins
+    try:
+        notification_service.criar_notificacao_para_admins(
+            db=db,
+            tipo=TipoNotificacao.NOVO_LEAD,
+            titulo=f"Novo pedido de demo: {request.company}",
+            mensagem=f"{request.name} da empresa {request.company} solicitou uma demonstração. Telefone: {request.phone}",
+            link=f"/admin/leads/{lead.id}",
+            entity_type="lead",
+            entity_id=lead.id
+        )
+        logger.success(f"✅ Notificação no sistema criada para admins")
+    except Exception as e:
+        logger.error(f"❌ Erro ao criar notificação no sistema: {str(e)}")
     
     return {
         "success": True,
