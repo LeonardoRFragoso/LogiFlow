@@ -326,8 +326,8 @@ class Lead(Base):
     company = Column(String(150), nullable=False)
     
     # cargo = Column(String(100))  # Commented out - column doesn't exist in DB yet
-    website = Column(String(255))
-    linkedin = Column(String(255))
+    # website = Column(String(255))  # Commented out - column doesn't exist in DB yet
+    # linkedin = Column(String(255))  # Commented out - column doesn't exist in DB yet
     
     vehicles = Column(String(20))
     message = Column(Text)
