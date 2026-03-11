@@ -9,8 +9,8 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
 from database import get_db
-from models import Lead, StatusLead, User, Tenant
-from models_main import TipoNotificacao
+from models_main import User, Tenant, TipoNotificacao
+from models import Lead, StatusLead
 from routers.auth import get_current_user, get_current_admin
 from services.system_notifications import notification_service
 from loguru import logger
