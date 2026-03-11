@@ -112,6 +112,15 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Iniciando LogiFlow API...")
     
+    # Executar script de migração de colunas ANTES de qualquer outra coisa
+    try:
+        logger.info("🔧 Executando script de migração de colunas do banco...")
+        from add_cargo_column import add_all_lead_columns
+        add_all_lead_columns()
+        logger.info("✅ Script de migração executado com sucesso")
+    except Exception as e:
+        logger.error(f"❌ Erro ao executar script de migração: {e}")
+    
     # Testar conexão Redis
     try:
         redis_config = settings.get_redis_config()
