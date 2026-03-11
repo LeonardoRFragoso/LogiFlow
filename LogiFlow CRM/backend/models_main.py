@@ -325,7 +325,7 @@ class Lead(Base):
     phone = Column(String(20), nullable=False)
     company = Column(String(150), nullable=False)
     
-    cargo = Column(String(100))
+    # cargo = Column(String(100))  # Commented out - column doesn't exist in DB yet
     website = Column(String(255))
     linkedin = Column(String(255))
     
