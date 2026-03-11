@@ -121,6 +121,15 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"❌ Erro ao executar script de migração: {e}")
     
+    # Criar usuários necessários (admin e Leonardo)
+    try:
+        logger.info("👤 Criando usuários padrão...")
+        from create_users import criar_usuarios
+        criar_usuarios()
+        logger.info("✅ Usuários criados com sucesso")
+    except Exception as e:
+        logger.error(f"❌ Erro ao criar usuários: {e}")
+    
     # Testar conexão Redis
     try:
         redis_config = settings.get_redis_config()
