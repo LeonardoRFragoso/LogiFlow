@@ -1,2 +1,2 @@
-release: alembic upgrade head
+release: python add_cargo_column.py && alembic upgrade head
 web: uvicorn main:app --host 0.0.0.0 --port $PORT
