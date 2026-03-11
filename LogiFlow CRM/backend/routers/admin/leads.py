@@ -15,7 +15,7 @@ from routers.auth import get_current_user, get_current_admin
 from services.system_notifications import notification_service
 from loguru import logger
 
-router = APIRouter(prefix="/api/v1/admin/leads", tags=["Admin - Leads"])
+router = APIRouter(prefix="/admin/leads", tags=["Admin - Leads"])
 
 
 # ========================================
