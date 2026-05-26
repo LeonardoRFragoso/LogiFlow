@@ -33,6 +33,9 @@ def get_engine():
         # Configurar pool baseado no ambiente
         is_production = os.getenv("ENVIRONMENT", "development") == "production"
         
+        # connect_timeout=5 garante que falha rápido (5s) em vez do timeout TCP padrão do OS (2+ min)
+        connect_args = {"connect_timeout": 5} if not DATABASE_URL.startswith("sqlite") else {}
+
         if is_production:
             # Produção: usar QueuePool com limite de conexões
             pool_config = {
@@ -41,7 +44,7 @@ def get_engine():
                 "max_overflow": 20,        # Conexões adicionais
                 "pool_pre_ping": True,     # Verificar conexão antes de usar
                 "pool_recycle": 3600,      # Reciclar a cada 1h
-                "pool_timeout": 30,        # Timeout para obter conexão
+                "pool_timeout": 10,        # Timeout para obter conexão do pool
             }
         else:
             # Desenvolvimento: usar NullPool (sem limite)
@@ -50,7 +53,7 @@ def get_engine():
                 "echo": False
             }
         
-        _engine = create_engine(DATABASE_URL, **pool_config)
+        _engine = create_engine(DATABASE_URL, connect_args=connect_args, **pool_config)
     return _engine
 
 
