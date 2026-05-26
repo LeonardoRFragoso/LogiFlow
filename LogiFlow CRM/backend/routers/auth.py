@@ -346,7 +346,7 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
             )
 
         access_token = criar_access_token(data={
-            "sub": usuario.id,
+            "sub": str(usuario.id),
             "user_id": usuario.id,
             "email": usuario.email,
             "tipo": usuario.tipo,
@@ -414,7 +414,7 @@ async def login_motorista(request: Request, form_data: OAuth2PasswordRequestForm
             )
 
         access_token = criar_access_token(data={
-            "sub": usuario.id,
+            "sub": str(usuario.id),
             "user_id": usuario.id,
             "email": usuario.email,
             "tipo": usuario.tipo,
@@ -482,7 +482,7 @@ async def login_cliente(request: Request, form_data: OAuth2PasswordRequestForm =
             )
 
         access_token = criar_access_token(data={
-            "sub": usuario.id,
+            "sub": str(usuario.id),
             "user_id": usuario.id,
             "email": usuario.email,
             "tipo": usuario.tipo,
@@ -537,7 +537,7 @@ async def refresh_token(payload: RefreshRequest, db: Session = Depends(get_db)):
             )
 
         access_token = criar_access_token(data={
-            "sub": usuario.id,
+            "sub": str(usuario.id),
             "email": usuario.email,
             "tipo": usuario.tipo,
             "nome": usuario.nome
