@@ -157,6 +157,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useEntregasStore } from '../stores/entregas'
+import api from '../services/api'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -206,13 +207,38 @@ function getPrioridadeClass(prioridade) {
   return classes[prioridade] || classes.normal
 }
 
-function iniciarGPS() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => alert(`GPS Ativo!\nLat: ${pos.coords.latitude}\nLng: ${pos.coords.longitude}`),
-      (err) => alert('Erro ao obter localização: ' + err.message)
-    )
+async function iniciarGPS() {
+  if (!navigator.geolocation) {
+    alert('Geolocalização não suportada neste dispositivo.')
+    return
   }
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const { latitude, longitude, accuracy } = pos.coords
+      const entregaAtiva = proximaEntrega.value
+      if (!entregaAtiva) {
+        alert(`📍 Localização obtida:\nLat: ${latitude.toFixed(5)}\nLng: ${longitude.toFixed(5)}\n\nNenhuma entrega ativa para enviar posição.`)
+        return
+      }
+      try {
+        const authStore = useAuthStore()
+        const motorista_id = authStore.user?.id || authStore.user?.motorista_id
+        await api.post('/api/v1/rastreamento/posicao', {
+          entrega_id: entregaAtiva.id,
+          motorista_id,
+          latitude,
+          longitude,
+          precisao: accuracy
+        })
+        alert(`📍 Posição enviada!\nLat: ${latitude.toFixed(5)}\nLng: ${longitude.toFixed(5)}`)
+      } catch (err) {
+        console.error('Erro ao enviar posição:', err)
+        alert(`📍 Posição obtida (falha ao enviar ao servidor):\nLat: ${latitude.toFixed(5)}\nLng: ${longitude.toFixed(5)}`)
+      }
+    },
+    (err) => alert('Erro ao obter localização: ' + err.message),
+    { enableHighAccuracy: true, timeout: 10000 }
+  )
 }
 
 function abrirCamera() {

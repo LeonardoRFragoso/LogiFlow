@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '../services/api'
+import { useAuthStore } from './auth'
 
 export const useEntregasStore = defineStore('entregas', () => {
   const entregas = ref([])
@@ -20,32 +21,41 @@ export const useEntregasStore = defineStore('entregas', () => {
     loading.value = true
     error.value = null
     
+    const authStore = useAuthStore()
+    const motorista_id = authStore.user?.id || authStore.user?.motorista_id
+
     try {
-      const response = await api.get('/demo/entregas')
-      const data = response.data.data || []
+      let data = []
+      if (motorista_id) {
+        const response = await api.get(`/api/v1/rastreamento/motorista/${motorista_id}/entregas`)
+        data = response.data.data || []
+      } else {
+        const response = await api.get('/api/v1/demo/entregas')
+        data = response.data.data || []
+      }
       // Mapear dados para o formato esperado pelo app
       entregas.value = data.map(e => ({
         id: e.id,
-        numero: e.pedido_numero,
-        codigo_rastreio: e.codigo,
+        numero: e.numero || e.pedido_numero,
+        codigo_rastreio: e.codigo_rastreio || e.codigo,
         status: e.status,
         cliente_nome: e.cliente_nome,
-        origem: {
-          cidade: 'Rio de Janeiro',
-          uf: 'RJ',
-          logradouro: 'Rua da Expedição, 500'
+        origem: e.origem || {
+          cidade: 'Origem',
+          uf: '',
+          logradouro: ''
         },
-        destino: {
-          cidade: e.endereco_cidade,
-          uf: e.endereco_uf,
-          logradouro: e.endereco_rua,
+        destino: e.destino || {
+          cidade: e.endereco_cidade || '',
+          uf: e.endereco_uf || '',
+          logradouro: e.endereco_rua || '',
           contato_nome: e.cliente_nome,
           contato_telefone: e.cliente_telefone
         },
-        peso_total_kg: e.peso,
-        valor_total: e.valor_mercadoria,
-        data_entrega_prevista: e.previsao_entrega,
-        prioridade: e.atrasada ? 'urgente' : 'normal'
+        peso_total_kg: e.peso_total_kg || e.peso,
+        valor_total: e.valor_total || e.valor_mercadoria,
+        data_entrega_prevista: e.data_entrega_prevista || e.previsao_entrega,
+        prioridade: e.prioridade || (e.atrasada ? 'urgente' : 'normal')
       }))
     } catch (err) {
       console.error('Erro ao carregar entregas:', err)
@@ -61,11 +71,11 @@ export const useEntregasStore = defineStore('entregas', () => {
     error.value = null
     
     try {
-      const response = await api.get(`/pedidos/${id}`)
+      const response = await api.get(`/api/v1/rastreamento/entregas/${id}`)
       entregaAtual.value = response.data.data
     } catch (err) {
       console.error('Erro ao carregar entrega:', err)
-      // Buscar nos dados locais
+      // Buscar nos dados locais como fallback
       entregaAtual.value = entregas.value.find(e => e.id === id) || getDadosDemostracao()[0]
     } finally {
       loading.value = false
@@ -73,11 +83,13 @@ export const useEntregasStore = defineStore('entregas', () => {
   }
   
   async function atualizarStatus(id, status, dados = {}) {
+    const authStore = useAuthStore()
+    const motorista_id = authStore.user?.id || authStore.user?.motorista_id
     try {
-      await api.patch(`/rastreamento/entrega/status`, {
+      await api.patch(`/api/v1/rastreamento/entrega/status`, {
         entrega_id: id,
         status,
-        motorista_id: 'motorista-atual',
+        motorista_id,
         ...dados
       })
       
@@ -98,10 +110,12 @@ export const useEntregasStore = defineStore('entregas', () => {
   }
   
   async function registrarOcorrencia(id, dados) {
+    const authStore = useAuthStore()
+    const motorista_id = authStore.user?.id || authStore.user?.motorista_id
     try {
-      await api.post(`/rastreamento/entrega/ocorrencia`, {
+      await api.post(`/api/v1/rastreamento/entrega/ocorrencia`, {
         entrega_id: id,
-        motorista_id: 'motorista-atual',
+        motorista_id,
         ...dados
       })
       return { success: true }

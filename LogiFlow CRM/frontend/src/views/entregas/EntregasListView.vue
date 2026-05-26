@@ -254,9 +254,10 @@ async function fetchEntregas() {
     const params = {}
     if (filtroStatus.value) params.status = filtroStatus.value
     const response = await api.get('/entregas/', { params })
-    entregas.value = response.data.results || response.data || mockEntregas()
+    entregas.value = response.data.results || response.data?.data || response.data || []
   } catch (e) {
-    entregas.value = mockEntregas()
+    console.error('Erro ao carregar entregas:', e)
+    entregas.value = []
   }
 }
 
@@ -269,15 +270,6 @@ async function fetchMotoristas() {
   }
 }
 
-function mockEntregas() {
-  return [
-    { id: 1, codigo: 'ENT-2024-001', cliente_nome: 'João Silva', cliente_telefone: '(21) 99999-1234', endereco_rua: 'Rua das Flores, 123', endereco_cidade: 'Rio de Janeiro', endereco_uf: 'RJ', motorista_nome: 'Carlos Santos', status: 'em_transito', previsao_entrega: new Date().toISOString(), progresso: 65, atrasada: false },
-    { id: 2, codigo: 'ENT-2024-002', cliente_nome: 'Maria Oliveira', cliente_telefone: '(21) 98888-5678', endereco_rua: 'Av. Brasil, 456', endereco_cidade: 'Niterói', endereco_uf: 'RJ', motorista_nome: 'Pedro Lima', status: 'saiu_para_entrega', previsao_entrega: new Date().toISOString(), progresso: 85, atrasada: false },
-    { id: 3, codigo: 'ENT-2024-003', cliente_nome: 'Tech Solutions', cliente_telefone: '(21) 97777-9012', endereco_rua: 'Rua do Comércio, 789', endereco_cidade: 'São Gonçalo', endereco_uf: 'RJ', motorista_nome: null, status: 'aguardando_coleta', previsao_entrega: new Date(Date.now() + 86400000).toISOString(), progresso: 10, atrasada: false },
-    { id: 4, codigo: 'ENT-2024-004', cliente_nome: 'Ana Costa', cliente_telefone: '(21) 96666-3456', endereco_rua: 'Rua Principal, 321', endereco_cidade: 'Duque de Caxias', endereco_uf: 'RJ', motorista_nome: 'Carlos Santos', status: 'entregue', previsao_entrega: new Date().toISOString(), progresso: 100, atrasada: false, data_entrega: new Date().toISOString() },
-    { id: 5, codigo: 'ENT-2024-005', cliente_nome: 'Loja Express', cliente_telefone: '(21) 95555-7890', endereco_rua: 'Av. Central, 555', endereco_cidade: 'Nova Iguaçu', endereco_uf: 'RJ', motorista_nome: 'Pedro Lima', status: 'em_transito', previsao_entrega: new Date(Date.now() - 3600000).toISOString(), progresso: 45, atrasada: true },
-  ]
-}
 
 function openModal(entrega = null) {
   selected.value = entrega

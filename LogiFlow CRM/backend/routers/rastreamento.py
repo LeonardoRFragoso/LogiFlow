@@ -658,6 +658,36 @@ async def listar_entregas_cliente(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class NotificacaoWhatsAppRequest(BaseModel):
+    codigo_rastreio: str
+    telefone: str
+
+
+@router.post("/notificacao/whatsapp")
+async def cadastrar_notificacao_whatsapp(
+    dados: NotificacaoWhatsAppRequest,
+    request: Request
+):
+    """
+    Cadastra telefone para receber atualizações de rastreamento via WhatsApp.
+    Endpoint público — usado pelo Portal do Cliente.
+    """
+    try:
+        redis = get_redis(request)
+        telefone_limpo = ''.join(filter(str.isdigit, dados.telefone))
+
+        if redis:
+            redis.sadd(f"rastreio:{dados.codigo_rastreio}:whatsapp", telefone_limpo)
+            redis.expire(f"rastreio:{dados.codigo_rastreio}:whatsapp", 60 * 60 * 24 * 30)
+
+        logger.info(f"📱 WhatsApp {telefone_limpo} cadastrado para rastreio {dados.codigo_rastreio}")
+        return {"success": True, "message": "Número cadastrado com sucesso para notificações"}
+
+    except Exception as e:
+        logger.error(f"Erro ao cadastrar WhatsApp para rastreio: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ========================================
 # Helpers
 # ========================================
