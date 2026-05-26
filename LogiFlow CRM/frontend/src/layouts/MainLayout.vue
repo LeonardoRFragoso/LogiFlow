@@ -122,10 +122,26 @@
             <span class="nav-icon">📱</span>
             <span class="nav-text">Dashboard WA</span>
           </router-link>
+          <router-link to="/whatsapp/config" class="nav-item" active-class="active">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-text">Config. WhatsApp</span>
+          </router-link>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-section-title">Gestão</span>
+          <router-link to="/customer-success" class="nav-item" active-class="active">
+            <span class="nav-icon">🏆</span>
+            <span class="nav-text">Customer Success</span>
+          </router-link>
         </div>
 
         <div class="nav-section">
           <span class="nav-section-title">Configurações</span>
+          <router-link to="/configuracoes" class="nav-item" active-class="active">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-text">Geral</span>
+          </router-link>
           <router-link to="/configuracoes/sla" class="nav-item" active-class="active">
             <span class="nav-icon">⏱️</span>
             <span class="nav-text">SLA</span>
