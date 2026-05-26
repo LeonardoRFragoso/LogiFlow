@@ -39,7 +39,7 @@ EVOLUTION_API_KEY=REDACTED_EVOLUTION_API_KEY
 EVOLUTION_INSTANCE_NAME=logiflow
 ```
 
-> ⚠️ **IMPORTANTE:** Em produção, mude a `AUTHENTICATION_API_KEY` no docker-compose.yml!
+> ⚠️ **IMPORTANTE:** Em produção, mude a `AUTHENTICATION_API_KEY` no docker compose -f docker/docker-compose.yml!
 
 ---
 

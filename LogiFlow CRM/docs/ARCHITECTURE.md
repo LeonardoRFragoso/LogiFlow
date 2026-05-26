@@ -100,7 +100,7 @@ Vue → PATCH /api/cotacoes/{id}/aprovar → FastAPI → SuiteCRM API V8
 ## Arquivos de Configuração
 
 ### Docker
-- `docker-compose.yml` - Orquestração de todos os containers
+- `docker compose -f docker/docker-compose.yml` - Orquestração de todos os containers
 - `docker/suitecrm/Dockerfile` - Imagem PHP-FPM para SuiteCRM
 - `docker/nginx/sites/default.conf` - Proxy reverso
 
@@ -140,14 +140,14 @@ Após instalar o SuiteCRM, configure as credenciais OAuth2:
 
 ```bash
 # Subir ambiente de desenvolvimento
-docker-compose up -d
+docker compose -f docker/docker-compose.yml up -d
 
 # Ver logs
-docker-compose logs -f suitecrm
-docker-compose logs -f django
+docker compose -f docker/docker-compose.yml logs -f suitecrm
+docker compose -f docker/docker-compose.yml logs -f django
 
 # Rebuild após mudanças
-docker-compose up -d --build
+docker compose -f docker/docker-compose.yml up -d --build
 
 # Acessar container SuiteCRM
 docker exec -it logiflow_suitecrm bash

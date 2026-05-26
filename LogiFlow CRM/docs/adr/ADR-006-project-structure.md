@@ -37,7 +37,7 @@ LogiFlow CRM/
 ├── docs/                 # Documentação
 ├── scripts/              # Scripts de automação
 ├── .github/              # GitHub Actions
-└── docker-compose.yml    # Orquestração local
+└── docker compose -f docker/docker-compose.yml    # Orquestração local
 ```
 
 ## Consequências

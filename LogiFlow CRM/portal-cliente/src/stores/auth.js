@@ -14,7 +14,7 @@ export const useAuthStore = defineStore('auth', () => {
       formData.append('username', email)
       formData.append('password', senha)
       
-      const response = await api.post('/auth/motorista/login', formData, {
+      const response = await api.post('/auth/cliente/login', formData, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       })
       

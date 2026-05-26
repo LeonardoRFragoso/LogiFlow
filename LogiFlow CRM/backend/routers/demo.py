@@ -32,12 +32,13 @@ class DemoRequest(BaseModel):
     vehicles: Optional[str] = None
     message: Optional[str] = None
 
-# Importar dados de seed
-from seed_data import (
-    motoristas_db, veiculos_db, clientes_db,
-    pedidos_db, entregas_db, cotacoes_db,
-    seed_all
-)
+# Dados de demonstração simulados
+motoristas_db = {}
+veiculos_db = {}
+clientes_db = {}
+pedidos_db = {}
+entregas_db = {}
+cotacoes_db = {}
 
 
 # ========================================

@@ -64,10 +64,10 @@ CORS_ORIGIN=*
 CORS_CREDENTIALS=true
 
 # 3. Subir containers
-docker-compose up -d
+docker compose -f docker/docker-compose.yml up -d
 
 # 4. Verificar logs
-docker-compose logs -f
+docker compose -f docker/docker-compose.yml logs -f
 ```
 
 A API estará disponível em: `http://localhost:8080`
@@ -171,7 +171,7 @@ EVOLUTION_INSTANCE_NAME=logiflow-prod
 ### Teste 1: Verificar Conexão
 
 ```bash
-docker-compose exec backend python -c "
+docker compose -f docker/docker-compose.yml exec backend python -c "
 import os
 import requests
 
@@ -223,7 +223,7 @@ else:
 
 Execute:
 ```bash
-docker-compose exec backend python test_whatsapp.py
+docker compose -f docker/docker-compose.yml exec backend python test_whatsapp.py
 ```
 
 ### Teste 3: Webhook
@@ -232,7 +232,7 @@ docker-compose exec backend python test_whatsapp.py
 2. Verifique os logs:
 
 ```bash
-docker-compose logs -f backend | grep "WhatsApp"
+docker compose -f docker/docker-compose.yml logs -f backend | grep "WhatsApp"
 ```
 
 Deve aparecer:
@@ -424,10 +424,10 @@ else:
 
 ```bash
 # Logs de WhatsApp
-docker-compose logs backend | grep "WhatsApp" | tail -100
+docker compose -f docker/docker-compose.yml logs backend | grep "WhatsApp" | tail -100
 
 # Mensagens enviadas hoje
-docker-compose exec backend python -c "
+docker compose -f docker/docker-compose.yml exec backend python -c "
 from database import SessionLocal
 from models import WhatsAppMessage
 from datetime import datetime, timedelta

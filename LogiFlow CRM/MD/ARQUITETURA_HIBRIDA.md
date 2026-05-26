@@ -203,7 +203,7 @@ Job Scheduler (10 min) → SuiteCRM ⇄ Banco Local
 ```bash
 # 1. Subir Docker (SuiteCRM + MySQL + Redis)
 cd "LogiFlow CRM"
-docker-compose -f docker-compose.minimal.yml up -d
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml up -d
 
 # 2. Iniciar Backend FastAPI
 cd backend

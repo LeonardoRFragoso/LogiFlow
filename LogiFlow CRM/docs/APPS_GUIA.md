@@ -164,9 +164,9 @@ VITE_API_URL=http://localhost:8000/api/v1
 
 ## 🐳 Docker - Executar Ambos os Apps
 
-### docker-compose.yml
+### docker compose -f docker/docker-compose.yml
 
-Adicione ao `docker-compose.yml`:
+Adicione ao `docker compose -f docker/docker-compose.yml`:
 
 ```yaml
   # App do Motorista
@@ -241,7 +241,7 @@ server {
 ### Executar com Docker
 
 ```bash
-docker-compose up -d app-motorista portal-cliente
+docker compose -f docker/docker-compose.yml up -d app-motorista portal-cliente
 ```
 
 **Acessos**:

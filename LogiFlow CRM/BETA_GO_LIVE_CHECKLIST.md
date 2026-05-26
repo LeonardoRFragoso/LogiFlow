@@ -43,11 +43,11 @@
   - **Validação**: `curl http://localhost:8000/api/v1/features`
 
 - [ ] **5. Docker Compose Validado**
-  - [ ] `docker-compose.minimal.yml` inicia sem erro
+  - [ ] `docker compose -f docker/docker-compose.yml.minimal.yml` inicia sem erro
   - [ ] Todos containers healthy (db, redis, suitecrm, nginx, api)
   - [ ] Logs sem erros críticos
   - [ ] Portas corretas expostas (3306, 6379, 8080, 8000)
-  - **Comando**: `docker-compose -f docker-compose.minimal.yml ps`
+  - **Comando**: `docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml ps`
 
 - [ ] **6. Variáveis de Ambiente Configuradas**
   - [ ] `backend/.env` existe
@@ -226,7 +226,7 @@ docker logs logiflow_api
 cat backend/.env | grep SUITECRM
 
 # Reiniciar
-docker-compose -f docker-compose.minimal.yml restart api
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml restart api
 ```
 
 ### OAuth2 falha
@@ -254,7 +254,7 @@ python scripts/seed_demo_data.py
 ### Smoke test falha
 ```bash
 # Verificar serviços
-docker-compose -f docker-compose.minimal.yml ps
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml ps
 
 # Testar individualmente
 curl http://localhost:8000/health
@@ -284,13 +284,13 @@ docker logs -f logiflow_db
 ### Comandos Úteis
 ```bash
 # Status geral
-docker-compose -f docker-compose.minimal.yml ps
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml ps
 
 # Restart completo
-docker-compose -f docker-compose.minimal.yml restart
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml restart
 
 # Rebuild backend
-docker-compose -f docker-compose.minimal.yml up -d --build api
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml up -d --build api
 
 # Acessar container
 docker exec -it logiflow_api bash

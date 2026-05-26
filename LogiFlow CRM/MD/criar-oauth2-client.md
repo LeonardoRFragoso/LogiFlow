@@ -43,7 +43,7 @@
 
 6. **Atualize as configurações:**
    
-   Edite o arquivo: `docker-compose.minimal.yml`
+   Edite o arquivo: `docker compose -f docker/docker-compose.yml.minimal.yml`
    
    Na seção `api: environment:`, atualize:
    ```yaml
@@ -53,7 +53,7 @@
 
 7. **Reinicie o container API:**
    ```bash
-   docker-compose -f docker-compose.minimal.yml restart api
+   docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml restart api
    ```
 
 8. **Execute os testes:**

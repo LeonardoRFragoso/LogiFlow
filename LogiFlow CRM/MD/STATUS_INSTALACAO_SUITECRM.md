@@ -89,7 +89,7 @@ URLs corrigidas:
 - Token: `http://nginx:80/legacy/Api/access_token`
 - API: `http://nginx:80/legacy/Api/V8`
 
-#### `docker-compose.minimal.yml`
+#### `docker compose -f docker/docker-compose.yml.minimal.yml`
 Variáveis de ambiente injetadas no container `api`:
 ```yaml
 environment:
@@ -199,7 +199,7 @@ Se preferir garantir que tudo esteja configurado:
 
 ### Verificar Status dos Containers
 ```bash
-docker-compose -f docker-compose.minimal.yml ps
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml ps
 ```
 
 ### Ver Logs do SuiteCRM
@@ -209,12 +209,12 @@ docker exec logiflow_suitecrm tail -f /var/log/php/error.log
 
 ### Ver Logs do Nginx
 ```bash
-docker-compose -f docker-compose.minimal.yml logs nginx
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml logs nginx
 ```
 
 ### Reiniciar Serviços
 ```bash
-docker-compose -f docker-compose.minimal.yml restart suitecrm nginx api
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml restart suitecrm nginx api
 ```
 
 ### Testar Conexão OAuth2 Manual
@@ -240,7 +240,7 @@ docker exec logiflow_api python tests/test_suitecrm_integration.py
 4. **`backend/services/suitecrm_service.py`** - URLs da API corrigidas
 5. **`backend/tests/conftest.py`** - Removido import de TenantCredentials
 6. **`backend/pytest.ini`** - Removidas opções de coverage
-7. **`docker-compose.minimal.yml`** - Injetadas variáveis OAuth2
+7. **`docker compose -f docker/docker-compose.yml.minimal.yml`** - Injetadas variáveis OAuth2
 8. **`instalar-suitecrm.bat`** - Corrigida detecção de containers
 
 ---

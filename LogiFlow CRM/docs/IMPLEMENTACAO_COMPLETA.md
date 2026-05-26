@@ -29,7 +29,7 @@ Este documento resume todas as implementações realizadas para transformar o Lo
 - **Localização**: `LogiFlow CRM/site-divulgacao/`
 - **Formulário**: DemoModal.vue atualizado com variável de ambiente
 - **API URL**: Configurável via `VITE_API_URL`
-- **Docker**: Serviço configurado no docker-compose.yml
+- **Docker**: Serviço configurado no docker compose -f docker/docker-compose.yml
 
 ### 4. ✅ Página de Checkout
 - **Arquivo**: `frontend/src/views/CheckoutView.vue`
@@ -129,7 +129,7 @@ docker/
 ### Raiz
 ```
 LogiFlow CRM/
-├── docker-compose.yml (atualizado - serviço site)
+├── docker compose -f docker/docker-compose.yml (atualizado - serviço site)
 ├── IMPLEMENTACAO_COMPLETA.md (este arquivo)
 ├── INTEGRACAO_SITE_CRM.md
 ├── RESUMO_IMPLEMENTACAO_SITE.md
@@ -201,7 +201,7 @@ npm run dev
 ### Docker (Produção)
 ```bash
 cd "LogiFlow CRM"
-docker-compose up -d
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 **Serviços disponíveis:**
@@ -357,7 +357,7 @@ docker-compose up -d
 - **Migrations**: Usar `alembic upgrade head`
 
 ### Docker
-- **Desenvolvimento**: docker-compose up
+- **Desenvolvimento**: docker compose -f docker/docker-compose.yml up
 - **Produção**: Configurar variáveis de ambiente
 - **Volumes**: Dados persistentes configurados
 

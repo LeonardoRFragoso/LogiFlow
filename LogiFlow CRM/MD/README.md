@@ -92,7 +92,7 @@ logiflow-crm/
 ├── scripts/                   # Scripts de automação
 ├── tenants/                   # Credenciais de tenants (git ignored)
 ├── backups/                   # Backups locais (git ignored)
-├── docker-compose.yml
+├── docker compose -f docker/docker-compose.yml
 ├── .env.example
 └── README.md
 ```

@@ -15,7 +15,7 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+if ! command -v docker compose -f docker/docker-compose.yml &> /dev/null && ! docker compose version &> /dev/null; then
     echo "❌ Docker Compose não encontrado."
     exit 1
 fi
@@ -36,8 +36,8 @@ echo "✓ Diretórios criados"
 # Copiar .env se não existir
 echo "[2/5] Configurando variáveis de ambiente..."
 if [ ! -f .env ]; then
-    cp .env.example .env
-    echo "✓ Arquivo .env criado a partir do .env.example"
+    cp backend/.env.example .env
+    echo "✓ Arquivo .env criado a partir do backend/.env.example"
     echo "⚠ IMPORTANTE: Edite o arquivo .env com suas configurações!"
 else
     echo "✓ Arquivo .env já existe"

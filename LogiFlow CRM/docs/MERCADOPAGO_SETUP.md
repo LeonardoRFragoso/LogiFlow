@@ -169,7 +169,7 @@ Após pagamento de teste:
 
 1. Verifique logs do backend:
    ```bash
-   docker-compose logs -f backend
+   docker compose -f docker/docker-compose.yml logs -f backend
    ```
 
 2. Deve aparecer:
@@ -257,7 +257,7 @@ Após pagamento de teste:
 **Solução:**
 1. Verifique logs do backend:
    ```bash
-   docker-compose logs backend | grep "provisionamento"
+   docker compose -f docker/docker-compose.yml logs backend | grep "provisionamento"
    ```
 2. Verifique se database está acessível
 3. Verifique se há erro na criação do tenant

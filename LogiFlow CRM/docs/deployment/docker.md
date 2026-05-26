@@ -6,7 +6,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     docker-compose.yml                       │
+│                     docker compose -f docker/docker-compose.yml                       │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐        │
 │  │   api   │  │frontend │  │   db    │  │  redis  │        │
@@ -25,49 +25,49 @@
 
 ```bash
 # Subir todos os serviços
-docker-compose up -d
+docker compose -f docker/docker-compose.yml up -d
 
 # Subir serviços específicos
-docker-compose up -d api db redis
+docker compose -f docker/docker-compose.yml up -d api db redis
 
 # Subir com rebuild
-docker-compose up -d --build
+docker compose -f docker/docker-compose.yml up -d --build
 ```
 
 ### Gerenciar Serviços
 
 ```bash
 # Ver status
-docker-compose ps
+docker compose -f docker/docker-compose.yml ps
 
 # Ver logs
-docker-compose logs -f api
-docker-compose logs -f --tail=100 api
+docker compose -f docker/docker-compose.yml logs -f api
+docker compose -f docker/docker-compose.yml logs -f --tail=100 api
 
 # Reiniciar serviço
-docker-compose restart api
+docker compose -f docker/docker-compose.yml restart api
 
 # Parar tudo
-docker-compose down
+docker compose -f docker/docker-compose.yml down
 
 # Parar e remover volumes
-docker-compose down -v
+docker compose -f docker/docker-compose.yml down -v
 ```
 
 ### Executar Comandos
 
 ```bash
 # Shell no container
-docker-compose exec api bash
+docker compose -f docker/docker-compose.yml exec api bash
 
 # Rodar migrations
-docker-compose exec api alembic upgrade head
+docker compose -f docker/docker-compose.yml exec api alembic upgrade head
 
 # Rodar testes
-docker-compose exec api pytest
+docker compose -f docker/docker-compose.yml exec api pytest
 
 # Python REPL
-docker-compose exec api python
+docker compose -f docker/docker-compose.yml exec api python
 ```
 
 ## Dockerfile (Backend)
@@ -104,7 +104,7 @@ EXPOSE 8000
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
-## docker-compose.yml
+## docker compose -f docker/docker-compose.yml
 
 ```yaml
 version: '3.8'
@@ -241,26 +241,26 @@ htmlcov/
 
 ```bash
 # Ver logs detalhados
-docker-compose logs api
+docker compose -f docker/docker-compose.yml logs api
 
 # Verificar se imagem foi construída
 docker images | grep logiflow
 
 # Rebuild forçado
-docker-compose build --no-cache api
+docker compose -f docker/docker-compose.yml build --no-cache api
 ```
 
 ### Banco não conecta
 
 ```bash
 # Verificar se db está healthy
-docker-compose ps db
+docker compose -f docker/docker-compose.yml ps db
 
 # Testar conexão
-docker-compose exec db psql -U logiflow -d logiflow
+docker compose -f docker/docker-compose.yml exec db psql -U logiflow -d logiflow
 
 # Ver logs do banco
-docker-compose logs db
+docker compose -f docker/docker-compose.yml logs db
 ```
 
 ### Espaço em disco

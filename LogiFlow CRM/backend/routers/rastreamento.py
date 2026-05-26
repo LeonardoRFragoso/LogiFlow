@@ -627,6 +627,37 @@ async def listar_entregas_motorista(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/cliente/{cliente_id}/entregas")
+async def listar_entregas_cliente(
+    cliente_id: str,
+    request: Request,
+    status: Optional[str] = None,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0)
+):
+    """
+    Lista todas as entregas de um cliente.
+    Endpoint para portal do cliente com histórico completo.
+    """
+    try:
+        # Simular busca de entregas (em produção, usar banco de dados)
+        entregas = []
+        
+        logger.info(f"✅ Entregas do cliente {cliente_id} listadas")
+        
+        return {
+            "success": True,
+            "data": entregas,
+            "total": len(entregas),
+            "limit": limit,
+            "offset": offset
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao listar entregas do cliente: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ========================================
 # Helpers
 # ========================================

@@ -92,7 +92,7 @@ https://api.logiflow.com.br/api/billing/webhooks/mercadopago
 O Mercado Pago envia uma notificação de teste ao salvar. Verifique os logs:
 
 ```bash
-docker-compose logs -f backend | grep "Webhook"
+docker compose -f docker/docker-compose.yml logs -f backend | grep "Webhook"
 ```
 
 Você deve ver:
@@ -124,7 +124,7 @@ Depois, registre essa URL no painel do Mercado Pago.
 1. Inicie o backend:
 ```bash
 cd backend
-docker-compose up
+docker compose -f docker/docker-compose.yml up
 ```
 
 2. Faça uma requisição de teste:
@@ -212,7 +212,7 @@ Para testar o fluxo completo no sandbox:
 
 2. **Verifique logs do backend:**
    ```bash
-   docker-compose logs -f backend | grep "💳"
+   docker compose -f docker/docker-compose.yml logs -f backend | grep "💳"
    ```
 
 3. **Verifique se o lead existe:**
@@ -225,14 +225,14 @@ Para testar o fluxo completo no sandbox:
 Verifique se a variável `MERCADOPAGO_ACCESS_TOKEN` está definida:
 
 ```bash
-docker-compose exec backend env | grep MERCADOPAGO
+docker compose -f docker/docker-compose.yml exec backend env | grep MERCADOPAGO
 ```
 
 Se não aparecer, reinicie os containers:
 
 ```bash
-docker-compose down
-docker-compose up -d
+docker compose -f docker/docker-compose.yml down
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 ---

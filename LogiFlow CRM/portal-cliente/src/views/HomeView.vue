@@ -8,6 +8,15 @@
           <span class="logo-text">LogiFlow</span>
         </div>
         <p class="header-subtitle">Rastreamento de Entregas</p>
+        <div class="header-actions">
+          <button v-if="!isAuthenticated" @click="goToLogin" class="btn-login">
+            Login Cliente
+          </button>
+          <div v-else class="user-menu">
+            <span class="user-name">{{ user?.nome }}</span>
+            <button @click="logout" class="btn-logout">Sair</button>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -84,13 +93,18 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const codigoRastreio = ref('')
 const loading = ref(false)
 const erro = ref('')
+
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+const user = computed(() => authStore.user)
 
 function rastrear() {
   erro.value = ''
@@ -106,6 +120,15 @@ function rastrear() {
     loading.value = false
     router.push(`/rastrear/${codigoRastreio.value}`)
   }, 500)
+}
+
+function goToLogin() {
+  router.push('/login')
+}
+
+function logout() {
+  authStore.logout()
+  router.push('/')
 }
 </script>
 

@@ -37,7 +37,7 @@ Sempre que possível, o agente deve **assumir que o workspace atual está dispon
 - Estrutura de diretórios
 - Arquivos `.md` de documentação
 - Código backend e frontend
-- Dockerfiles, docker-compose e scripts
+- Dockerfiles, docker compose -f docker/docker-compose.yml e scripts
 - Arquivos de configuração e exemplos de env
 
 Caso o contexto fornecido seja insuficiente para uma análise responsável, o agente deve **solicitar de forma objetiva** os diretórios ou arquivos necessários, evitando conclusões especulativas.

@@ -70,7 +70,7 @@ celery_worker | The module worker was not found.
 - Task: `send_email_async` - Envio assíncrono de emails
 - Task: `provision_tenant_async` - Provisionamento assíncrono
 
-#### c) Atualizado `docker-compose.yml`
+#### c) Atualizado `docker compose -f docker/docker-compose.yml`
 - **Linha 191:** `celery -A worker worker` → `celery -A celery_app worker`
 - **Linha 217:** `celery -A worker beat` → `celery -A celery_app beat`
 
@@ -107,7 +107,7 @@ backend/
 
 ```
 backend/.env.example              ✅ MODIFICADO - Configurações Docker
-docker-compose.yml                ✅ MODIFICADO - Comandos Celery
+docker compose -f docker/docker-compose.yml                ✅ MODIFICADO - Comandos Celery
 ```
 
 ---
@@ -130,28 +130,28 @@ cp .env.example .env
 
 ```bash
 cd ..
-docker-compose down
-docker-compose up --build -d
+docker compose -f docker/docker-compose.yml down
+docker compose -f docker/docker-compose.yml up --build -d
 ```
 
 ### Passo 3: Verificar Logs
 
 ```bash
 # Verificar se Celery está funcionando
-docker-compose logs celery_worker | tail -20
-docker-compose logs celery_beat | tail -20
+docker compose -f docker/docker-compose.yml logs celery_worker | tail -20
+docker compose -f docker/docker-compose.yml logs celery_beat | tail -20
 
 # Verificar se Redis conectou
-docker-compose logs api | grep Redis
+docker compose -f docker/docker-compose.yml logs api | grep Redis
 
 # Verificar se não há mais erros
-docker-compose logs api | grep ERROR
+docker compose -f docker/docker-compose.yml logs api | grep ERROR
 ```
 
 ### Passo 4: Executar Diagnóstico
 
 ```bash
-docker-compose exec api python scripts/diagnose_docker.py
+docker compose -f docker/docker-compose.yml exec api python scripts/diagnose_docker.py
 ```
 
 **Saída Esperada:**
@@ -198,7 +198,7 @@ Criado `backend/scripts/diagnose_docker.py` que verifica:
 
 **Uso:**
 ```bash
-docker-compose exec api python scripts/diagnose_docker.py
+docker compose -f docker/docker-compose.yml exec api python scripts/diagnose_docker.py
 ```
 
 ---
@@ -253,13 +253,13 @@ docker-compose exec api python scripts/diagnose_docker.py
 2. **Monitorar Celery**
    ```bash
    # Ver tasks sendo executadas
-   docker-compose logs -f celery_worker
+   docker compose -f docker/docker-compose.yml logs -f celery_worker
    ```
 
 3. **Verificar Sincronização SuiteCRM**
    ```bash
    # Deve sincronizar a cada 10 minutos
-   docker-compose logs api | grep "sync"
+   docker compose -f docker/docker-compose.yml logs api | grep "sync"
    ```
 
 4. **Configurar Variáveis Externas**
@@ -275,26 +275,26 @@ docker-compose exec api python scripts/diagnose_docker.py
 
 ```bash
 # 1. Verificar se Redis está rodando
-docker-compose ps redis
+docker compose -f docker/docker-compose.yml ps redis
 
 # 2. Verificar variável no container
-docker-compose exec api env | grep REDIS
+docker compose -f docker/docker-compose.yml exec api env | grep REDIS
 
 # 3. Testar conexão manual
-docker-compose exec api python -c "import redis; r=redis.Redis(host='redis', port=6379, password='redis123'); print(r.ping())"
+docker compose -f docker/docker-compose.yml exec api python -c "import redis; r=redis.Redis(host='redis', port=6379, password='redis123'); print(r.ping())"
 ```
 
 ### Se Celery continuar falhando:
 
 ```bash
 # 1. Verificar se arquivos existem
-docker-compose exec api ls -la celery_app.py tasks.py
+docker compose -f docker/docker-compose.yml exec api ls -la celery_app.py tasks.py
 
 # 2. Testar import manual
-docker-compose exec api python -c "from celery_app import celery; print(celery)"
+docker compose -f docker/docker-compose.yml exec api python -c "from celery_app import celery; print(celery)"
 
 # 3. Rebuildar container
-docker-compose up --build -d celery_worker celery_beat
+docker compose -f docker/docker-compose.yml up --build -d celery_worker celery_beat
 ```
 
 ---
@@ -304,8 +304,8 @@ docker-compose up --build -d celery_worker celery_beat
 Para problemas adicionais, execute o diagnóstico completo e envie os logs:
 
 ```bash
-docker-compose exec api python scripts/diagnose_docker.py > diagnostic_report.txt
-docker-compose logs > docker_logs.txt
+docker compose -f docker/docker-compose.yml exec api python scripts/diagnose_docker.py > diagnostic_report.txt
+docker compose -f docker/docker-compose.yml logs > docker_logs.txt
 ```
 
 ---

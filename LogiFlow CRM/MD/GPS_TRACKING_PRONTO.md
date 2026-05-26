@@ -131,13 +131,13 @@ Onixsat:  https://api.logiflow.com.br/gps/webhook/onixsat
 
 ```bash
 # Reiniciar API
-docker-compose restart api
+docker compose -f docker/docker-compose.yml restart api
 
 # Testar endpoint
 curl http://localhost:8000/gps/veiculos
 
 # Verificar logs
-docker-compose logs -f api
+docker compose -f docker/docker-compose.yml logs -f api
 ```
 
 ---

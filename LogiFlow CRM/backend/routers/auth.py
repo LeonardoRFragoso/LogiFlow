@@ -382,6 +382,142 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/motorista/login", response_model=Token)
+@limiter.limit("5/minute")
+async def login_motorista(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    """
+    Login específico para motoristas.
+    Valida se o usuário tem role 'motorista'.
+    """
+    try:
+        email = form_data.username.lower()
+        senha = form_data.password
+
+        usuario = _get_user_by_email(db, email)
+
+        if not usuario or not _verificar_senha(senha, usuario.senha_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Email ou senha incorretos"
+            )
+
+        if usuario.status != StatusUsuario.ATIVO.value:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Usuário {usuario.status}"
+            )
+
+        if usuario.tipo != TipoUsuario.MOTORISTA.value:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Acesso restrito a motoristas"
+            )
+
+        access_token = criar_access_token(data={
+            "sub": usuario.id,
+            "user_id": usuario.id,
+            "email": usuario.email,
+            "tipo": usuario.tipo,
+            "nome": usuario.nome,
+            "tenant_id": usuario.tenant_id
+        })
+
+        refresh_token = criar_refresh_token_db(db, usuario.id)
+
+        usuario.ultimo_acesso = datetime.utcnow()
+        db.add(usuario)
+        db.commit()
+
+        logger.info(f"✅ Login motorista realizado: {email}")
+
+        return Token(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="bearer",
+            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            user={
+                "id": usuario.id,
+                "email": usuario.email,
+                "nome": usuario.nome,
+                "tipo": usuario.tipo
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Erro no login motorista: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/cliente/login", response_model=Token)
+@limiter.limit("5/minute")
+async def login_cliente(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    """
+    Login específico para clientes.
+    Valida se o usuário tem role 'cliente'.
+    """
+    try:
+        email = form_data.username.lower()
+        senha = form_data.password
+
+        usuario = _get_user_by_email(db, email)
+
+        if not usuario or not _verificar_senha(senha, usuario.senha_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Email ou senha incorretos"
+            )
+
+        if usuario.status != StatusUsuario.ATIVO.value:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Usuário {usuario.status}"
+            )
+
+        if usuario.tipo != TipoUsuario.CLIENTE.value:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Acesso restrito a clientes"
+            )
+
+        access_token = criar_access_token(data={
+            "sub": usuario.id,
+            "user_id": usuario.id,
+            "email": usuario.email,
+            "tipo": usuario.tipo,
+            "nome": usuario.nome,
+            "tenant_id": usuario.tenant_id
+        })
+
+        refresh_token = criar_refresh_token_db(db, usuario.id)
+
+        usuario.ultimo_acesso = datetime.utcnow()
+        db.add(usuario)
+        db.commit()
+
+        logger.info(f"✅ Login cliente realizado: {email}")
+
+        return Token(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="bearer",
+            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            user={
+                "id": usuario.id,
+                "email": usuario.email,
+                "nome": usuario.nome,
+                "tipo": usuario.tipo
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Erro no login cliente: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 class RefreshRequest(BaseModel):
     refresh_token: str
 

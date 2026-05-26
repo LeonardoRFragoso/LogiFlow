@@ -9,8 +9,8 @@
 ### **Docker Completo - TODOS os Componentes**
 
 #### ✅ Arquivos Docker Criados/Corrigidos:
-1. **docker-compose.minimal.yml** - Setup essencial (DB, Redis, SuiteCRM, API)
-2. **docker-compose.completo.yml** - Todos os 11 serviços + 4 frontends
+1. **docker compose -f docker/docker-compose.yml.minimal.yml** - Setup essencial (DB, Redis, SuiteCRM, API)
+2. **docker compose -f docker/docker-compose.yml.completo.yml** - Todos os 11 serviços + 4 frontends
 3. **docker/site/Dockerfile** - Node.js 18→20 (Vite compatível)
 4. **docker/frontend/Dockerfile** - Otimizado multi-stage
 5. **docker/app-motorista/Dockerfile** - Build production com Nginx (**NOVO**)

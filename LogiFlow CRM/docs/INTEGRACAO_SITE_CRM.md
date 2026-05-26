@@ -88,7 +88,7 @@ LogiFlow CRM/
 │           ├── app.conf       # ✨ NOVO - Config do app
 │           └── api.conf       # ✨ NOVO - Config da API
 │
-└── docker-compose.yml         # ✨ ATUALIZAR - Adicionar serviço 'site'
+└── docker compose -f docker/docker-compose.yml         # ✨ ATUALIZAR - Adicionar serviço 'site'
 ```
 
 ---
@@ -371,7 +371,7 @@ Response 201:
 ### **Fase 2: Integração Site (1-2 dias)**
 - [ ] Atualizar `DemoModal.vue` com variável de ambiente
 - [ ] Criar `.env.production` no site
-- [ ] Adicionar serviço `site` no `docker-compose.yml`
+- [ ] Adicionar serviço `site` no `docker compose -f docker/docker-compose.yml`
 - [ ] Criar `Dockerfile` para o site
 - [ ] Testar formulário → backend → banco
 

@@ -67,13 +67,13 @@ chmod +x start-all.sh
 
 ```bash
 # Stack básico (essencial)
-docker-compose -f docker-compose.production.yml up -d
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml up -d
 
 # Stack completo (com workers e site)
-docker-compose -f docker-compose.production.yml --profile full up -d
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml --profile full up -d
 
 # Stack com ferramentas de desenvolvimento
-docker-compose -f docker-compose.production.yml --profile dev --profile full up -d
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml --profile dev --profile full up -d
 ```
 
 ---
@@ -88,7 +88,7 @@ stop-all.bat
 ./stop-all.sh
 
 # Ou manualmente
-docker-compose -f docker-compose.production.yml down
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml down
 ```
 
 ---
@@ -97,12 +97,12 @@ docker-compose -f docker-compose.production.yml down
 
 ```bash
 # Todos os serviços
-docker-compose -f docker-compose.production.yml logs -f
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml logs -f
 
 # Serviço específico
-docker-compose -f docker-compose.production.yml logs -f api
-docker-compose -f docker-compose.production.yml logs -f frontend
-docker-compose -f docker-compose.production.yml logs -f suitecrm
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml logs -f api
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml logs -f frontend
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml logs -f suitecrm
 ```
 
 ---
@@ -258,13 +258,13 @@ volumes:
 
 ```bash
 # Ver logs do container
-docker-compose -f docker-compose.production.yml logs nome_do_container
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml logs nome_do_container
 
 # Verificar status
-docker-compose -f docker-compose.production.yml ps
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml ps
 
 # Reiniciar container específico
-docker-compose -f docker-compose.production.yml restart nome_do_container
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml restart nome_do_container
 ```
 
 ---
@@ -278,7 +278,7 @@ netstat -ano | findstr :8000
 # Matar processo
 taskkill /PID numero_do_pid /F
 
-# Ou alterar porta no docker-compose.production.yml
+# Ou alterar porta no docker compose -f docker/docker-compose.yml.production.yml
 ```
 
 ---
@@ -287,13 +287,13 @@ taskkill /PID numero_do_pid /F
 
 ```bash
 # Verificar se MySQL está rodando
-docker-compose -f docker-compose.production.yml ps db
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml ps db
 
 # Testar conexão
-docker-compose -f docker-compose.production.yml exec db mysql -u logiflow -plogiflow123 logiflow_crm
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml exec db mysql -u logiflow -plogiflow123 logiflow_crm
 
 # Ver logs do banco
-docker-compose -f docker-compose.production.yml logs db
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml logs db
 ```
 
 ---
@@ -302,13 +302,13 @@ docker-compose -f docker-compose.production.yml logs db
 
 ```bash
 # Ver logs detalhados
-docker-compose -f docker-compose.production.yml logs -f api
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml logs -f api
 
 # Entrar no container
-docker-compose -f docker-compose.production.yml exec api sh
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml exec api sh
 
 # Verificar variáveis de ambiente
-docker-compose -f docker-compose.production.yml exec api env
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml exec api env
 ```
 
 ---
@@ -317,11 +317,11 @@ docker-compose -f docker-compose.production.yml exec api env
 
 ```bash
 # Rebuild do frontend
-docker-compose -f docker-compose.production.yml build --no-cache frontend
-docker-compose -f docker-compose.production.yml up -d frontend
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml build --no-cache frontend
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml up -d frontend
 
 # Ver logs
-docker-compose -f docker-compose.production.yml logs frontend
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml logs frontend
 ```
 
 ---
@@ -332,7 +332,7 @@ docker-compose -f docker-compose.production.yml logs frontend
 
 ```bash
 # Parar e remover containers + volumes
-docker-compose -f docker-compose.production.yml down -v
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml down -v
 
 # Limpar imagens não usadas
 docker image prune -a
@@ -347,10 +347,10 @@ docker system prune -a --volumes
 
 ```bash
 # Exportar banco
-docker-compose -f docker-compose.production.yml exec db mysqldump -u logiflow -plogiflow123 logiflow_crm > backup.sql
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml exec db mysqldump -u logiflow -plogiflow123 logiflow_crm > backup.sql
 
 # Importar banco
-docker-compose -f docker-compose.production.yml exec -T db mysql -u logiflow -plogiflow123 logiflow_crm < backup.sql
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml exec -T db mysql -u logiflow -plogiflow123 logiflow_crm < backup.sql
 ```
 
 ---
@@ -359,13 +359,13 @@ docker-compose -f docker-compose.production.yml exec -T db mysql -u logiflow -pl
 
 ```bash
 # Rebuild todas as imagens
-docker-compose -f docker-compose.production.yml build --no-cache
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml build --no-cache
 
 # Pull imagens base atualizadas
-docker-compose -f docker-compose.production.yml pull
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml pull
 
 # Recriar containers
-docker-compose -f docker-compose.production.yml up -d --force-recreate
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml up -d --force-recreate
 ```
 
 ---
@@ -390,7 +390,7 @@ Todos os serviços essenciais têm healthchecks configurados:
 
 ```bash
 # Ver status de saúde
-docker-compose -f docker-compose.production.yml ps
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml ps
 
 # Legenda:
 # healthy - Serviço funcionando
@@ -404,25 +404,25 @@ docker-compose -f docker-compose.production.yml ps
 
 ### **Básico (padrão)**
 ```bash
-docker-compose -f docker-compose.production.yml up -d
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml up -d
 ```
 Inicia: db, redis, suitecrm, nginx, api, frontend
 
 ### **Completo**
 ```bash
-docker-compose -f docker-compose.production.yml --profile full up -d
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml --profile full up -d
 ```
 Adiciona: site, app-motorista, celery_worker, celery_beat
 
 ### **Desenvolvimento**
 ```bash
-docker-compose -f docker-compose.production.yml --profile dev up -d
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml --profile dev up -d
 ```
 Adiciona: adminer, redis-commander
 
 ### **Tudo**
 ```bash
-docker-compose -f docker-compose.production.yml --profile full --profile dev up -d
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml --profile full --profile dev up -d
 ```
 Todos os serviços
 
@@ -444,21 +444,21 @@ Todos os serviços
 ## 📞 Suporte
 
 **Logs importantes:**
-- API: `docker-compose -f docker-compose.production.yml logs -f api`
-- Frontend: `docker-compose -f docker-compose.production.yml logs -f frontend`
-- SuiteCRM: `docker-compose -f docker-compose.production.yml logs -f suitecrm nginx`
-- Banco: `docker-compose -f docker-compose.production.yml logs -f db`
+- API: `docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml logs -f api`
+- Frontend: `docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml logs -f frontend`
+- SuiteCRM: `docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml logs -f suitecrm nginx`
+- Banco: `docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml logs -f db`
 
 **Comandos úteis:**
 ```bash
 # Status de todos os containers
-docker-compose -f docker-compose.production.yml ps
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml ps
 
 # Reiniciar tudo
-docker-compose -f docker-compose.production.yml restart
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml restart
 
 # Parar tudo
-docker-compose -f docker-compose.production.yml down
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml down
 
 # Ver uso de recursos
 docker stats

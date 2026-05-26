@@ -213,7 +213,7 @@ sequenceDiagram
 
 ## Configuração Docker
 
-### docker-compose.yml (Resumo)
+### docker compose -f docker/docker-compose.yml (Resumo)
 
 ```yaml
 services:

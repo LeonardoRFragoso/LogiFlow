@@ -11,8 +11,8 @@
 
 ### O Que Está no Docker Atual (2 de 4):
 
-1. ✅ **Sistema Web CRM** → No docker-compose.yml (porta 3001)
-2. ✅ **Site Divulgação** → No docker-compose.yml (porta 5173)
+1. ✅ **Sistema Web CRM** → No docker compose -f docker/docker-compose.yml (porta 3001)
+2. ✅ **Site Divulgação** → No docker compose -f docker/docker-compose.yml (porta 5173)
 3. ❌ **App Motorista** → **FALTANDO**
 4. ❌ **Portal Cliente** → **FALTANDO**
 
@@ -61,7 +61,7 @@ Para ter **TODOS** os 4 componentes no Docker:
 ### Opção 1: Usar Compose Completo (depois de corrigir)
 ```batch
 # Depois que eu criar os Dockerfiles faltantes
-docker-compose up -d
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 ### Opção 2: Usar Compose Mínimo (só essenciais)
@@ -124,7 +124,7 @@ cd portal-cliente && npm run dev
 
 **Para produção (DEPOIS):**
 - Criar Dockerfiles para app-motorista e portal-cliente
-- Atualizar docker-compose.yml
+- Atualizar docker compose -f docker/docker-compose.yml
 - Build de produção otimizado
 
 ---
@@ -134,6 +134,6 @@ cd portal-cliente && npm run dev
 Posso criar agora:
 1. `docker/app-motorista/Dockerfile`
 2. `docker/portal-cliente/Dockerfile`
-3. Atualizar `docker-compose.yml` completo
+3. Atualizar `docker compose -f docker/docker-compose.yml` completo
 
 **Mas recomendo rodar frontends localmente por enquanto** (desenvolvimento).
