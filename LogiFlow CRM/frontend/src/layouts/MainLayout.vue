@@ -11,7 +11,7 @@
       </div>
 
       <!-- Navigation -->
-      <nav class="sidebar-nav">
+        <nav class="sidebar-nav">
         <div class="nav-section">
           <span class="nav-section-title">Principal</span>
           <router-link to="/" class="nav-item" exact-active-class="active">
@@ -30,6 +30,14 @@
             <span class="nav-icon">💰</span>
             <span class="nav-text">Cotações</span>
           </router-link>
+          <router-link to="/cotacao-automatica" class="nav-item" active-class="active">
+            <span class="nav-icon">🤖</span>
+            <span class="nav-text">Cotação Automática</span>
+          </router-link>
+          <router-link to="/leads" class="nav-item" active-class="active">
+            <span class="nav-icon">🎯</span>
+            <span class="nav-text">Leads</span>
+          </router-link>
         </div>
 
         <div class="nav-section">
@@ -38,6 +46,22 @@
             <span class="nav-icon">📦</span>
             <span class="nav-text">Pedidos</span>
           </router-link>
+          <router-link to="/entregas" class="nav-item" active-class="active">
+            <span class="nav-icon">🚛</span>
+            <span class="nav-text">Entregas</span>
+          </router-link>
+          <router-link to="/ocorrencias" class="nav-item" active-class="active">
+            <span class="nav-icon">⚠️</span>
+            <span class="nav-text">Ocorrências</span>
+          </router-link>
+          <router-link to="/gps" class="nav-item" active-class="active">
+            <span class="nav-icon">📍</span>
+            <span class="nav-text">Rastreamento GPS</span>
+          </router-link>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-section-title">Frota</span>
           <router-link to="/motoristas" class="nav-item" active-class="active">
             <span class="nav-icon">🧑‍✈️</span>
             <span class="nav-text">Motoristas</span>
@@ -49,26 +73,78 @@
         </div>
 
         <div class="nav-section">
-          <span class="nav-section-title">Gestão</span>
-          <router-link to="/ocorrencias" class="nav-item" active-class="active">
-            <span class="nav-icon">⚠️</span>
-            <span class="nav-text">Ocorrências</span>
+          <span class="nav-section-title">CRM</span>
+          <router-link to="/crm/contatos" class="nav-item" active-class="active">
+            <span class="nav-icon">📇</span>
+            <span class="nav-text">Contatos</span>
+          </router-link>
+          <router-link to="/crm/oportunidades" class="nav-item" active-class="active">
+            <span class="nav-icon">💼</span>
+            <span class="nav-text">Oportunidades</span>
+          </router-link>
+          <router-link to="/crm/pipeline" class="nav-item" active-class="active">
+            <span class="nav-icon">🔀</span>
+            <span class="nav-text">Pipeline</span>
+          </router-link>
+          <router-link to="/crm/casos" class="nav-item" active-class="active">
+            <span class="nav-icon">🗂️</span>
+            <span class="nav-text">Casos</span>
+          </router-link>
+          <router-link to="/satisfacao" class="nav-item" active-class="active">
+            <span class="nav-icon">⭐</span>
+            <span class="nav-text">NPS / Satisfação</span>
+          </router-link>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-section-title">Fiscal</span>
+          <router-link to="/fiscal/cte" class="nav-item" active-class="active">
+            <span class="nav-icon">📄</span>
+            <span class="nav-text">CT-e</span>
+          </router-link>
+          <router-link to="/fiscal/mdfe" class="nav-item" active-class="active">
+            <span class="nav-icon">📋</span>
+            <span class="nav-text">MDF-e</span>
+          </router-link>
+          <router-link to="/fiscal/dashboard" class="nav-item" active-class="active">
+            <span class="nav-icon">📈</span>
+            <span class="nav-text">Dashboard Fiscal</span>
+          </router-link>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-section-title">WhatsApp</span>
+          <router-link to="/whatsapp/conversas" class="nav-item" active-class="active">
+            <span class="nav-icon">💬</span>
+            <span class="nav-text">Conversas</span>
+          </router-link>
+          <router-link to="/whatsapp/dashboard" class="nav-item" active-class="active">
+            <span class="nav-icon">📱</span>
+            <span class="nav-text">Dashboard WA</span>
           </router-link>
         </div>
 
         <div class="nav-section">
           <span class="nav-section-title">Configurações</span>
           <router-link to="/configuracoes/sla" class="nav-item" active-class="active">
-            <span class="nav-icon">⚙️</span>
+            <span class="nav-icon">⏱️</span>
             <span class="nav-text">SLA</span>
+          </router-link>
+          <router-link to="/configuracoes/integracoes" class="nav-item" active-class="active">
+            <span class="nav-icon">🔌</span>
+            <span class="nav-text">Integrações</span>
+          </router-link>
+          <router-link to="/configuracoes/fiscal" class="nav-item" active-class="active">
+            <span class="nav-icon">🏛️</span>
+            <span class="nav-text">Config. Fiscal</span>
           </router-link>
         </div>
 
         <div class="nav-section" v-if="isAdmin">
           <span class="nav-section-title">Admin</span>
           <router-link to="/admin/leads" class="nav-item" active-class="active">
-            <span class="nav-icon">🎯</span>
-            <span class="nav-text">Leads</span>
+            <span class="nav-icon">🛡️</span>
+            <span class="nav-text">Admin Leads</span>
             <span v-if="newLeadsCount > 0" class="badge-count">{{ newLeadsCount }}</span>
           </router-link>
         </div>
@@ -108,7 +184,7 @@
             <div v-if="showNotifications" class="dropdown-menu notifications-dropdown">
               <div class="dropdown-header">
                 <span class="dropdown-title">🔔 Notificações</span>
-                <button class="mark-read-btn">Marcar todas como lidas</button>
+                <button class="mark-read-btn" @click="marcarTodasComoLidas">Marcar todas como lidas</button>
               </div>
               <div class="dropdown-content">
                 <div v-if="notifications.length === 0" class="empty-notifications">
@@ -172,6 +248,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
 import { useRouter } from 'vue-router'
+import api from '@/services/api'
 
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
@@ -187,12 +264,29 @@ const showUserMenu = ref(false)
 // Admin
 const newLeadsCount = ref(0)
 
-// Mock notifications (replace with real data later)
-const notifications = ref([
-  { icon: '📦', text: 'Novo pedido PED-2024-001 criado', time: 'Há 5 min' },
-  { icon: '🚚', text: 'Entrega confirmada - ABC-1234', time: 'Há 15 min' },
-  { icon: '⚠️', text: '2 entregas com SLA crítico', time: 'Há 1 hora' },
-])
+const notifications = ref([])
+
+async function fetchNotifications() {
+  try {
+    const response = await api.get('/notifications/')
+    const data = response.data.data || response.data || []
+    notifications.value = data.map(n => ({
+      id: n.id,
+      icon: n.icon || '�',
+      text: n.mensagem || n.message || n.titulo || '',
+      time: n.criado_em ? new Date(n.criado_em).toLocaleString('pt-BR') : ''
+    }))
+  } catch {
+    notifications.value = []
+  }
+}
+
+async function marcarTodasComoLidas() {
+  try {
+    await api.patch('/notifications/read-all')
+    notifications.value = []
+  } catch { /* silencioso */ }
+}
 
 // User info
 const userName = computed(() => authStore.user?.first_name || authStore.user?.username || 'Usuário')
@@ -242,10 +336,10 @@ function handleClickOutside(e) {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
-  // Fetch user if not loaded
   if (!authStore.user && authStore.token) {
     authStore.fetchUser()
   }
+  fetchNotifications()
 })
 
 onUnmounted(() => {

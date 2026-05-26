@@ -70,11 +70,21 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
+
   if (!to.meta.public && !authStore.isAuthenticated) {
     next('/login')
-  } else {
-    next()
+    return
   }
+
+  if (to.meta.requiresAdmin) {
+    const role = authStore.user?.role || authStore.user?.tipo
+    if (role !== 'admin' && role !== 'superadmin') {
+      next('/')
+      return
+    }
+  }
+
+  next()
 })
 
 export default router

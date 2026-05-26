@@ -149,6 +149,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import api from '../services/api'
 
 const router = useRouter()
 const route = useRoute()
@@ -170,68 +171,32 @@ async function carregarEntrega() {
   error.value = ''
 
   try {
-    // Simulação - em produção, fazer fetch para API
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const response = await api.get(`/api/v1/rastreamento/tracking/${codigo.value}`)
+    const data = response.data.data
 
-    // Mock de dados
     entrega.value = {
-      codigo: codigo.value,
-      status: 'em_transito',
-      destinatario: 'João Silva',
-      remetente: 'Loja Exemplo',
-      destino: {
-        cidade: 'São Paulo',
-        uf: 'SP',
-        endereco: 'Rua Exemplo, 123'
-      },
-      peso_kg: 5.5,
-      previsao_entrega: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-      localizacao: {
-        lat: -23.5505,
-        lng: -46.6333,
-        cidade: 'Campinas',
-        uf: 'SP'
-      },
-      timeline: [
-        {
-          tipo: 'info',
-          data: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-          titulo: 'Entrega em trânsito',
-          descricao: 'Veículo está a caminho do destino',
-          local: 'Campinas, SP'
-        },
-        {
-          tipo: 'success',
-          data: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          titulo: 'Saiu para entrega',
-          descricao: 'Pedido saiu do centro de distribuição',
-          local: 'São Paulo, SP'
-        },
-        {
-          tipo: 'success',
-          data: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-          titulo: 'Em trânsito',
-          descricao: 'Mercadoria em transporte',
-          local: 'Guarulhos, SP'
-        },
-        {
-          tipo: 'success',
-          data: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-          titulo: 'Coletado',
-          descricao: 'Pacote foi coletado',
-          local: 'Rio de Janeiro, RJ'
-        },
-        {
-          tipo: 'default',
-          data: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          titulo: 'Pedido criado',
-          descricao: 'Pedido registrado no sistema',
-          local: 'Rio de Janeiro, RJ'
-        }
-      ]
+      codigo: data.codigo_rastreio,
+      status: data.status,
+      destinatario: data.destinatario || '',
+      remetente: data.remetente || 'LogiFlow',
+      destino: data.destino || null,
+      peso_kg: data.peso_kg || null,
+      previsao_entrega: data.previsao_entrega || null,
+      localizacao: data.localizacao || null,
+      timeline: (data.eventos || []).map(e => ({
+        tipo: e.tipo || 'info',
+        data: e.data || e.timestamp,
+        titulo: e.titulo || e.descricao,
+        descricao: e.descricao || '',
+        local: e.local || null
+      }))
     }
   } catch (err) {
-    error.value = 'Não foi possível carregar as informações da entrega. Tente novamente.'
+    if (err.response?.status === 404) {
+      error.value = 'Código de rastreio não encontrado. Verifique o código e tente novamente.'
+    } else {
+      error.value = 'Não foi possível carregar as informações da entrega. Tente novamente.'
+    }
   } finally {
     loading.value = false
   }
@@ -293,12 +258,16 @@ async function cadastrarWhatsApp() {
   whatsappSuccess.value = false
 
   try {
-    // Simular chamada API
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    await api.post('/api/v1/rastreamento/notificacao/whatsapp', {
+      codigo_rastreio: entrega.value?.codigo,
+      telefone: whatsapp.value
+    })
     whatsappSuccess.value = true
-    setTimeout(() => {
-      whatsappSuccess.value = false
-    }, 3000)
+    whatsapp.value = ''
+    setTimeout(() => { whatsappSuccess.value = false }, 3000)
+  } catch (err) {
+    console.error('Erro ao cadastrar WhatsApp:', err)
+    alert('Não foi possível cadastrar. Tente novamente.')
   } finally {
     loadingWhatsApp.value = false
   }

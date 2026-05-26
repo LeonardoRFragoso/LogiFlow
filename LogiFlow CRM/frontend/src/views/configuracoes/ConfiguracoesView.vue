@@ -272,6 +272,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useThemeStore } from '@/stores/theme'
+import api from '@/services/api'
 
 const themeStore = useThemeStore()
 const currentTheme = ref('dark')
@@ -316,7 +317,11 @@ async function saveSettings() {
   salvando.value = true
   try {
     localStorage.setItem('userSettings', JSON.stringify(settings.value))
-    await new Promise(resolve => setTimeout(resolve, 500)) // Simula delay
+    try {
+      await api.patch('/auth/me/preferences', settings.value)
+    } catch {
+      // Endpoint opcional — configurações ficam salvas localmente
+    }
     alert('Configurações salvas com sucesso!')
   } catch (e) {
     alert('Erro ao salvar configurações')

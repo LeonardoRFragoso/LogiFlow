@@ -2,9 +2,22 @@
 
 ## 📊 Análise de Navegação e Operações Completas
 
-**Data:** 26 de Maio de 2026  
-**Status:** ✅ REVISÃO COMPLETA  
+**Data:** 26 de Maio de 2026 (revisado e corrigido)
+**Status:** ✅ REVISADO E CORRIGIDO — 5 bugs críticos/altos corrigidos
 **Objetivo:** Validar se usuários conseguem navegar e completar operações em todos os portais
+
+---
+
+## 🐛 BUGS ENCONTRADOS E CORRIGIDOS
+
+| # | Severidade | Portal | Problema | Correção |
+|---|-----------|--------|----------|----------|
+| 1 | 🔴 Crítico | Portal Cliente | `TrackingView.vue` usava **mock hardcoded** — rastreamento nunca chamava o backend real | Conectado ao endpoint `GET /api/v1/rastreamento/tracking/{codigo}` com mapeamento correto da resposta |
+| 2 | 🔴 Crítico | App Motorista | `entregas.js` chamava `/demo/entregas` em vez do endpoint real; `motorista_id` era `'motorista-atual'` (string literal) | Corrigido para `/api/v1/rastreamento/motorista/{id}/entregas`; ID real do `authStore.user?.id` |
+| 3 | 🟠 Alto | Frontend CRM | Sidebar tinha apenas 8 links — **13 módulos sem navegação** (Entregas, GPS, Leads, CRM, Fiscal, WhatsApp, etc) | Adicionados todos os módulos à sidebar por seção |
+| 4 | 🟡 Médio | Frontend CRM | `router.beforeEach` não verificava `requiresAdmin` — qualquer usuário acessava `/admin/leads` | Adicionada verificação de `role === 'admin'` com redirect para `/` |
+| 5 | 🟡 Médio | App Motorista | Botão GPS apenas mostrava `alert()` — não enviava posição ao backend | Implementado envio real via `POST /api/v1/rastreamento/posicao` com fallback gracioso |
+| 6 | 🟡 Médio | Portal Cliente | `pinia` não estava instalada (`npm install pinia` faltando) — build falhava | Instalada via `npm install pinia` |
 
 ---
 

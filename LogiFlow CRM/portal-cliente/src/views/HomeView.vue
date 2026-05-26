@@ -115,11 +115,8 @@ function rastrear() {
   }
 
   loading.value = true
-  
-  setTimeout(() => {
-    loading.value = false
-    router.push(`/rastrear/${codigoRastreio.value}`)
-  }, 500)
+  router.push(`/rastrear/${codigoRastreio.value}`)
+  loading.value = false
 }
 
 function goToLogin() {
