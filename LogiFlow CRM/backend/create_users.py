@@ -23,8 +23,8 @@ def criar_usuarios():
         return False
     
     try:
-        # Criar engine e session
-        engine = create_engine(database_url)
+        # connect_timeout=5 evita bloquear o startup por minutos se o DB estiver indisponível
+        engine = create_engine(database_url, connect_args={"connect_timeout": 5})
         Session = sessionmaker(bind=engine)
         session = Session()
         
