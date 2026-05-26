@@ -7,7 +7,7 @@
           <BaseInput v-model="form.razao_social" label="Razão Social" required class="col-span-2" />
           <BaseInput v-model="form.nome_fantasia" label="Nome Fantasia" />
           <BaseInput v-model="form.cnpj" label="CNPJ" required placeholder="00.000.000/0000-00" />
-          <BaseInput v-model="form.inscricao_estadual" label="Inscrição Estadual" />
+          <BaseInput v-model="form.ie" label="Inscrição Estadual" />
           <BaseInput v-model="form.contato_nome" label="Contato Principal" />
         </div>
       </fieldset>
@@ -74,7 +74,7 @@ const isEdit = computed(() => !!props.cliente?.id)
 const { create, update, loading } = useCrud('/clientes/')
 
 const form = ref({})
-const defaultForm = { razao_social: '', nome_fantasia: '', cnpj: '', inscricao_estadual: '', contato_nome: '', email: '', telefone: '', celular: '', cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', condicao_pagamento: '30_dias', limite_credito: '', observacoes: '' }
+const defaultForm = { razao_social: '', nome_fantasia: '', cnpj: '', ie: '', contato_nome: '', email: '', telefone: '', celular: '', cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', condicao_pagamento: '30_dias', limite_credito: 0, observacoes: '', ativo: true }
 
 watch(() => props.modelValue, (v) => { if (v) form.value = props.cliente ? { ...props.cliente } : { ...defaultForm } })
 

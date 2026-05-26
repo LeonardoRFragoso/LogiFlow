@@ -19,7 +19,7 @@ from services.email_service import send_welcome_email, send_payment_confirmation
 from loguru import logger
 from fastapi import BackgroundTasks
 
-router = APIRouter(prefix="/api/billing", tags=["billing"])
+router = APIRouter(prefix="/billing", tags=["Billing"])
 
 # Inicializar serviço Mercado Pago
 MP_ACCESS_TOKEN = os.getenv("MERCADOPAGO_ACCESS_TOKEN", "")

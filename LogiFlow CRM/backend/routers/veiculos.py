@@ -84,104 +84,132 @@ class TipoManutencao(str, Enum):
 
 
 # ========================================
-# Schemas
+# Schemas - Simplificados para MVP (campos planos)
 # ========================================
 
-class DocumentoVeiculo(BaseModel):
-    tipo: str  # CRLV, Seguro, ANTT, etc
-    numero: str
-    data_emissao: date
-    data_validade: date
-    arquivo_url: Optional[str] = None
-
-
-class ManutencaoSchema(BaseModel):
-    tipo: TipoManutencao
-    data: date
-    km_atual: int
-    descricao: str
-    valor: float
-    oficina: Optional[str] = None
-    proxima_km: Optional[int] = None
-    proxima_data: Optional[date] = None
-    observacoes: Optional[str] = None
-
-
-class CriarVeiculoRequest(BaseModel):
-    placa: str = Field(..., min_length=7, max_length=8)
-    placa_reboque: Optional[str] = None
-    renavam: str
+class VeiculoBase(BaseModel):
+    """Schema base com campos planos para compatibilidade com frontend"""
+    # Identificação
+    placa: str
+    renavam: Optional[str] = None
     chassi: Optional[str] = None
     
-    marca: str
-    modelo: str
-    ano_fabricacao: int = Field(..., ge=1990, le=2030)
-    ano_modelo: int = Field(..., ge=1990, le=2030)
+    # Características
+    marca: Optional[str] = None
+    modelo: Optional[str] = None
+    ano_fabricacao: Optional[int] = None
+    ano_modelo: Optional[int] = None
     cor: Optional[str] = None
     
-    tipo: TipoVeiculo
-    tipo_carroceria: TipoCarroceria
-    tipo_propriedade: TipoPropriedade = TipoPropriedade.PROPRIO
+    # Tipo
+    tipo: Optional[str] = "truck"
+    tipo_carroceria: Optional[str] = "bau"
+    tipo_propriedade: Optional[str] = "proprio"
     
-    capacidade_kg: float = Field(..., gt=0)
+    # Capacidade
+    capacidade_kg: Optional[float] = None
     capacidade_m3: Optional[float] = None
-    eixos: int = Field(..., ge=2, le=9)
+    eixos: Optional[int] = 2
+    km_atual: Optional[int] = 0
     
-    km_atual: int = Field(0, ge=0)
-    
-    rntrc: Optional[str] = None  # Registro Nacional de Transportadores
+    # Documentação
+    rntrc: Optional[str] = None
     antt: Optional[str] = None
     
-    motorista_padrao_id: Optional[str] = None
-    
+    # Propriedade
     proprietario_nome: Optional[str] = None
     proprietario_documento: Optional[str] = None
     
-    valor_compra: Optional[float] = None
-    data_compra: Optional[date] = None
-    
+    # Documentos e Seguro
+    licenciamento_validade: Optional[str] = None
     seguro_apolice: Optional[str] = None
-    seguro_validade: Optional[date] = None
+    seguro_validade: Optional[str] = None
     seguro_valor: Optional[float] = None
     
+    # Status
+    status: Optional[str] = "ativo"
+    disponibilidade: Optional[str] = "disponivel"
+    
+    # Outros
     observacoes: Optional[str] = None
     foto_url: Optional[str] = None
-    
-    @validator('placa')
-    def validar_placa(cls, v):
-        placa = v.upper().replace('-', '')
-        # Placa antiga: ABC1234 ou Mercosul: ABC1D23
-        if not re.match(r'^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$', placa):
-            raise ValueError('Placa inválida')
-        return placa
+    motorista_padrao_id: Optional[int] = None
+
+
+class CriarVeiculoRequest(VeiculoBase):
+    """Request para criar veículo"""
+    placa: str  # Obrigatório
 
 
 class AtualizarVeiculoRequest(BaseModel):
-    placa_reboque: Optional[str] = None
+    """Request para atualizar veículo - todos campos opcionais"""
+    placa: Optional[str] = None
+    renavam: Optional[str] = None
+    chassi: Optional[str] = None
+    marca: Optional[str] = None
+    modelo: Optional[str] = None
+    ano_fabricacao: Optional[int] = None
+    ano_modelo: Optional[int] = None
     cor: Optional[str] = None
-    tipo_carroceria: Optional[TipoCarroceria] = None
-    tipo_propriedade: Optional[TipoPropriedade] = None
+    tipo: Optional[str] = None
+    tipo_carroceria: Optional[str] = None
+    tipo_propriedade: Optional[str] = None
     capacidade_kg: Optional[float] = None
     capacidade_m3: Optional[float] = None
+    eixos: Optional[int] = None
     km_atual: Optional[int] = None
     rntrc: Optional[str] = None
     antt: Optional[str] = None
-    motorista_padrao_id: Optional[str] = None
+    proprietario_nome: Optional[str] = None
+    licenciamento_validade: Optional[str] = None
     seguro_apolice: Optional[str] = None
-    seguro_validade: Optional[date] = None
+    seguro_validade: Optional[str] = None
     seguro_valor: Optional[float] = None
+    status: Optional[str] = None
+    disponibilidade: Optional[str] = None
     observacoes: Optional[str] = None
     foto_url: Optional[str] = None
+    motorista_padrao_id: Optional[int] = None
+
+
+class VeiculoResponse(BaseModel):
+    """Response de veículo"""
+    id: int
+    placa: str
+    renavam: Optional[str] = None
+    chassi: Optional[str] = None
+    marca: Optional[str] = None
+    modelo: Optional[str] = None
+    ano_fabricacao: Optional[int] = None
+    ano_modelo: Optional[int] = None
+    cor: Optional[str] = None
+    tipo: Optional[str] = None
+    tipo_carroceria: Optional[str] = None
+    tipo_propriedade: Optional[str] = None
+    capacidade_kg: Optional[float] = None
+    capacidade_m3: Optional[float] = None
+    eixos: Optional[int] = None
+    km_atual: Optional[int] = None
+    status: Optional[str] = None
+    disponibilidade: Optional[str] = None
+    licenciamento_validade: Optional[str] = None
+    seguro_validade: Optional[str] = None
+    observacoes: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
 
 
 class AtualizarKmRequest(BaseModel):
-    km_atual: int = Field(..., ge=0)
+    km_atual: int
     data_registro: Optional[datetime] = None
     observacao: Optional[str] = None
 
 
 class AgendarManutencaoRequest(BaseModel):
-    tipo: TipoManutencao
+    tipo: str
     data_agendada: date
     km_atual: Optional[int] = None
     descricao: str
@@ -190,7 +218,7 @@ class AgendarManutencaoRequest(BaseModel):
 
 
 class RegistrarManutencaoRequest(BaseModel):
-    tipo: TipoManutencao
+    tipo: str
     data: date
     km_atual: int
     descricao: str
@@ -456,197 +484,210 @@ async def estatisticas_veiculos():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/{veiculo_id}")
-async def obter_veiculo(veiculo_id: str):
+@router.get("/{veiculo_id}", response_model=VeiculoResponse)
+async def obter_veiculo(
+    veiculo_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """Obtém detalhes de um veículo"""
     try:
-        if veiculo_id not in veiculos_db:
+        tenant_id = get_current_tenant_id(request)
+        
+        veiculo = db.query(Veiculo).filter(
+            Veiculo.id == veiculo_id,
+            Veiculo.tenant_id == tenant_id
+        ).first()
+        
+        if not veiculo:
             raise HTTPException(status_code=404, detail="Veículo não encontrado")
         
-        veiculo = veiculos_db[veiculo_id]
-        veiculo["manutencoes"] = manutencoes_db.get(veiculo_id, [])
-        
-        return {
-            "success": True,
-            "data": veiculo
-        }
+        return veiculo
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao obter veículo: {e}")
+        logger.error(f"❌ Erro ao obter veículo: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("")
-async def criar_veiculo(request: CriarVeiculoRequest):
+@router.post("", response_model=VeiculoResponse)
+async def criar_veiculo(
+    veiculo_data: CriarVeiculoRequest,
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """Cadastra um novo veículo"""
     try:
+        tenant_id = get_current_tenant_id(request)
+        
         # Verificar placa duplicada
-        for v in veiculos_db.values():
-            if v["placa"] == request.placa:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Placa já cadastrada"
-                )
+        existing = db.query(Veiculo).filter(
+            Veiculo.placa == veiculo_data.placa.upper(),
+            Veiculo.tenant_id == tenant_id
+        ).first()
         
-        veiculo_id = str(uuid.uuid4())
-        now = datetime.utcnow()
+        if existing:
+            raise HTTPException(status_code=400, detail="Placa já cadastrada")
         
-        veiculo = {
-            "id": veiculo_id,
-            "placa": request.placa,
-            "placa_reboque": request.placa_reboque,
-            "renavam": request.renavam,
-            "chassi": request.chassi,
-            "marca": request.marca,
-            "modelo": request.modelo,
-            "ano_fabricacao": request.ano_fabricacao,
-            "ano_modelo": request.ano_modelo,
-            "cor": request.cor,
-            "tipo": request.tipo.value,
-            "tipo_carroceria": request.tipo_carroceria.value,
-            "tipo_propriedade": request.tipo_propriedade.value,
-            "capacidade_kg": request.capacidade_kg,
-            "capacidade_m3": request.capacidade_m3,
-            "eixos": request.eixos,
-            "km_atual": request.km_atual,
-            "rntrc": request.rntrc,
-            "antt": request.antt,
-            "motorista_padrao_id": request.motorista_padrao_id,
-            "proprietario_nome": request.proprietario_nome,
-            "proprietario_documento": request.proprietario_documento,
-            "valor_compra": request.valor_compra,
-            "data_compra": request.data_compra.isoformat() if request.data_compra else None,
-            "seguro_apolice": request.seguro_apolice,
-            "seguro_validade": request.seguro_validade.isoformat() if request.seguro_validade else None,
-            "seguro_valor": request.seguro_valor,
-            "status": StatusVeiculo.ATIVO.value,
-            "disponibilidade": DisponibilidadeVeiculo.DISPONIVEL.value,
-            "observacoes": request.observacoes,
-            "foto_url": request.foto_url,
-            "documentos": [],
-            "criado_em": now,
-            "atualizado_em": now,
-            "viagens_realizadas": 0,
-            "km_rodados_total": 0
-        }
+        veiculo = Veiculo(
+            placa=veiculo_data.placa.upper(),
+            renavam=veiculo_data.renavam,
+            chassi=veiculo_data.chassi,
+            marca=veiculo_data.marca,
+            modelo=veiculo_data.modelo,
+            ano_fabricacao=veiculo_data.ano_fabricacao,
+            ano_modelo=veiculo_data.ano_modelo,
+            cor=veiculo_data.cor,
+            tipo=veiculo_data.tipo,
+            tipo_carroceria=veiculo_data.tipo_carroceria,
+            tipo_propriedade=veiculo_data.tipo_propriedade,
+            capacidade_kg=veiculo_data.capacidade_kg,
+            capacidade_m3=veiculo_data.capacidade_m3,
+            eixos=veiculo_data.eixos or 2,
+            km_atual=veiculo_data.km_atual or 0,
+            rntrc=veiculo_data.rntrc,
+            antt=veiculo_data.antt,
+            proprietario_nome=veiculo_data.proprietario_nome,
+            licenciamento_validade=veiculo_data.licenciamento_validade,
+            seguro_apolice=veiculo_data.seguro_apolice,
+            seguro_validade=veiculo_data.seguro_validade,
+            seguro_valor=veiculo_data.seguro_valor,
+            status=veiculo_data.status or "ativo",
+            disponibilidade=veiculo_data.disponibilidade or "disponivel",
+            observacoes=veiculo_data.observacoes,
+            foto_url=veiculo_data.foto_url,
+            motorista_padrao_id=veiculo_data.motorista_padrao_id,
+            tenant_id=tenant_id
+        )
         
-        veiculos_db[veiculo_id] = veiculo
-        manutencoes_db[veiculo_id] = []
+        db.add(veiculo)
+        db.commit()
+        db.refresh(veiculo)
         
-        logger.info(f"Veículo cadastrado: {request.placa}")
+        logger.info(f"✅ Veículo cadastrado: {veiculo.placa} (ID: {veiculo.id})")
         
-        return {
-            "success": True,
-            "message": "Veículo cadastrado com sucesso",
-            "data": veiculo
-        }
+        return veiculo
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao criar veículo: {e}")
+        db.rollback()
+        logger.error(f"❌ Erro ao criar veículo: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.put("/{veiculo_id}")
+@router.put("/{veiculo_id}", response_model=VeiculoResponse)
 async def atualizar_veiculo(
-    veiculo_id: str,
-    request: AtualizarVeiculoRequest
+    veiculo_id: int,
+    veiculo_data: AtualizarVeiculoRequest,
+    request: Request,
+    db: Session = Depends(get_db)
 ):
     """Atualiza dados de um veículo"""
     try:
-        if veiculo_id not in veiculos_db:
+        tenant_id = get_current_tenant_id(request)
+        
+        veiculo = db.query(Veiculo).filter(
+            Veiculo.id == veiculo_id,
+            Veiculo.tenant_id == tenant_id
+        ).first()
+        
+        if not veiculo:
             raise HTTPException(status_code=404, detail="Veículo não encontrado")
         
-        veiculo = veiculos_db[veiculo_id]
-        
-        update_data = request.dict(exclude_unset=True)
+        update_data = veiculo_data.dict(exclude_unset=True)
         for key, value in update_data.items():
-            if value is not None:
-                if hasattr(value, 'value'):
-                    veiculo[key] = value.value
-                elif isinstance(value, date):
-                    veiculo[key] = value.isoformat()
-                else:
-                    veiculo[key] = value
+            if value is not None and hasattr(veiculo, key):
+                setattr(veiculo, key, value)
         
-        veiculo["atualizado_em"] = datetime.utcnow()
+        db.commit()
+        db.refresh(veiculo)
         
-        return {
-            "success": True,
-            "message": "Veículo atualizado",
-            "data": veiculo
-        }
+        logger.info(f"✅ Veículo atualizado: {veiculo.placa}")
+        
+        return veiculo
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao atualizar veículo: {e}")
+        db.rollback()
+        logger.error(f"❌ Erro ao atualizar veículo: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.patch("/{veiculo_id}/km")
 async def atualizar_km(
-    veiculo_id: str,
-    request: AtualizarKmRequest
+    veiculo_id: int,
+    km_data: AtualizarKmRequest,
+    request: Request,
+    db: Session = Depends(get_db)
 ):
     """Atualiza quilometragem do veículo"""
     try:
-        if veiculo_id not in veiculos_db:
+        tenant_id = get_current_tenant_id(request)
+        
+        veiculo = db.query(Veiculo).filter(
+            Veiculo.id == veiculo_id,
+            Veiculo.tenant_id == tenant_id
+        ).first()
+        
+        if not veiculo:
             raise HTTPException(status_code=404, detail="Veículo não encontrado")
         
-        veiculo = veiculos_db[veiculo_id]
-        
-        if request.km_atual < veiculo["km_atual"]:
+        if km_data.km_atual < (veiculo.km_atual or 0):
             raise HTTPException(
                 status_code=400,
                 detail="Quilometragem não pode ser menor que a atual"
             )
         
-        km_rodado = request.km_atual - veiculo["km_atual"]
-        veiculo["km_atual"] = request.km_atual
-        veiculo["km_rodados_total"] = veiculo.get("km_rodados_total", 0) + km_rodado
-        veiculo["atualizado_em"] = datetime.utcnow()
+        km_anterior = veiculo.km_atual or 0
+        veiculo.km_atual = km_data.km_atual
+        db.commit()
         
         return {
             "success": True,
-            "message": f"Quilometragem atualizada: {request.km_atual} km",
+            "message": f"Quilometragem atualizada: {km_data.km_atual} km",
             "data": {
-                "km_atual": veiculo["km_atual"],
-                "km_rodado_neste_registro": km_rodado
+                "km_atual": veiculo.km_atual,
+                "km_rodado_neste_registro": km_data.km_atual - km_anterior
             }
         }
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao atualizar km: {e}")
+        db.rollback()
+        logger.error(f"❌ Erro ao atualizar km: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.patch("/{veiculo_id}/disponibilidade")
 async def atualizar_disponibilidade_veiculo(
-    veiculo_id: str,
-    disponibilidade: DisponibilidadeVeiculo,
+    veiculo_id: int,
+    disponibilidade: str,
+    request: Request,
+    db: Session = Depends(get_db),
     motivo: Optional[str] = None
 ):
     """Atualiza disponibilidade do veículo"""
     try:
-        if veiculo_id not in veiculos_db:
+        tenant_id = get_current_tenant_id(request)
+        
+        veiculo = db.query(Veiculo).filter(
+            Veiculo.id == veiculo_id,
+            Veiculo.tenant_id == tenant_id
+        ).first()
+        
+        if not veiculo:
             raise HTTPException(status_code=404, detail="Veículo não encontrado")
         
-        veiculo = veiculos_db[veiculo_id]
-        veiculo["disponibilidade"] = disponibilidade.value
-        veiculo["atualizado_em"] = datetime.utcnow()
-        
-        if motivo:
-            veiculo["motivo_disponibilidade"] = motivo
+        veiculo.disponibilidade = disponibilidade
+        db.commit()
         
         return {
             "success": True,
-            "message": f"Disponibilidade alterada para {disponibilidade.value}",
+            "message": f"Disponibilidade alterada para {disponibilidade}",
             "data": veiculo
         }
         
@@ -671,7 +712,7 @@ async def registrar_manutencao(
         
         manutencao = {
             "id": str(uuid.uuid4()),
-            "tipo": request.tipo.value,
+            "tipo": request.tipo,
             "data": request.data.isoformat(),
             "km_atual": request.km_atual,
             "descricao": request.descricao,
@@ -695,7 +736,7 @@ async def registrar_manutencao(
         
         veiculo["atualizado_em"] = datetime.utcnow()
         
-        logger.info(f"Manutenção registrada: {veiculo['placa']} - {request.tipo.value}")
+        logger.info(f"Manutenção registrada: {veiculo['placa']} - {request.tipo}")
         
         return {
             "success": True,

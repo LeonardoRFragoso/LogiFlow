@@ -53,6 +53,8 @@ const routes = [
       // Módulos CRM
       { path: 'crm/contatos', name: 'Contatos', component: () => import('@/views/crm/ContactsView.vue') },
       { path: 'crm/oportunidades', name: 'Oportunidades', component: () => import('@/views/crm/OpportunitiesView.vue') },
+      { path: 'crm/pipeline', name: 'Pipeline', component: () => import('@/views/crm/PipelineView.vue') },
+      { path: 'crm/cliente360/:id?', name: 'Cliente360', component: () => import('@/views/crm/Cliente360View.vue') },
       { path: 'crm/casos', name: 'Casos', component: () => import('@/views/crm/CasesView.vue') },
       
       // Admin

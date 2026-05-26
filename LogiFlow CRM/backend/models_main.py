@@ -176,13 +176,36 @@ class Cliente(Base):
     __tablename__ = "clientes"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    nome = Column(String(255), nullable=False)
+    # Dados da Empresa
+    razao_social = Column(String(255), nullable=False)
+    nome_fantasia = Column(String(255), nullable=True)
+    cnpj = Column(String(20), nullable=True, index=True)
+    ie = Column(String(20), nullable=True)  # Inscrição Estadual
+    
+    # Contato
+    contato_nome = Column(String(255), nullable=True)
     email = Column(String(255), nullable=True)
     telefone = Column(String(20), nullable=True)
-    cnpj = Column(String(20), nullable=True)
-    endereco = Column(Text, nullable=True)
+    celular = Column(String(20), nullable=True)
+    
+    # Endereço
+    cep = Column(String(10), nullable=True)
+    logradouro = Column(String(255), nullable=True)
+    numero = Column(String(20), nullable=True)
+    complemento = Column(String(100), nullable=True)
+    bairro = Column(String(100), nullable=True)
     cidade = Column(String(100), nullable=True)
     uf = Column(String(2), nullable=True)
+    
+    # Comercial
+    condicao_pagamento = Column(String(50), nullable=True, default="30_dias")
+    limite_credito = Column(Float, nullable=True, default=0)
+    
+    # Status e Observações
+    ativo = Column(Boolean, default=True, index=True)
+    observacoes = Column(Text, nullable=True)
+    
+    # Multi-tenant
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -192,45 +215,135 @@ class Cliente(Base):
     cotacoes = relationship("Cotacao", back_populates="cliente")
     oportunidades = relationship("Opportunity", back_populates="cliente")
     interacoes = relationship("CustomerInteraction", back_populates="cliente")
+    
+    # Propriedade para compatibilidade com código legado
+    @property
+    def nome(self):
+        return self.nome_fantasia or self.razao_social
+    
+    @property
+    def endereco(self):
+        """Retorna endereço formatado para compatibilidade"""
+        partes = [self.logradouro]
+        if self.numero:
+            partes.append(self.numero)
+        if self.complemento:
+            partes.append(self.complemento)
+        return ", ".join(filter(None, partes))
 
 
 class Motorista(Base):
     __tablename__ = "motoristas"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    # Dados Pessoais
     nome = Column(String(255), nullable=False)
-    cpf = Column(String(20), nullable=True)
-    cnh = Column(String(20), nullable=True)
-    email = Column(String(255), nullable=True)
+    cpf = Column(String(20), nullable=True, index=True)
+    rg = Column(String(20), nullable=True)
+    data_nascimento = Column(String(20), nullable=True)
+    
+    # CNH - campos planos
+    cnh_numero = Column(String(20), nullable=True)
+    cnh_categoria = Column(String(5), nullable=True, default="E")
+    cnh_validade = Column(String(20), nullable=True)
+    
+    # Contato
     telefone = Column(String(20), nullable=True)
-    status = Column(String(50), nullable=True)
-    disponibilidade = Column(String(50), nullable=True)
-    tipo_contrato = Column(String(50), nullable=True)
+    celular = Column(String(20), nullable=True)
+    email = Column(String(255), nullable=True)
+    
+    # Endereço
+    cep = Column(String(10), nullable=True)
+    endereco = Column(String(255), nullable=True)
+    cidade = Column(String(100), nullable=True)
+    uf = Column(String(2), nullable=True)
+    
+    # Situação
+    status = Column(String(50), nullable=True, default="ativo", index=True)
+    disponibilidade = Column(String(50), nullable=True, default="disponivel")
+    tipo_contrato = Column(String(50), nullable=True, default="clt")
+    data_admissao = Column(String(20), nullable=True)
+    
+    # Outros
+    observacoes = Column(Text, nullable=True)
+    foto_url = Column(String(500), nullable=True)
+    veiculo_padrao_id = Column(Integer, nullable=True)
+    
+    # Multi-tenant
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
     pedidos = relationship("Pedido", back_populates="motorista")
+    
+    # Propriedade para compatibilidade
+    @property
+    def cnh(self):
+        return self.cnh_numero
 
 
 class Veiculo(Base):
     __tablename__ = "veiculos"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    placa = Column(String(20), nullable=False, unique=True)
+    
+    # Identificação
+    placa = Column(String(20), nullable=False, unique=True, index=True)
+    renavam = Column(String(20), nullable=True)
+    chassi = Column(String(50), nullable=True)
+    
+    # Características
     marca = Column(String(100), nullable=True)
     modelo = Column(String(100), nullable=True)
-    ano = Column(Integer, nullable=True)
-    status = Column(String(50), nullable=True)
-    disponibilidade = Column(String(50), nullable=True)
-    tipo = Column(String(50), nullable=True)
-    tipo_carroceria = Column(String(50), nullable=True)
-    tipo_propriedade = Column(String(50), nullable=True)
+    ano_fabricacao = Column(Integer, nullable=True)
+    ano_modelo = Column(Integer, nullable=True)
+    cor = Column(String(50), nullable=True)
+    
+    # Tipo
+    tipo = Column(String(50), nullable=True, default="truck")
+    tipo_carroceria = Column(String(50), nullable=True, default="bau")
+    tipo_propriedade = Column(String(50), nullable=True, default="proprio")
+    
+    # Capacidade
     capacidade_kg = Column(Float, nullable=True)
+    capacidade_m3 = Column(Float, nullable=True)
+    eixos = Column(Integer, nullable=True, default=2)
+    km_atual = Column(Integer, nullable=True, default=0)
+    
+    # Documentação
+    rntrc = Column(String(50), nullable=True)
+    antt = Column(String(50), nullable=True)
+    
+    # Propriedade
+    proprietario_nome = Column(String(255), nullable=True)
+    proprietario_documento = Column(String(20), nullable=True)
+    
+    # Documentos e Seguro
+    licenciamento_validade = Column(String(20), nullable=True)
+    seguro_apolice = Column(String(50), nullable=True)
+    seguro_validade = Column(String(20), nullable=True)
+    seguro_valor = Column(Float, nullable=True)
+    
+    # Status
+    status = Column(String(50), nullable=True, default="ativo", index=True)
+    disponibilidade = Column(String(50), nullable=True, default="disponivel")
+    
+    # Outros
+    observacoes = Column(Text, nullable=True)
+    foto_url = Column(String(500), nullable=True)
+    motorista_padrao_id = Column(Integer, nullable=True)
+    
+    # Multi-tenant
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Propriedade para compatibilidade com código legado
+    @property
+    def ano(self):
+        return self.ano_fabricacao
 
 
 class Pedido(Base):
@@ -276,24 +389,56 @@ class Cotacao(Base):
     __tablename__ = "cotacoes"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    numero = Column(String(20), unique=True, nullable=True)
+    numero = Column(String(20), unique=True, nullable=True, index=True)
+    
+    # Cliente
     cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=True)
+    cliente_nome = Column(String(255), nullable=True)
+    
+    # Origem
     origem_cidade = Column(String(100), nullable=True)
     origem_uf = Column(String(2), nullable=True)
+    origem_cep = Column(String(10), nullable=True)
+    origem_logradouro = Column(String(255), nullable=True)
+    
+    # Destino
     destino_cidade = Column(String(100), nullable=True)
     destino_uf = Column(String(2), nullable=True)
+    destino_cep = Column(String(10), nullable=True)
+    destino_logradouro = Column(String(255), nullable=True)
+    
+    # Carga
+    tipo_carga = Column(String(50), nullable=True, default="geral")
+    modal = Column(String(50), nullable=True, default="rodoviario")
     peso_kg = Column(Float, default=0)
+    cubagem_m3 = Column(Float, nullable=True)
+    quantidade_volumes = Column(Integer, default=1)
     valor_mercadoria = Column(Float, default=0)
+    
+    # Valores e Prazo
+    prazo_estimado = Column(Integer, default=5)
     valor_frete = Column(Float, default=0)
-    prazo_dias = Column(Integer, default=0)
-    status = Column(String(20), default=StatusCotacao.PENDENTE.value)
-    validade = Column(DateTime, nullable=True)
+    valor_seguro = Column(Float, default=0)
+    valor_adicional = Column(Float, default=0)
+    validade = Column(String(20), nullable=True)
+    
+    # Status
+    status = Column(String(20), default="rascunho", index=True)
+    urgente = Column(Boolean, default=False)
     observacoes = Column(Text, nullable=True)
-    criado_em = Column(DateTime, default=datetime.utcnow)
-    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Multi-tenant
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
     cliente = relationship("Cliente", back_populates="cotacoes")
+    
+    # Propriedade para compatibilidade
+    @property
+    def prazo_dias(self):
+        return self.prazo_estimado
 
 
 class Ocorrencia(Base):

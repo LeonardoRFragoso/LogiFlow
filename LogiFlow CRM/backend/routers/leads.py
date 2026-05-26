@@ -18,7 +18,7 @@ from routers.auth import _hash_senha
 from services.sendgrid_email_service import send_welcome_email
 from loguru import logger
 
-router = APIRouter(prefix="/api/leads", tags=["leads"])
+router = APIRouter(prefix="/leads", tags=["Leads"])
 
 
 # ========================================
