@@ -115,34 +115,7 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Iniciando LogiFlow API...")
     
-    # Executar script de migração de colunas ANTES de qualquer outra coisa
-    try:
-        logger.info("🔧 Executando script de migração de colunas do banco...")
-        from add_cargo_column import add_all_lead_columns
-        add_all_lead_columns()
-        logger.info("✅ Script de migração executado com sucesso")
-    except Exception as e:
-        logger.error(f"❌ Erro ao executar script de migração: {e}")
-    
-    # Criar usuários necessários (admin e Leonardo)
-    try:
-        logger.info("👤 Criando usuários padrão...")
-        from create_users import criar_usuarios
-        criar_usuarios()
-        logger.info("✅ Usuários criados com sucesso")
-    except Exception as e:
-        logger.error(f"❌ Erro ao criar usuários: {e}")
-    
-    # Adicionar tabela de notificações
-    try:
-        logger.info("🔔 Verificando tabela de notificações...")
-        from add_notifications_table import add_notifications_table
-        add_notifications_table()
-        logger.info("✅ Tabela de notificações verificada")
-    except Exception as e:
-        logger.error(f"❌ Erro ao verificar tabela de notificações: {e}")
-    
-    # Testar conexão Redis
+    # Testar conexão Redis (não depende do DB)
     try:
         redis_config = settings.get_redis_config()
         redis_client = redis.Redis(**redis_config)
@@ -153,14 +126,41 @@ async def lifespan(app: FastAPI):
         logger.warning(f"Redis não disponível: {e}. Continuando sem cache...")
         app.state.redis = None
 
-    # Garantir que as tabelas do banco existam
+    # 1. Criar tabelas (deve ser o PRIMEIRO passo com o DB)
     try:
         init_db()
         logger.info("Banco inicializado (init_db).")
     except Exception as e:
         logger.error(f"Erro ao inicializar banco: {e}")
-    
-    # Criar usuário admin padrão se não existir
+
+    # 2. Migrations de colunas adicionais (após tabelas existirem)
+    try:
+        logger.info("� Executando script de migração de colunas do banco...")
+        from add_cargo_column import add_all_lead_columns
+        add_all_lead_columns()
+        logger.info("✅ Script de migração executado com sucesso")
+    except Exception as e:
+        logger.error(f"❌ Erro ao executar script de migração: {e}")
+
+    # 3. Tabela de notificações (após init_db)
+    try:
+        logger.info("🔔 Verificando tabela de notificações...")
+        from add_notifications_table import add_notifications_table
+        add_notifications_table()
+        logger.info("✅ Tabela de notificações verificada")
+    except Exception as e:
+        logger.error(f"❌ Erro ao verificar tabela de notificações: {e}")
+
+    # 4. Criar usuários padrão (após tabelas existirem)
+    try:
+        logger.info("👤 Criando usuários padrão...")
+        from create_users import criar_usuarios
+        criar_usuarios()
+        logger.info("✅ Usuários criados com sucesso")
+    except Exception as e:
+        logger.error(f"❌ Erro ao criar usuários: {e}")
+
+    # 5. Criar usuário admin via ORM (após tabelas existirem)
     try:
         from routers.auth import criar_usuario_admin_se_necessario
         criar_usuario_admin_se_necessario()
