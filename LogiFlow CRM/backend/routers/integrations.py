@@ -16,7 +16,7 @@ from services.encryption_service import encrypt_api_key, decrypt_api_key
 from auth import get_current_user
 from loguru import logger
 
-router = APIRouter(prefix="/api/integrations", tags=["integrations"])
+router = APIRouter(prefix="/integrations", tags=["Integrações"])
 
 
 # ========================================

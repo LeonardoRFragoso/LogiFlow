@@ -61,83 +61,106 @@ class DisponibilidadeMotorista(str, Enum):
 
 
 # ========================================
-# Schemas
+# Schemas - Simplificados para MVP (campos planos)
 # ========================================
 
-class EnderecoSchema(BaseModel):
-    cep: str
-    logradouro: str
-    numero: str
-    complemento: Optional[str] = None
-    bairro: str
-    cidade: str
-    uf: str = Field(..., max_length=2)
-
-
-class CNHSchema(BaseModel):
-    numero: str
-    categoria: CategoriaCNH
-    data_emissao: date
-    data_validade: date
-    uf_emissao: str = Field(..., max_length=2)
-    primeira_habilitacao: Optional[date] = None
-    observacoes: Optional[str] = None
-
-
-class ContatoEmergenciaSchema(BaseModel):
-    nome: str
-    telefone: str
-    parentesco: Optional[str] = None
-
-
-class CriarMotoristaRequest(BaseModel):
+class MotoristaBase(BaseModel):
+    """Schema base com campos planos para compatibilidade com frontend"""
+    # Dados Pessoais
     nome: str = Field(..., min_length=3, max_length=100)
-    cpf: str = Field(..., min_length=11, max_length=14)
+    cpf: str
     rg: Optional[str] = None
-    data_nascimento: date
-    telefone: str
-    telefone_secundario: Optional[str] = None
+    data_nascimento: Optional[str] = None  # Aceita string para flexibilidade
+    
+    # CNH - campos planos
+    cnh_numero: Optional[str] = None
+    cnh_categoria: Optional[str] = "E"
+    cnh_validade: Optional[str] = None
+    
+    # Contato
+    telefone: Optional[str] = None
+    celular: Optional[str] = None
     email: Optional[str] = None
     
-    endereco: EnderecoSchema
-    cnh: CNHSchema
+    # Endereço - campos planos
+    cep: Optional[str] = None
+    endereco: Optional[str] = None
+    cidade: Optional[str] = None
+    uf: Optional[str] = None
     
-    tipo_contrato: TipoContrato = TipoContrato.CLT
-    data_admissao: Optional[date] = None
-    salario: Optional[float] = None
+    # Situação
+    status: Optional[str] = "ativo"
+    disponibilidade: Optional[str] = "disponivel"
+    tipo_contrato: Optional[str] = "clt"
+    data_admissao: Optional[str] = None
     
-    contato_emergencia: Optional[ContatoEmergenciaSchema] = None
-    
-    veiculo_padrao_id: Optional[str] = None
-    
+    # Outros
     observacoes: Optional[str] = None
     foto_url: Optional[str] = None
-    
-    @validator('cpf')
-    def validar_cpf(cls, v):
-        cpf = re.sub(r'[^0-9]', '', v)
-        if len(cpf) != 11:
-            raise ValueError('CPF deve ter 11 dígitos')
-        return cpf
+    veiculo_padrao_id: Optional[str] = None
+
+
+class CriarMotoristaRequest(MotoristaBase):
+    """Request para criar motorista"""
+    pass
 
 
 class AtualizarMotoristaRequest(BaseModel):
+    """Request para atualizar motorista - todos campos opcionais"""
     nome: Optional[str] = None
+    cpf: Optional[str] = None
+    rg: Optional[str] = None
+    data_nascimento: Optional[str] = None
+    cnh_numero: Optional[str] = None
+    cnh_categoria: Optional[str] = None
+    cnh_validade: Optional[str] = None
     telefone: Optional[str] = None
-    telefone_secundario: Optional[str] = None
+    celular: Optional[str] = None
     email: Optional[str] = None
-    endereco: Optional[EnderecoSchema] = None
-    cnh: Optional[CNHSchema] = None
-    tipo_contrato: Optional[TipoContrato] = None
-    salario: Optional[float] = None
-    contato_emergencia: Optional[ContatoEmergenciaSchema] = None
-    veiculo_padrao_id: Optional[str] = None
+    cep: Optional[str] = None
+    endereco: Optional[str] = None
+    cidade: Optional[str] = None
+    uf: Optional[str] = None
+    status: Optional[str] = None
+    disponibilidade: Optional[str] = None
+    tipo_contrato: Optional[str] = None
+    data_admissao: Optional[str] = None
     observacoes: Optional[str] = None
     foto_url: Optional[str] = None
+    veiculo_padrao_id: Optional[str] = None
+
+
+class MotoristaResponse(BaseModel):
+    """Response de motorista"""
+    id: int
+    nome: str
+    cpf: Optional[str] = None
+    rg: Optional[str] = None
+    data_nascimento: Optional[str] = None
+    cnh_numero: Optional[str] = None
+    cnh_categoria: Optional[str] = None
+    cnh_validade: Optional[str] = None
+    telefone: Optional[str] = None
+    celular: Optional[str] = None
+    email: Optional[str] = None
+    cep: Optional[str] = None
+    endereco: Optional[str] = None
+    cidade: Optional[str] = None
+    uf: Optional[str] = None
+    status: Optional[str] = None
+    disponibilidade: Optional[str] = None
+    tipo_contrato: Optional[str] = None
+    data_admissao: Optional[str] = None
+    observacoes: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
 
 
 class AtualizarDisponibilidadeRequest(BaseModel):
-    disponibilidade: DisponibilidadeMotorista
+    disponibilidade: str
     motivo: Optional[str] = None
     previsao_retorno: Optional[datetime] = None
 
@@ -214,22 +237,23 @@ async def listar_motoristas(
 
 @router.get("/disponiveis")
 async def listar_motoristas_disponiveis(
-    categoria_cnh: Optional[CategoriaCNH] = None
+    categoria_cnh: Optional[str] = None,
+    request: Request = None,
+    db: Session = Depends(get_db)
 ):
     """Lista motoristas disponíveis para viagem"""
     try:
-        motoristas = [
-            m for m in motoristas_db.values()
-            if m["status"] == StatusMotorista.ATIVO.value
-            and m.get("disponibilidade") == DisponibilidadeMotorista.DISPONIVEL.value
-        ]
+        tenant_id = get_current_tenant_id(request) if request else None
+        
+        query = db.query(Motorista).filter(
+            Motorista.status == "ativo",
+            Motorista.tenant_id == tenant_id
+        )
         
         if categoria_cnh:
-            # Verificar se a categoria do motorista inclui a necessária
-            motoristas = [
-                m for m in motoristas
-                if categoria_cnh.value in m["cnh"]["categoria"]
-            ]
+            query = query.filter(Motorista.cnh_categoria.contains(categoria_cnh))
+        
+        motoristas = query.all()
         
         return {
             "success": True,
@@ -238,39 +262,49 @@ async def listar_motoristas_disponiveis(
         }
         
     except Exception as e:
-        logger.error(f"Erro ao listar motoristas disponíveis: {e}")
+        logger.error(f"❌ Erro ao listar motoristas disponíveis: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/cnh-vencendo")
 async def listar_cnh_vencendo(
-    dias: int = Query(30, ge=1, le=180)
+    dias: int = Query(30, ge=1, le=180),
+    request: Request = None,
+    db: Session = Depends(get_db)
 ):
     """Lista motoristas com CNH vencendo nos próximos dias"""
     try:
+        tenant_id = get_current_tenant_id(request) if request else None
         data_limite = date.today() + timedelta(days=dias)
         
-        motoristas = [
-            {
-                "id": m["id"],
-                "nome": m["nome"],
-                "cnh_numero": m["cnh"]["numero"],
-                "cnh_categoria": m["cnh"]["categoria"],
-                "cnh_validade": m["cnh"]["data_validade"],
-                "dias_para_vencer": (datetime.strptime(m["cnh"]["data_validade"], "%Y-%m-%d").date() - date.today()).days
-            }
-            for m in motoristas_db.values()
-            if m["status"] == StatusMotorista.ATIVO.value
-            and datetime.strptime(m["cnh"]["data_validade"], "%Y-%m-%d").date() <= data_limite
-        ]
+        motoristas = db.query(Motorista).filter(
+            Motorista.status == "ativo",
+            Motorista.tenant_id == tenant_id
+        ).all()
         
-        # Ordenar por data de vencimento
-        motoristas.sort(key=lambda x: x["cnh_validade"])
+        resultado = []
+        for m in motoristas:
+            if m.cnh_validade:
+                try:
+                    validade = datetime.strptime(m.cnh_validade, "%Y-%m-%d").date() if isinstance(m.cnh_validade, str) else m.cnh_validade
+                    if validade <= data_limite:
+                        resultado.append({
+                            "id": m.id,
+                            "nome": m.nome,
+                            "cnh_numero": m.cnh_numero,
+                            "cnh_categoria": m.cnh_categoria,
+                            "cnh_validade": m.cnh_validade,
+                            "dias_para_vencer": (validade - date.today()).days
+                        })
+                except:
+                    pass
+        
+        resultado.sort(key=lambda x: x.get("cnh_validade", ""))
         
         return {
             "success": True,
-            "data": motoristas,
-            "total": len(motoristas),
+            "data": resultado,
+            "total": len(resultado),
             "alerta": f"CNHs vencendo nos próximos {dias} dias"
         }
         
@@ -280,60 +314,70 @@ async def listar_cnh_vencendo(
 
 
 @router.get("/estatisticas")
-async def estatisticas_motoristas():
+async def estatisticas_motoristas(
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """Estatísticas dos motoristas"""
     try:
-        motoristas = list(motoristas_db.values())
+        tenant_id = get_current_tenant_id(request)
+        
+        motoristas = db.query(Motorista).filter(Motorista.tenant_id == tenant_id).all()
         
         total = len(motoristas)
         por_status = {}
-        por_disponibilidade = {}
-        por_tipo_contrato = {}
         
         for m in motoristas:
-            status = m["status"]
+            status = m.status or "ativo"
             por_status[status] = por_status.get(status, 0) + 1
-            
-            disp = m.get("disponibilidade", "nao_informado")
-            por_disponibilidade[disp] = por_disponibilidade.get(disp, 0) + 1
-            
-            tipo = m["tipo_contrato"]
-            por_tipo_contrato[tipo] = por_tipo_contrato.get(tipo, 0) + 1
         
         # CNH vencendo em 30 dias
         data_limite = date.today() + timedelta(days=30)
-        cnh_vencendo = len([
-            m for m in motoristas
-            if m["status"] == StatusMotorista.ATIVO.value
-            and datetime.strptime(m["cnh"]["data_validade"], "%Y-%m-%d").date() <= data_limite
-        ])
+        cnh_vencendo = 0
+        for m in motoristas:
+            if m.cnh_validade and m.status == "ativo":
+                try:
+                    validade = datetime.strptime(m.cnh_validade, "%Y-%m-%d").date() if isinstance(m.cnh_validade, str) else m.cnh_validade
+                    if validade <= data_limite:
+                        cnh_vencendo += 1
+                except:
+                    pass
         
         return {
             "success": True,
             "data": {
                 "total": total,
                 "por_status": por_status,
-                "por_disponibilidade": por_disponibilidade,
-                "por_tipo_contrato": por_tipo_contrato,
                 "cnh_vencendo_30_dias": cnh_vencendo
             }
         }
         
     except Exception as e:
-        logger.error(f"Erro ao gerar estatísticas: {e}")
+        logger.error(f"❌ Erro ao gerar estatísticas: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{motorista_id}")
-async def obter_motorista(motorista_id: str):
+async def obter_motorista(
+    motorista_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """Obtém detalhes de um motorista"""
     try:
-        if motorista_id not in motoristas_db:
+        tenant_id = get_current_tenant_id(request)
+        
+        motorista = db.query(Motorista).filter(
+            Motorista.id == motorista_id,
+            Motorista.tenant_id == tenant_id
+        ).first()
+        
+        if not motorista:
             raise HTTPException(status_code=404, detail="Motorista não encontrado")
         
         return {
             "success": True,
-            "data": motoristas_db[motorista_id]
+            "data": motorista
         }
         
     except HTTPException:
@@ -343,187 +387,186 @@ async def obter_motorista(motorista_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("")
-async def criar_motorista(request: CriarMotoristaRequest):
+@router.post("", response_model=MotoristaResponse)
+async def criar_motorista(
+    motorista_data: CriarMotoristaRequest,
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """Cadastra um novo motorista"""
     try:
+        tenant_id = get_current_tenant_id(request)
+        
         # Verificar CPF duplicado
-        for m in motoristas_db.values():
-            if m["cpf"] == request.cpf:
-                raise HTTPException(
-                    status_code=400,
-                    detail="CPF já cadastrado"
-                )
+        existing = db.query(Motorista).filter(
+            Motorista.cpf == motorista_data.cpf,
+            Motorista.tenant_id == tenant_id
+        ).first()
         
-        motorista_id = str(uuid.uuid4())
-        now = datetime.utcnow()
+        if existing:
+            raise HTTPException(status_code=400, detail="CPF já cadastrado")
         
-        motorista = {
-            "id": motorista_id,
-            "nome": request.nome,
-            "cpf": request.cpf,
-            "rg": request.rg,
-            "data_nascimento": request.data_nascimento.isoformat(),
-            "telefone": request.telefone,
-            "telefone_secundario": request.telefone_secundario,
-            "email": request.email,
-            "endereco": request.endereco.dict(),
-            "cnh": {
-                **request.cnh.dict(),
-                "data_emissao": request.cnh.data_emissao.isoformat(),
-                "data_validade": request.cnh.data_validade.isoformat(),
-                "primeira_habilitacao": request.cnh.primeira_habilitacao.isoformat() if request.cnh.primeira_habilitacao else None,
-                "categoria": request.cnh.categoria.value
-            },
-            "tipo_contrato": request.tipo_contrato.value,
-            "data_admissao": request.data_admissao.isoformat() if request.data_admissao else None,
-            "salario": request.salario,
-            "contato_emergencia": request.contato_emergencia.dict() if request.contato_emergencia else None,
-            "veiculo_padrao_id": request.veiculo_padrao_id,
-            "status": StatusMotorista.ATIVO.value,
-            "disponibilidade": DisponibilidadeMotorista.DISPONIVEL.value,
-            "observacoes": request.observacoes,
-            "foto_url": request.foto_url,
-            "criado_em": now,
-            "atualizado_em": now,
-            "viagens_realizadas": 0,
-            "km_rodados": 0,
-            "avaliacao_media": None
-        }
+        # Criar motorista
+        motorista = Motorista(
+            nome=motorista_data.nome,
+            cpf=motorista_data.cpf,
+            rg=motorista_data.rg,
+            data_nascimento=motorista_data.data_nascimento,
+            cnh_numero=motorista_data.cnh_numero,
+            cnh_categoria=motorista_data.cnh_categoria,
+            cnh_validade=motorista_data.cnh_validade,
+            telefone=motorista_data.telefone,
+            celular=motorista_data.celular,
+            email=motorista_data.email,
+            cep=motorista_data.cep,
+            endereco=motorista_data.endereco,
+            cidade=motorista_data.cidade,
+            uf=motorista_data.uf,
+            status=motorista_data.status or "ativo",
+            disponibilidade=motorista_data.disponibilidade or "disponivel",
+            tipo_contrato=motorista_data.tipo_contrato or "clt",
+            data_admissao=motorista_data.data_admissao,
+            observacoes=motorista_data.observacoes,
+            foto_url=motorista_data.foto_url,
+            tenant_id=tenant_id
+        )
         
-        motoristas_db[motorista_id] = motorista
+        db.add(motorista)
+        db.commit()
+        db.refresh(motorista)
         
-        logger.info(f"Motorista cadastrado: {request.nome}")
+        logger.info(f"✅ Motorista cadastrado: {motorista.nome} (ID: {motorista.id})")
         
-        return {
-            "success": True,
-            "message": "Motorista cadastrado com sucesso",
-            "data": motorista
-        }
+        return motorista
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao criar motorista: {e}")
+        db.rollback()
+        logger.error(f"❌ Erro ao criar motorista: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.put("/{motorista_id}")
+@router.put("/{motorista_id}", response_model=MotoristaResponse)
 async def atualizar_motorista(
-    motorista_id: str,
-    request: AtualizarMotoristaRequest
+    motorista_id: int,
+    motorista_data: AtualizarMotoristaRequest,
+    request: Request,
+    db: Session = Depends(get_db)
 ):
     """Atualiza dados de um motorista"""
     try:
-        if motorista_id not in motoristas_db:
+        tenant_id = get_current_tenant_id(request)
+        
+        motorista = db.query(Motorista).filter(
+            Motorista.id == motorista_id,
+            Motorista.tenant_id == tenant_id
+        ).first()
+        
+        if not motorista:
             raise HTTPException(status_code=404, detail="Motorista não encontrado")
         
-        motorista = motoristas_db[motorista_id]
-        
-        update_data = request.dict(exclude_unset=True)
+        # Atualizar apenas campos fornecidos
+        update_data = motorista_data.dict(exclude_unset=True)
         for key, value in update_data.items():
-            if value is not None:
-                if key == "cnh" and value:
-                    motorista["cnh"] = {
-                        **value,
-                        "data_emissao": value["data_emissao"].isoformat() if isinstance(value["data_emissao"], date) else value["data_emissao"],
-                        "data_validade": value["data_validade"].isoformat() if isinstance(value["data_validade"], date) else value["data_validade"],
-                        "categoria": value["categoria"].value if hasattr(value["categoria"], 'value') else value["categoria"]
-                    }
-                elif key == "endereco" and value:
-                    motorista["endereco"] = value if isinstance(value, dict) else value.dict()
-                elif key == "contato_emergencia" and value:
-                    motorista["contato_emergencia"] = value if isinstance(value, dict) else value.dict()
-                elif hasattr(value, 'value'):
-                    motorista[key] = value.value
-                elif hasattr(value, 'dict'):
-                    motorista[key] = value.dict()
-                else:
-                    motorista[key] = value
+            if value is not None and hasattr(motorista, key):
+                setattr(motorista, key, value)
         
-        motorista["atualizado_em"] = datetime.utcnow()
+        db.commit()
+        db.refresh(motorista)
         
-        return {
-            "success": True,
-            "message": "Motorista atualizado",
-            "data": motorista
-        }
+        logger.info(f"✅ Motorista atualizado: {motorista.nome}")
+        
+        return motorista
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao atualizar motorista: {e}")
+        db.rollback()
+        logger.error(f"❌ Erro ao atualizar motorista: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.patch("/{motorista_id}/status")
 async def atualizar_status_motorista(
-    motorista_id: str,
-    status: StatusMotorista,
+    motorista_id: int,
+    status: str,
+    request: Request,
+    db: Session = Depends(get_db),
     motivo: Optional[str] = None
 ):
     """Atualiza status do motorista"""
     try:
-        if motorista_id not in motoristas_db:
+        tenant_id = get_current_tenant_id(request)
+        
+        motorista = db.query(Motorista).filter(
+            Motorista.id == motorista_id,
+            Motorista.tenant_id == tenant_id
+        ).first()
+        
+        if not motorista:
             raise HTTPException(status_code=404, detail="Motorista não encontrado")
         
-        motorista = motoristas_db[motorista_id]
-        motorista["status"] = status.value
-        motorista["atualizado_em"] = datetime.utcnow()
+        motorista.status = status
+        db.commit()
         
-        if motivo:
-            motorista["motivo_status"] = motivo
-        
-        logger.info(f"Status do motorista {motorista['nome']} alterado para {status.value}")
+        logger.info(f"Status do motorista {motorista.nome} alterado para {status}")
         
         return {
             "success": True,
-            "message": f"Status alterado para {status.value}",
+            "message": f"Status alterado para {status}",
             "data": motorista
         }
         
     except HTTPException:
         raise
     except Exception as e:
+        db.rollback()
         logger.error(f"Erro ao atualizar status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.patch("/{motorista_id}/disponibilidade")
 async def atualizar_disponibilidade(
-    motorista_id: str,
-    request: AtualizarDisponibilidadeRequest
+    motorista_id: int,
+    disp_data: AtualizarDisponibilidadeRequest,
+    request: Request,
+    db: Session = Depends(get_db)
 ):
     """Atualiza disponibilidade do motorista"""
     try:
-        if motorista_id not in motoristas_db:
+        tenant_id = get_current_tenant_id(request)
+        
+        motorista = db.query(Motorista).filter(
+            Motorista.id == motorista_id,
+            Motorista.tenant_id == tenant_id
+        ).first()
+        
+        if not motorista:
             raise HTTPException(status_code=404, detail="Motorista não encontrado")
         
-        motorista = motoristas_db[motorista_id]
-        motorista["disponibilidade"] = request.disponibilidade.value
-        motorista["atualizado_em"] = datetime.utcnow()
-        
-        if request.motivo:
-            motorista["motivo_disponibilidade"] = request.motivo
-        if request.previsao_retorno:
-            motorista["previsao_retorno"] = request.previsao_retorno.isoformat()
+        motorista.disponibilidade = disp_data.disponibilidade
+        db.commit()
         
         return {
             "success": True,
-            "message": f"Disponibilidade alterada para {request.disponibilidade.value}",
+            "message": f"Disponibilidade alterada para {disp_data.disponibilidade}",
             "data": motorista
         }
         
     except HTTPException:
         raise
     except Exception as e:
+        db.rollback()
         logger.error(f"Erro ao atualizar disponibilidade: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{motorista_id}/viagens")
 async def listar_viagens_motorista(
-    motorista_id: str,
+    motorista_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
     data_inicio: Optional[date] = None,
     data_fim: Optional[date] = None,
     page: int = Query(1, ge=1),
@@ -531,12 +574,17 @@ async def listar_viagens_motorista(
 ):
     """Lista viagens realizadas pelo motorista"""
     try:
-        if motorista_id not in motoristas_db:
+        tenant_id = get_current_tenant_id(request)
+        
+        motorista = db.query(Motorista).filter(
+            Motorista.id == motorista_id,
+            Motorista.tenant_id == tenant_id
+        ).first()
+        
+        if not motorista:
             raise HTTPException(status_code=404, detail="Motorista não encontrado")
         
-        # TODO: Integrar com pedidos_db
-        # Por enquanto retorna lista vazia
-        
+        # Retorna lista vazia por enquanto
         return {
             "success": True,
             "data": [],
@@ -556,21 +604,29 @@ async def listar_viagens_motorista(
 
 
 @router.delete("/{motorista_id}")
-async def excluir_motorista(motorista_id: str):
+async def excluir_motorista(
+    motorista_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """Exclui (inativa) um motorista"""
     try:
-        if motorista_id not in motoristas_db:
+        tenant_id = get_current_tenant_id(request)
+        
+        motorista = db.query(Motorista).filter(
+            Motorista.id == motorista_id,
+            Motorista.tenant_id == tenant_id
+        ).first()
+        
+        if not motorista:
             raise HTTPException(status_code=404, detail="Motorista não encontrado")
         
-        motorista = motoristas_db[motorista_id]
-        
         # Soft delete - apenas inativa
-        motorista["status"] = StatusMotorista.DESLIGADO.value
-        motorista["disponibilidade"] = DisponibilidadeMotorista.INDISPONIVEL.value
-        motorista["desligado_em"] = datetime.utcnow()
-        motorista["atualizado_em"] = datetime.utcnow()
+        motorista.status = "desligado"
+        motorista.disponibilidade = "indisponivel"
+        db.commit()
         
-        logger.info(f"Motorista desligado: {motorista['nome']}")
+        logger.info(f"Motorista desligado: {motorista.nome}")
         
         return {
             "success": True,

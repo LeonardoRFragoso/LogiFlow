@@ -4,7 +4,7 @@
       <fieldset class="modal-fieldset">
         <legend>Identificação</legend>
         <div class="form-grid-2">
-          <BaseInput v-model="form.placa" label="Placa" required />
+          <BaseInput v-model="form.placa" label="Placa" required placeholder="ABC1D23" />
           <BaseSelect v-model="form.tipo" label="Tipo" :options="tipos" required />
           <BaseInput v-model="form.renavam" label="RENAVAM" />
           <BaseInput v-model="form.chassi" label="Chassi" />
@@ -19,6 +19,7 @@
           <BaseInput v-model="form.ano_fabricacao" label="Ano Fabricação" type="number" />
           <BaseInput v-model="form.ano_modelo" label="Ano Modelo" type="number" />
           <BaseInput v-model="form.cor" label="Cor" />
+          <BaseSelect v-model="form.tipo_carroceria" label="Tipo Carroceria" :options="carrocerias" />
         </div>
       </fieldset>
 
@@ -27,6 +28,7 @@
         <div class="form-grid-2">
           <BaseInput v-model="form.capacidade_kg" label="Capacidade (kg)" type="number" />
           <BaseInput v-model="form.capacidade_m3" label="Capacidade (m³)" type="number" />
+          <BaseInput v-model="form.eixos" label="Eixos" type="number" />
           <BaseInput v-model="form.km_atual" label="KM Atual" type="number" />
         </div>
       </fieldset>
@@ -34,8 +36,10 @@
       <fieldset class="modal-fieldset">
         <legend>Propriedade e Documentação</legend>
         <div class="form-grid-2">
-          <BaseSelect v-model="form.propriedade" label="Propriedade" :options="propriedades" />
+          <BaseSelect v-model="form.tipo_propriedade" label="Propriedade" :options="propriedades" />
           <BaseInput v-model="form.proprietario_nome" label="Proprietário" />
+          <BaseInput v-model="form.rntrc" label="RNTRC" />
+          <BaseInput v-model="form.antt" label="ANTT" />
           <BaseInput v-model="form.licenciamento_validade" label="Licenciamento" type="date" />
           <BaseInput v-model="form.seguro_validade" label="Seguro Validade" type="date" />
         </div>
@@ -70,12 +74,44 @@ const isEdit = computed(() => !!props.veiculo?.id)
 const { create, update, loading } = useCrud('/veiculos/')
 
 const form = ref({})
-const defaultForm = { placa: '', tipo: 'truck', renavam: '', chassi: '', marca: '', modelo: '', ano_fabricacao: '', ano_modelo: '', cor: '', capacidade_kg: '', capacidade_m3: '', km_atual: 0, propriedade: 'proprio', proprietario_nome: '', licenciamento_validade: '', seguro_validade: '', observacoes: '' }
+const defaultForm = { 
+  placa: '', tipo: 'truck', tipo_carroceria: 'bau', tipo_propriedade: 'proprio',
+  renavam: '', chassi: '', marca: '', modelo: '', ano_fabricacao: '', ano_modelo: '', cor: '', 
+  capacidade_kg: '', capacidade_m3: '', eixos: 2, km_atual: 0, 
+  rntrc: '', antt: '', proprietario_nome: '', 
+  licenciamento_validade: '', seguro_validade: '', observacoes: '',
+  status: 'ativo', disponibilidade: 'disponivel'
+}
 
 watch(() => props.modelValue, (v) => { if (v) form.value = props.veiculo ? { ...props.veiculo } : { ...defaultForm } })
 
-const tipos = [{ value: 'moto', label: 'Moto' }, { value: 'fiorino', label: 'Fiorino' }, { value: 'van', label: 'Van' }, { value: 'vuc', label: 'VUC' }, { value: 'toco', label: 'Toco' }, { value: 'truck', label: 'Truck' }, { value: 'carreta', label: 'Carreta' }, { value: 'bitrem', label: 'Bitrem' }]
-const propriedades = [{ value: 'proprio', label: 'Próprio' }, { value: 'terceiro', label: 'Terceiro' }, { value: 'agregado', label: 'Agregado' }, { value: 'alugado', label: 'Alugado' }]
+const tipos = [
+  { value: 'utilitario', label: 'Utilitário' }, 
+  { value: 'vuc', label: 'VUC' }, 
+  { value: 'toco', label: 'Toco' }, 
+  { value: 'truck', label: 'Truck' }, 
+  { value: 'carreta', label: 'Carreta' }, 
+  { value: 'bitrem', label: 'Bitrem' },
+  { value: 'rodotrem', label: 'Rodotrem' },
+  { value: 'van', label: 'Van' },
+  { value: 'furgao', label: 'Furgão' }
+]
+const carrocerias = [
+  { value: 'aberta', label: 'Aberta' },
+  { value: 'fechada', label: 'Fechada' },
+  { value: 'bau', label: 'Baú' },
+  { value: 'sider', label: 'Sider' },
+  { value: 'graneleira', label: 'Graneleira' },
+  { value: 'tanque', label: 'Tanque' },
+  { value: 'refrigerada', label: 'Refrigerada' },
+  { value: 'porta_container', label: 'Porta Container' }
+]
+const propriedades = [
+  { value: 'proprio', label: 'Próprio' }, 
+  { value: 'agregado', label: 'Agregado' }, 
+  { value: 'terceirizado', label: 'Terceirizado' }, 
+  { value: 'alugado', label: 'Alugado' }
+]
 
 async function handleSubmit() {
   try {

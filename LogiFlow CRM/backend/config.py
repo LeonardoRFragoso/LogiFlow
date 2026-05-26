@@ -26,16 +26,24 @@ class Settings(BaseSettings):
     
     # Database (suporta DATABASE_URL do Render ou vars individuais)
     DATABASE_URL: Optional[str] = None  # URL completa (Render)
-    DB_HOST: str = "db"
+    DB_HOST: str = "localhost"  # Alterado de "db" para "localhost" para dev local
     DB_NAME: str = "logiflow"
     DB_USER: str = "logiflow"
     DB_PASSWORD: str = "logiflow123"
     DB_PORT: int = 5432
+    USE_SQLITE: bool = False  # Usar SQLite para desenvolvimento local
     
     def get_database_url(self) -> str:
-        """Retorna URL do banco com driver psycopg2"""
+        """Retorna URL do banco com driver psycopg2 ou SQLite para dev"""
         if self.DATABASE_URL:
             return self.DATABASE_URL
+        
+        # Se USE_SQLITE=true, usar SQLite local (sem precisar de PostgreSQL)
+        if self.USE_SQLITE:
+            import os
+            db_path = os.path.join(os.path.dirname(__file__), "logiflow_dev.db")
+            return f"sqlite:///{db_path}"
+        
         # Construir URL com psycopg2
         return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
     

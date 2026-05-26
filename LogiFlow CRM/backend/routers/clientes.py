@@ -15,32 +15,84 @@ router = APIRouter()
 
 
 class ClienteBase(BaseModel):
+    # Dados da Empresa
     razao_social: str
     nome_fantasia: Optional[str] = None
-    cnpj: str
-    ie: Optional[str] = None
-    telefone: Optional[str] = None
+    cnpj: Optional[str] = None
+    ie: Optional[str] = None  # Inscrição Estadual (alias: inscricao_estadual)
+    
+    # Contato
+    contato_nome: Optional[str] = None
     email: Optional[str] = None
-    endereco: Optional[str] = None
+    telefone: Optional[str] = None
+    celular: Optional[str] = None
+    
+    # Endereço
+    cep: Optional[str] = None
+    logradouro: Optional[str] = None
     numero: Optional[str] = None
     complemento: Optional[str] = None
     bairro: Optional[str] = None
-    cidade: str
-    uf: str
-    cep: str
+    cidade: Optional[str] = None
+    uf: Optional[str] = None
+    
+    # Comercial
+    condicao_pagamento: Optional[str] = "30_dias"
+    limite_credito: Optional[float] = 0
+    
+    # Status
     ativo: bool = True
+    observacoes: Optional[str] = None
 
 
 class ClienteCreate(ClienteBase):
     pass
 
 
-class ClienteUpdate(ClienteBase):
-    pass
+class ClienteUpdate(BaseModel):
+    # Todos os campos opcionais para update parcial
+    razao_social: Optional[str] = None
+    nome_fantasia: Optional[str] = None
+    cnpj: Optional[str] = None
+    ie: Optional[str] = None
+    contato_nome: Optional[str] = None
+    email: Optional[str] = None
+    telefone: Optional[str] = None
+    celular: Optional[str] = None
+    cep: Optional[str] = None
+    logradouro: Optional[str] = None
+    numero: Optional[str] = None
+    complemento: Optional[str] = None
+    bairro: Optional[str] = None
+    cidade: Optional[str] = None
+    uf: Optional[str] = None
+    condicao_pagamento: Optional[str] = None
+    limite_credito: Optional[float] = None
+    ativo: Optional[bool] = None
+    observacoes: Optional[str] = None
 
 
-class ClienteResponse(ClienteBase):
+class ClienteResponse(BaseModel):
     id: int
+    razao_social: str
+    nome_fantasia: Optional[str] = None
+    cnpj: Optional[str] = None
+    ie: Optional[str] = None
+    contato_nome: Optional[str] = None
+    email: Optional[str] = None
+    telefone: Optional[str] = None
+    celular: Optional[str] = None
+    cep: Optional[str] = None
+    logradouro: Optional[str] = None
+    numero: Optional[str] = None
+    complemento: Optional[str] = None
+    bairro: Optional[str] = None
+    cidade: Optional[str] = None
+    uf: Optional[str] = None
+    condicao_pagamento: Optional[str] = None
+    limite_credito: Optional[float] = None
+    ativo: bool = True
+    observacoes: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

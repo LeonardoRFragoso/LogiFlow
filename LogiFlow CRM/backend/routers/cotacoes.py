@@ -3,14 +3,19 @@ LogiFlow CRM - Router Cotações
 Endpoints para gestão de cotações de frete
 """
 
-from fastapi import APIRouter, HTTPException, Query, Path
+from fastapi import APIRouter, HTTPException, Query, Path, Depends, Request
 from pydantic import BaseModel, Field, validator
+from sqlalchemy.orm import Session
 from typing import Optional, List
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from enum import Enum
 from decimal import Decimal
 import logging
 import uuid
+
+from database import get_db
+from models import Cotacao
+from middleware.tenant import get_current_tenant_id
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -50,83 +55,57 @@ class ModalTransporte(str, Enum):
 
 
 # ========================================
-# Schemas
+# Schemas - Simplificados para MVP (campos planos)
 # ========================================
 
-class EnderecoSchema(BaseModel):
-    cep: str
-    logradouro: str
-    numero: str
-    complemento: Optional[str] = None
-    bairro: str
-    cidade: str
-    uf: str = Field(..., max_length=2)
-    
-    @validator('uf')
-    def uf_uppercase(cls, v):
-        return v.upper()
-
-
-class ItemCotacao(BaseModel):
-    descricao: str
-    quantidade: int = Field(..., ge=1)
-    peso_kg: float = Field(..., gt=0)
-    volume_m3: Optional[float] = None
-    valor_mercadoria: Optional[float] = None
-    observacao: Optional[str] = None
-
-
-class CriarCotacaoRequest(BaseModel):
-    cliente_id: str = Field(..., description="ID do cliente")
+class CotacaoBase(BaseModel):
+    """Schema base com campos planos para compatibilidade com frontend"""
+    # Cliente
+    cliente: Optional[str] = None  # ID do cliente (frontend envia como 'cliente')
+    cliente_id: Optional[str] = None  # Alias
     cliente_nome: Optional[str] = None
     
-    origem: EnderecoSchema
-    destino: EnderecoSchema
+    # Origem - campos planos
+    origem_cidade: Optional[str] = None
+    origem_uf: Optional[str] = None
+    origem_cep: Optional[str] = None
+    origem_logradouro: Optional[str] = None
     
-    tipo_frete: TipoFrete = TipoFrete.CIF
-    tipo_carga: TipoCarga = TipoCarga.FRACIONADA
-    modal: ModalTransporte = ModalTransporte.RODOVIARIO
+    # Destino - campos planos
+    destino_cidade: Optional[str] = None
+    destino_uf: Optional[str] = None
+    destino_cep: Optional[str] = None
+    destino_logradouro: Optional[str] = None
     
-    itens: List[ItemCotacao] = Field(..., min_items=1)
-    
-    peso_total_kg: Optional[float] = None
-    volume_total_m3: Optional[float] = None
+    # Carga
+    tipo_carga: Optional[str] = "geral"
+    modal: Optional[str] = "rodoviario"
+    peso_kg: Optional[float] = None
+    cubagem_m3: Optional[float] = None
+    quantidade_volumes: Optional[int] = 1
     valor_mercadoria: Optional[float] = None
     
-    data_coleta_desejada: Optional[date] = None
+    # Valores e Prazo
+    prazo_estimado: Optional[int] = 5
+    valor_frete: Optional[float] = None
+    valor_seguro: Optional[float] = 0
+    valor_adicional: Optional[float] = 0
+    validade: Optional[str] = None
+    
+    # Status e Observações
+    status: Optional[str] = "rascunho"
     urgente: bool = False
-    
     observacoes: Optional[str] = None
-    
-    # Valores (podem ser calculados automaticamente)
-    valor_frete: Optional[float] = None
-    valor_seguro: Optional[float] = None
-    valor_pedagio: Optional[float] = None
-    valor_outros: Optional[float] = None
-    desconto: Optional[float] = None
-    valor_total: Optional[float] = None
 
 
-class AtualizarCotacaoRequest(BaseModel):
-    cliente_id: Optional[str] = None
-    origem: Optional[EnderecoSchema] = None
-    destino: Optional[EnderecoSchema] = None
-    tipo_frete: Optional[TipoFrete] = None
-    tipo_carga: Optional[TipoCarga] = None
-    modal: Optional[ModalTransporte] = None
-    itens: Optional[List[ItemCotacao]] = None
-    peso_total_kg: Optional[float] = None
-    volume_total_m3: Optional[float] = None
-    valor_mercadoria: Optional[float] = None
-    data_coleta_desejada: Optional[date] = None
-    urgente: Optional[bool] = None
-    observacoes: Optional[str] = None
-    valor_frete: Optional[float] = None
-    valor_seguro: Optional[float] = None
-    valor_pedagio: Optional[float] = None
-    valor_outros: Optional[float] = None
-    desconto: Optional[float] = None
-    valor_total: Optional[float] = None
+class CriarCotacaoRequest(CotacaoBase):
+    """Request para criar cotação"""
+    pass
+
+
+class AtualizarCotacaoRequest(CotacaoBase):
+    """Request para atualizar cotação - todos campos opcionais"""
+    pass
 
 
 class AprovarCotacaoRequest(BaseModel):
@@ -139,33 +118,34 @@ class RejeitarCotacaoRequest(BaseModel):
 
 
 class CotacaoResponse(BaseModel):
-    id: str
-    numero: str
-    cliente_id: str
-    cliente_nome: Optional[str]
-    status: StatusCotacao
-    origem: EnderecoSchema
-    destino: EnderecoSchema
-    tipo_frete: TipoFrete
-    tipo_carga: TipoCarga
-    modal: ModalTransporte
-    itens: List[ItemCotacao]
-    peso_total_kg: float
-    volume_total_m3: Optional[float]
-    valor_mercadoria: Optional[float]
-    data_coleta_desejada: Optional[date]
-    urgente: bool
-    observacoes: Optional[str]
-    valor_frete: float
-    valor_seguro: float
-    valor_pedagio: float
-    valor_outros: float
-    desconto: float
-    valor_total: float
-    validade: date
-    criado_em: datetime
-    atualizado_em: datetime
-    criado_por: Optional[str]
+    """Response de cotação"""
+    id: int
+    numero: Optional[str] = None
+    cliente_id: Optional[str] = None
+    cliente_nome: Optional[str] = None
+    status: Optional[str] = None
+    origem_cidade: Optional[str] = None
+    origem_uf: Optional[str] = None
+    destino_cidade: Optional[str] = None
+    destino_uf: Optional[str] = None
+    tipo_carga: Optional[str] = None
+    modal: Optional[str] = None
+    peso_kg: Optional[float] = None
+    cubagem_m3: Optional[float] = None
+    quantidade_volumes: Optional[int] = None
+    valor_mercadoria: Optional[float] = None
+    prazo_estimado: Optional[int] = None
+    valor_frete: Optional[float] = None
+    valor_seguro: Optional[float] = None
+    valor_adicional: Optional[float] = None
+    validade: Optional[str] = None
+    urgente: bool = False
+    observacoes: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
 
 
 # ========================================
@@ -189,42 +169,46 @@ def gerar_numero_cotacao() -> str:
 
 @router.get("")
 async def listar_cotacoes(
-    status: Optional[StatusCotacao] = None,
-    cliente_id: Optional[str] = None,
+    request: Request,
+    status: Optional[str] = None,
+    cliente_id: Optional[int] = None,
     data_inicio: Optional[date] = None,
     data_fim: Optional[date] = None,
     urgente: Optional[bool] = None,
     page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100)
+    per_page: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db)
 ):
     """Lista cotações com filtros opcionais"""
     try:
-        cotacoes = list(cotacoes_db.values())
+        tenant_id = get_current_tenant_id(request)
+        
+        query = db.query(Cotacao).filter(Cotacao.tenant_id == tenant_id)
         
         # Aplicar filtros
         if status:
-            cotacoes = [c for c in cotacoes if c["status"] == status.value]
+            query = query.filter(Cotacao.status == status)
         if cliente_id:
-            cotacoes = [c for c in cotacoes if c["cliente_id"] == cliente_id]
+            query = query.filter(Cotacao.cliente_id == cliente_id)
         if urgente is not None:
-            cotacoes = [c for c in cotacoes if c["urgente"] == urgente]
+            query = query.filter(Cotacao.urgente == urgente)
         if data_inicio:
-            cotacoes = [c for c in cotacoes if c["criado_em"].date() >= data_inicio]
+            query = query.filter(Cotacao.created_at >= data_inicio)
         if data_fim:
-            cotacoes = [c for c in cotacoes if c["criado_em"].date() <= data_fim]
+            query = query.filter(Cotacao.created_at <= data_fim)
         
         # Ordenar por data (mais recentes primeiro)
-        cotacoes.sort(key=lambda x: x["criado_em"], reverse=True)
+        query = query.order_by(Cotacao.created_at.desc())
         
         # Paginação
-        total = len(cotacoes)
-        start = (page - 1) * per_page
-        end = start + per_page
-        cotacoes_paginadas = cotacoes[start:end]
+        total = query.count()
+        cotacoes = query.offset((page - 1) * per_page).limit(per_page).all()
+        
+        logger.info(f"✅ Listadas {len(cotacoes)} cotações do tenant {tenant_id}")
         
         return {
             "success": True,
-            "data": cotacoes_paginadas,
+            "data": cotacoes,
             "pagination": {
                 "page": page,
                 "per_page": per_page,
@@ -234,25 +218,30 @@ async def listar_cotacoes(
         }
         
     except Exception as e:
-        logger.error(f"Erro ao listar cotações: {e}")
+        logger.error(f"❌ Erro ao listar cotações: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/estatisticas")
-async def estatisticas_cotacoes():
+async def estatisticas_cotacoes(
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """Retorna estatísticas das cotações"""
     try:
-        cotacoes = list(cotacoes_db.values())
+        tenant_id = get_current_tenant_id(request)
+        
+        cotacoes = db.query(Cotacao).filter(Cotacao.tenant_id == tenant_id).all()
         
         total = len(cotacoes)
         por_status = {}
         valor_total = 0
         
         for c in cotacoes:
-            status = c["status"]
+            status = c.status or "rascunho"
             por_status[status] = por_status.get(status, 0) + 1
-            if c["status"] in ["aprovada", "convertida"]:
-                valor_total += c.get("valor_total", 0)
+            if c.status in ["aprovada", "convertida"]:
+                valor_total += (c.valor_frete or 0) + (c.valor_seguro or 0) + (c.valor_adicional or 0)
         
         return {
             "success": True,
@@ -267,165 +256,169 @@ async def estatisticas_cotacoes():
         }
         
     except Exception as e:
-        logger.error(f"Erro ao gerar estatísticas: {e}")
+        logger.error(f"❌ Erro ao gerar estatísticas: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/{cotacao_id}")
-async def obter_cotacao(cotacao_id: str = Path(...)):
+@router.get("/{cotacao_id}", response_model=CotacaoResponse)
+async def obter_cotacao(
+    cotacao_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """Obtém detalhes de uma cotação"""
     try:
-        if cotacao_id not in cotacoes_db:
+        tenant_id = get_current_tenant_id(request)
+        
+        cotacao = db.query(Cotacao).filter(
+            Cotacao.id == cotacao_id,
+            Cotacao.tenant_id == tenant_id
+        ).first()
+        
+        if not cotacao:
             raise HTTPException(status_code=404, detail="Cotação não encontrada")
         
-        return {
-            "success": True,
-            "data": cotacoes_db[cotacao_id]
-        }
+        return cotacao
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao obter cotação: {e}")
+        logger.error(f"❌ Erro ao obter cotação: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("")
-async def criar_cotacao(request: CriarCotacaoRequest):
+@router.post("", response_model=CotacaoResponse)
+async def criar_cotacao(
+    cotacao_data: CriarCotacaoRequest,
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """Cria uma nova cotação"""
     try:
-        cotacao_id = str(uuid.uuid4())
+        tenant_id = get_current_tenant_id(request)
         numero = gerar_numero_cotacao()
-        now = datetime.utcnow()
         
-        # Calcular totais
-        peso_total = request.peso_total_kg or sum(item.peso_kg * item.quantidade for item in request.itens)
-        volume_total = request.volume_total_m3
+        # Pegar cliente_id do campo 'cliente' ou 'cliente_id'
+        cliente_id = cotacao_data.cliente or cotacao_data.cliente_id
         
-        # Calcular valor total
-        valor_frete = request.valor_frete or 0
-        valor_seguro = request.valor_seguro or 0
-        valor_pedagio = request.valor_pedagio or 0
-        valor_outros = request.valor_outros or 0
-        desconto = request.desconto or 0
-        valor_total = request.valor_total or (valor_frete + valor_seguro + valor_pedagio + valor_outros - desconto)
+        cotacao = Cotacao(
+            numero=numero,
+            cliente_id=int(cliente_id) if cliente_id else None,
+            cliente_nome=cotacao_data.cliente_nome,
+            origem_cidade=cotacao_data.origem_cidade,
+            origem_uf=cotacao_data.origem_uf,
+            origem_cep=cotacao_data.origem_cep,
+            origem_logradouro=cotacao_data.origem_logradouro,
+            destino_cidade=cotacao_data.destino_cidade,
+            destino_uf=cotacao_data.destino_uf,
+            destino_cep=cotacao_data.destino_cep,
+            destino_logradouro=cotacao_data.destino_logradouro,
+            tipo_carga=cotacao_data.tipo_carga,
+            modal=cotacao_data.modal,
+            peso_kg=cotacao_data.peso_kg or 0,
+            cubagem_m3=cotacao_data.cubagem_m3,
+            quantidade_volumes=cotacao_data.quantidade_volumes or 1,
+            valor_mercadoria=cotacao_data.valor_mercadoria or 0,
+            prazo_estimado=cotacao_data.prazo_estimado or 5,
+            valor_frete=cotacao_data.valor_frete or 0,
+            valor_seguro=cotacao_data.valor_seguro or 0,
+            valor_adicional=cotacao_data.valor_adicional or 0,
+            validade=cotacao_data.validade,
+            status="rascunho",
+            urgente=cotacao_data.urgente or False,
+            observacoes=cotacao_data.observacoes,
+            tenant_id=tenant_id
+        )
         
-        cotacao = {
-            "id": cotacao_id,
-            "numero": numero,
-            "cliente_id": request.cliente_id,
-            "cliente_nome": request.cliente_nome,
-            "status": StatusCotacao.RASCUNHO.value,
-            "origem": request.origem.dict(),
-            "destino": request.destino.dict(),
-            "tipo_frete": request.tipo_frete.value,
-            "tipo_carga": request.tipo_carga.value,
-            "modal": request.modal.value,
-            "itens": [item.dict() for item in request.itens],
-            "peso_total_kg": peso_total,
-            "volume_total_m3": volume_total,
-            "valor_mercadoria": request.valor_mercadoria,
-            "data_coleta_desejada": request.data_coleta_desejada.isoformat() if request.data_coleta_desejada else None,
-            "urgente": request.urgente,
-            "observacoes": request.observacoes,
-            "valor_frete": valor_frete,
-            "valor_seguro": valor_seguro,
-            "valor_pedagio": valor_pedagio,
-            "valor_outros": valor_outros,
-            "desconto": desconto,
-            "valor_total": valor_total,
-            "validade": (now + timedelta(days=15)).date().isoformat(),
-            "criado_em": now,
-            "atualizado_em": now,
-            "criado_por": None  # TODO: pegar do token JWT
-        }
+        db.add(cotacao)
+        db.commit()
+        db.refresh(cotacao)
         
-        cotacoes_db[cotacao_id] = cotacao
+        logger.info(f"✅ Cotação criada: {numero} (ID: {cotacao.id})")
         
-        logger.info(f"Cotação criada: {numero}")
-        
-        return {
-            "success": True,
-            "message": "Cotação criada com sucesso",
-            "data": cotacao
-        }
+        return cotacao
         
     except Exception as e:
-        logger.error(f"Erro ao criar cotação: {e}")
+        db.rollback()
+        logger.error(f"❌ Erro ao criar cotação: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.put("/{cotacao_id}")
+@router.put("/{cotacao_id}", response_model=CotacaoResponse)
 async def atualizar_cotacao(
-    cotacao_id: str,
-    request: AtualizarCotacaoRequest
+    cotacao_id: int,
+    cotacao_data: AtualizarCotacaoRequest,
+    request: Request,
+    db: Session = Depends(get_db)
 ):
     """Atualiza uma cotação existente"""
     try:
-        if cotacao_id not in cotacoes_db:
+        tenant_id = get_current_tenant_id(request)
+        
+        cotacao = db.query(Cotacao).filter(
+            Cotacao.id == cotacao_id,
+            Cotacao.tenant_id == tenant_id
+        ).first()
+        
+        if not cotacao:
             raise HTTPException(status_code=404, detail="Cotação não encontrada")
         
-        cotacao = cotacoes_db[cotacao_id]
-        
         # Só permite editar cotações em rascunho ou enviada
-        if cotacao["status"] not in [StatusCotacao.RASCUNHO.value, StatusCotacao.ENVIADA.value]:
+        if cotacao.status not in ["rascunho", "enviada"]:
             raise HTTPException(
                 status_code=400,
-                detail=f"Não é possível editar cotação com status '{cotacao['status']}'"
+                detail=f"Não é possível editar cotação com status '{cotacao.status}'"
             )
         
         # Atualizar campos fornecidos
-        update_data = request.dict(exclude_unset=True)
+        update_data = cotacao_data.dict(exclude_unset=True)
         for key, value in update_data.items():
-            if value is not None:
-                if hasattr(value, 'dict'):
-                    cotacao[key] = value.dict()
-                elif hasattr(value, 'value'):
-                    cotacao[key] = value.value
-                elif isinstance(value, list):
-                    cotacao[key] = [item.dict() if hasattr(item, 'dict') else item for item in value]
-                elif isinstance(value, date):
-                    cotacao[key] = value.isoformat()
-                else:
-                    cotacao[key] = value
+            if value is not None and hasattr(cotacao, key):
+                setattr(cotacao, key, value)
         
-        cotacao["atualizado_em"] = datetime.utcnow()
+        db.commit()
+        db.refresh(cotacao)
         
-        return {
-            "success": True,
-            "message": "Cotação atualizada com sucesso",
-            "data": cotacao
-        }
+        logger.info(f"✅ Cotação atualizada: {cotacao.numero}")
+        
+        return cotacao
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao atualizar cotação: {e}")
+        db.rollback()
+        logger.error(f"❌ Erro ao atualizar cotação: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/{cotacao_id}/enviar")
-async def enviar_cotacao(cotacao_id: str):
+async def enviar_cotacao(
+    cotacao_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """Envia cotação para o cliente"""
     try:
-        if cotacao_id not in cotacoes_db:
+        tenant_id = get_current_tenant_id(request)
+        
+        cotacao = db.query(Cotacao).filter(
+            Cotacao.id == cotacao_id,
+            Cotacao.tenant_id == tenant_id
+        ).first()
+        
+        if not cotacao:
             raise HTTPException(status_code=404, detail="Cotação não encontrada")
         
-        cotacao = cotacoes_db[cotacao_id]
-        
-        if cotacao["status"] != StatusCotacao.RASCUNHO.value:
+        if cotacao.status != "rascunho":
             raise HTTPException(
                 status_code=400,
                 detail="Apenas cotações em rascunho podem ser enviadas"
             )
         
-        cotacao["status"] = StatusCotacao.ENVIADA.value
-        cotacao["atualizado_em"] = datetime.utcnow()
-        cotacao["enviada_em"] = datetime.utcnow()
+        cotacao.status = "enviada"
+        db.commit()
         
-        # TODO: Enviar email/WhatsApp para cliente
-        
-        logger.info(f"Cotação enviada: {cotacao['numero']}")
+        logger.info(f"✅ Cotação enviada: {cotacao.numero}")
         
         return {
             "success": True,
@@ -436,82 +429,84 @@ async def enviar_cotacao(cotacao_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao enviar cotação: {e}")
+        db.rollback()
+        logger.error(f"❌ Erro ao enviar cotação: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/{cotacao_id}/aprovar")
 async def aprovar_cotacao(
-    cotacao_id: str,
-    request: AprovarCotacaoRequest
+    cotacao_id: int,
+    aprovar_data: AprovarCotacaoRequest,
+    request: Request,
+    db: Session = Depends(get_db)
 ):
     """Aprova uma cotação e opcionalmente cria pedido"""
     try:
-        if cotacao_id not in cotacoes_db:
+        tenant_id = get_current_tenant_id(request)
+        
+        cotacao = db.query(Cotacao).filter(
+            Cotacao.id == cotacao_id,
+            Cotacao.tenant_id == tenant_id
+        ).first()
+        
+        if not cotacao:
             raise HTTPException(status_code=404, detail="Cotação não encontrada")
         
-        cotacao = cotacoes_db[cotacao_id]
-        
-        if cotacao["status"] not in [StatusCotacao.ENVIADA.value, StatusCotacao.EM_ANALISE.value]:
+        if cotacao.status not in ["enviada", "em_analise"]:
             raise HTTPException(
                 status_code=400,
                 detail="Apenas cotações enviadas ou em análise podem ser aprovadas"
             )
         
-        cotacao["status"] = StatusCotacao.APROVADA.value
-        cotacao["atualizado_em"] = datetime.utcnow()
-        cotacao["aprovada_em"] = datetime.utcnow()
-        cotacao["observacao_aprovacao"] = request.observacao
+        cotacao.status = "aprovada"
+        db.commit()
         
-        pedido_id = None
-        if request.criar_pedido:
-            # TODO: Chamar router de pedidos para criar
-            cotacao["status"] = StatusCotacao.CONVERTIDA.value
-            pedido_id = str(uuid.uuid4())  # Simulado
-            cotacao["pedido_id"] = pedido_id
-        
-        logger.info(f"Cotação aprovada: {cotacao['numero']}")
+        logger.info(f"✅ Cotação aprovada: {cotacao.numero}")
         
         return {
             "success": True,
             "message": "Cotação aprovada com sucesso",
-            "data": {
-                "cotacao": cotacao,
-                "pedido_id": pedido_id
-            }
+            "data": cotacao
         }
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao aprovar cotação: {e}")
+        db.rollback()
+        logger.error(f"❌ Erro ao aprovar cotação: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/{cotacao_id}/rejeitar")
 async def rejeitar_cotacao(
-    cotacao_id: str,
-    request: RejeitarCotacaoRequest
+    cotacao_id: int,
+    rejeitar_data: RejeitarCotacaoRequest,
+    request: Request,
+    db: Session = Depends(get_db)
 ):
     """Rejeita uma cotação"""
     try:
-        if cotacao_id not in cotacoes_db:
+        tenant_id = get_current_tenant_id(request)
+        
+        cotacao = db.query(Cotacao).filter(
+            Cotacao.id == cotacao_id,
+            Cotacao.tenant_id == tenant_id
+        ).first()
+        
+        if not cotacao:
             raise HTTPException(status_code=404, detail="Cotação não encontrada")
         
-        cotacao = cotacoes_db[cotacao_id]
-        
-        if cotacao["status"] in [StatusCotacao.CONVERTIDA.value, StatusCotacao.REJEITADA.value]:
+        if cotacao.status in ["convertida", "rejeitada"]:
             raise HTTPException(
                 status_code=400,
-                detail=f"Não é possível rejeitar cotação com status '{cotacao['status']}'"
+                detail=f"Não é possível rejeitar cotação com status '{cotacao.status}'"
             )
         
-        cotacao["status"] = StatusCotacao.REJEITADA.value
-        cotacao["atualizado_em"] = datetime.utcnow()
-        cotacao["rejeitada_em"] = datetime.utcnow()
-        cotacao["motivo_rejeicao"] = request.motivo
+        cotacao.status = "rejeitada"
+        db.commit()
         
-        logger.info(f"Cotação rejeitada: {cotacao['numero']}")
+        logger.info(f"✅ Cotação rejeitada: {cotacao.numero}")
         
         return {
             "success": True,
@@ -522,42 +517,64 @@ async def rejeitar_cotacao(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao rejeitar cotação: {e}")
+        db.rollback()
+        logger.error(f"❌ Erro ao rejeitar cotação: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/{cotacao_id}/duplicar")
-async def duplicar_cotacao(cotacao_id: str):
+async def duplicar_cotacao(
+    cotacao_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """Cria cópia de uma cotação"""
     try:
-        if cotacao_id not in cotacoes_db:
+        tenant_id = get_current_tenant_id(request)
+        
+        cotacao_original = db.query(Cotacao).filter(
+            Cotacao.id == cotacao_id,
+            Cotacao.tenant_id == tenant_id
+        ).first()
+        
+        if not cotacao_original:
             raise HTTPException(status_code=404, detail="Cotação não encontrada")
         
-        cotacao_original = cotacoes_db[cotacao_id]
-        
-        nova_cotacao_id = str(uuid.uuid4())
         novo_numero = gerar_numero_cotacao()
-        now = datetime.utcnow()
         
-        nova_cotacao = {
-            **cotacao_original,
-            "id": nova_cotacao_id,
-            "numero": novo_numero,
-            "status": StatusCotacao.RASCUNHO.value,
-            "criado_em": now,
-            "atualizado_em": now,
-            "validade": (now + timedelta(days=15)).date().isoformat(),
-            "cotacao_origem_id": cotacao_id
-        }
+        nova_cotacao = Cotacao(
+            numero=novo_numero,
+            cliente_id=cotacao_original.cliente_id,
+            cliente_nome=cotacao_original.cliente_nome,
+            origem_cidade=cotacao_original.origem_cidade,
+            origem_uf=cotacao_original.origem_uf,
+            origem_cep=cotacao_original.origem_cep,
+            origem_logradouro=cotacao_original.origem_logradouro,
+            destino_cidade=cotacao_original.destino_cidade,
+            destino_uf=cotacao_original.destino_uf,
+            destino_cep=cotacao_original.destino_cep,
+            destino_logradouro=cotacao_original.destino_logradouro,
+            tipo_carga=cotacao_original.tipo_carga,
+            modal=cotacao_original.modal,
+            peso_kg=cotacao_original.peso_kg,
+            cubagem_m3=cotacao_original.cubagem_m3,
+            quantidade_volumes=cotacao_original.quantidade_volumes,
+            valor_mercadoria=cotacao_original.valor_mercadoria,
+            prazo_estimado=cotacao_original.prazo_estimado,
+            valor_frete=cotacao_original.valor_frete,
+            valor_seguro=cotacao_original.valor_seguro,
+            valor_adicional=cotacao_original.valor_adicional,
+            status="rascunho",
+            urgente=cotacao_original.urgente,
+            observacoes=cotacao_original.observacoes,
+            tenant_id=tenant_id
+        )
         
-        # Remover campos específicos da cotação original
-        for key in ["enviada_em", "aprovada_em", "rejeitada_em", "pedido_id", 
-                    "motivo_rejeicao", "observacao_aprovacao"]:
-            nova_cotacao.pop(key, None)
+        db.add(nova_cotacao)
+        db.commit()
+        db.refresh(nova_cotacao)
         
-        cotacoes_db[nova_cotacao_id] = nova_cotacao
-        
-        logger.info(f"Cotação duplicada: {cotacao_original['numero']} -> {novo_numero}")
+        logger.info(f"✅ Cotação duplicada: {cotacao_original.numero} -> {novo_numero}")
         
         return {
             "success": True,
@@ -568,28 +585,39 @@ async def duplicar_cotacao(cotacao_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao duplicar cotação: {e}")
+        db.rollback()
+        logger.error(f"❌ Erro ao duplicar cotação: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/{cotacao_id}")
-async def excluir_cotacao(cotacao_id: str):
+async def excluir_cotacao(
+    cotacao_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """Exclui uma cotação (apenas rascunhos)"""
     try:
-        if cotacao_id not in cotacoes_db:
+        tenant_id = get_current_tenant_id(request)
+        
+        cotacao = db.query(Cotacao).filter(
+            Cotacao.id == cotacao_id,
+            Cotacao.tenant_id == tenant_id
+        ).first()
+        
+        if not cotacao:
             raise HTTPException(status_code=404, detail="Cotação não encontrada")
         
-        cotacao = cotacoes_db[cotacao_id]
-        
-        if cotacao["status"] != StatusCotacao.RASCUNHO.value:
+        if cotacao.status != "rascunho":
             raise HTTPException(
                 status_code=400,
                 detail="Apenas cotações em rascunho podem ser excluídas"
             )
         
-        del cotacoes_db[cotacao_id]
+        db.delete(cotacao)
+        db.commit()
         
-        logger.info(f"Cotação excluída: {cotacao['numero']}")
+        logger.info(f"✅ Cotação excluída: {cotacao.numero}")
         
         return {
             "success": True,
@@ -599,9 +627,6 @@ async def excluir_cotacao(cotacao_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao excluir cotação: {e}")
+        db.rollback()
+        logger.error(f"❌ Erro ao excluir cotação: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
-
-# Import necessário
-from datetime import timedelta

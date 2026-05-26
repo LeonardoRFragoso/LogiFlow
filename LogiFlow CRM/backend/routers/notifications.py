@@ -14,7 +14,7 @@ from routers.auth import get_current_user
 from services.system_notifications import notification_service
 from loguru import logger
 
-router = APIRouter(prefix="/api/v1/notifications", tags=["notifications"])
+router = APIRouter(prefix="/notifications", tags=["Notificações"])
 
 
 # ========================================
