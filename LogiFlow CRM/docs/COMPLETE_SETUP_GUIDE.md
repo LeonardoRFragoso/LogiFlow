@@ -184,7 +184,7 @@ pytest backend/tests/test_email_service.py -v
 #### Instalação via Docker
 
 ```bash
-# docker-compose.evolution.yml
+# docker compose -f docker/docker-compose.yml.evolution.yml
 version: '3.8'
 
 services:
@@ -205,7 +205,7 @@ volumes:
 
 Iniciar:
 ```bash
-docker-compose -f docker-compose.evolution.yml up -d
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.evolution.yml up -d
 ```
 
 #### Configuração
@@ -396,7 +396,7 @@ python scripts/test_email.py
 
 ```bash
 # Verificar logs
-docker-compose logs -f backend | grep webhook
+docker compose -f docker/docker-compose.yml logs -f backend | grep webhook
 
 # Testar endpoint
 curl -X POST http://localhost:8000/api/billing/webhooks/mercadopago \
@@ -408,10 +408,10 @@ curl -X POST http://localhost:8000/api/billing/webhooks/mercadopago \
 
 ```bash
 # Verificar logs detalhados
-docker-compose logs backend | grep provisionamento
+docker compose -f docker/docker-compose.yml logs backend | grep provisionamento
 
 # Verificar database
-docker-compose exec db mysql -u root -p logiflow_crm
+docker compose -f docker/docker-compose.yml exec db mysql -u root -p logiflow_crm
 SELECT * FROM tenants ORDER BY created_at DESC LIMIT 5;
 ```
 
@@ -475,7 +475,7 @@ Quando todos os itens acima estiverem ✅:
    ```bash
    git checkout main
    git pull origin main
-   docker-compose -f docker-compose.prod.yml up -d --build
+   docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.prod.yml up -d --build
    ```
 
 2. **Smoke test em produção**
@@ -493,7 +493,7 @@ Quando todos os itens acima estiverem ✅:
 
 - **Documentação:** Este arquivo + docs individuais
 - **Scripts de teste:** `backend/scripts/test_*.py`
-- **Logs:** `docker-compose logs -f backend`
+- **Logs:** `docker compose -f docker/docker-compose.yml logs -f backend`
 - **Email:** dev@logiflow.com.br
 
 ---

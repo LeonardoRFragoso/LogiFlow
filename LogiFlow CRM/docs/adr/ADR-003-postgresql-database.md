@@ -27,7 +27,7 @@ O LogiFlow CRM requer um banco de dados que suporte:
 Escolhemos **PostgreSQL 15** como banco de dados principal.
 
 ```yaml
-# docker-compose.yml
+# docker compose -f docker/docker-compose.yml
 db:
   image: postgres:15-alpine
   environment:

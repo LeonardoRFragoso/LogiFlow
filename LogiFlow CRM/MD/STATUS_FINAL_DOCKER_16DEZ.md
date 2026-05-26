@@ -18,8 +18,8 @@
 
 ### 3. Docker Completo
 - ✅ 4 Dockerfiles criados/corrigidos
-- ✅ docker-compose.minimal.yml funcional
-- ✅ docker-compose.completo.yml com 11 serviços
+- ✅ docker compose -f docker/docker-compose.yml.minimal.yml funcional
+- ✅ docker compose -f docker/docker-compose.yml.completo.yml com 11 serviços
 - ✅ Scripts de inicialização (start-minimal.bat, start-completo.bat)
 - ✅ 7 documentações Docker criadas
 
@@ -164,7 +164,7 @@ Admin → OAuth2 Clients → Create
 
 ### Arquivos Criados/Modificados
 - **Dockerfiles:** 4 novos + 3 corrigidos
-- **docker-compose:** 2 arquivos completos
+- **docker compose -f docker/docker-compose.yml:** 2 arquivos completos
 - **Scripts:** 2 batch files
 - **Documentação:** 8 arquivos .md
 - **Correções código:** 5 arquivos

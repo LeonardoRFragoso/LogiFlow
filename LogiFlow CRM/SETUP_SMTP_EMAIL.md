@@ -153,7 +153,7 @@ SALES_EMAIL=vendas@seudominio.com.br
 
 ```bash
 # No container do backend
-docker-compose exec backend env | grep SMTP
+docker compose -f docker/docker-compose.yml exec backend env | grep SMTP
 ```
 
 Deve mostrar:
@@ -185,7 +185,7 @@ print(f"Resultado: {'✅ Sucesso' if result else '❌ Erro'}")
 
 Execute:
 ```bash
-docker-compose exec backend python test_email.py
+docker compose -f docker/docker-compose.yml exec backend python test_email.py
 ```
 
 ### Teste 3: Fluxo completo de checkout
@@ -193,7 +193,7 @@ docker-compose exec backend python test_email.py
 1. Faça um pagamento de teste
 2. Verifique os logs:
 ```bash
-docker-compose logs -f backend | grep "Email"
+docker compose -f docker/docker-compose.yml logs -f backend | grep "Email"
 ```
 
 Deve mostrar:
@@ -224,7 +224,7 @@ Deve mostrar:
 
 1. **Verifique o SMTP_HOST:**
    ```bash
-   docker-compose exec backend ping smtp.gmail.com
+   docker compose -f docker/docker-compose.yml exec backend ping smtp.gmail.com
    ```
 
 2. **Verifique a porta:**
@@ -271,13 +271,13 @@ Sempre monitore os logs de email:
 
 ```bash
 # Ver últimos 100 emails enviados
-docker-compose logs backend | grep "Email" | tail -100
+docker compose -f docker/docker-compose.yml logs backend | grep "Email" | tail -100
 
 # Ver erros de email
-docker-compose logs backend | grep "❌.*email" -i
+docker compose -f docker/docker-compose.yml logs backend | grep "❌.*email" -i
 
 # Ver emails bem-sucedidos
-docker-compose logs backend | grep "✅ Email"
+docker compose -f docker/docker-compose.yml logs backend | grep "✅ Email"
 ```
 
 ### Métricas Importantes

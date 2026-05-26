@@ -206,7 +206,7 @@ curl -X POST "http://localhost:8000/api/v1/melhor-envio/cotacao-simples" \
 
 ```bash
 # No terminal do backend
-docker-compose logs -f api | grep "melhor_envio"
+docker compose -f docker/docker-compose.yml logs -f api | grep "melhor_envio"
 ```
 
 ---
@@ -220,7 +220,7 @@ docker-compose logs -f api | grep "melhor_envio"
 **Solução**:
 1. Gere um novo token no painel Melhor Envio
 2. Atualize o `.env`
-3. Reinicie o backend: `docker-compose restart api`
+3. Reinicie o backend: `docker compose -f docker/docker-compose.yml restart api`
 
 ### Erro: "Unauthorized"
 

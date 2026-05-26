@@ -118,7 +118,7 @@ Após deploy, verifique:
 ```bash
 # Verificar logs do job
 # Reproduzir localmente:
-docker-compose up -d db redis
+docker compose -f docker/docker-compose.yml up -d db redis
 pytest tests/unit/ -v --tb=long
 ```
 

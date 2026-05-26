@@ -19,7 +19,7 @@ NC='\033[0m' # No Color
 # Verificar se o container está rodando
 if ! docker ps | grep -q logiflow_suitecrm; then
     echo -e "${RED}ERRO: Container logiflow_suitecrm não está rodando${NC}"
-    echo "Execute: docker-compose up -d suitecrm"
+    echo "Execute: docker compose -f docker/docker-compose.yml up -d suitecrm"
     exit 1
 fi
 
@@ -124,7 +124,7 @@ except Exception as e:
     print('✗ Erro na conexão:', str(e))
 " 2>/dev/null || echo -e "${RED}Erro ao testar conexão. Verifique as credenciais no .env${NC}"
             else
-                echo -e "${YELLOW}Container backend não está rodando. Execute: docker-compose up -d api${NC}"
+                echo -e "${YELLOW}Container backend não está rodando. Execute: docker compose -f docker/docker-compose.yml up -d api${NC}"
             fi
         fi
     else

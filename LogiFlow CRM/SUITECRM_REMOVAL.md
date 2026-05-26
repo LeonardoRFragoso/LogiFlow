@@ -29,7 +29,7 @@ O **SuiteCRM foi completamente removido** do projeto LogiFlow CRM porque:
 
 ## 🔧 Mudanças Aplicadas
 
-### 1. **Docker Compose** (`docker-compose.yml`)
+### 1. **Docker Compose** (`docker compose -f docker/docker-compose.yml`)
 **Removido:**
 - ❌ Serviço `suitecrm` (PHP-FPM)
 - ❌ Serviço `nginx` (Web server)
@@ -126,7 +126,7 @@ LogiFlow API ←→ MariaDB
 
 ### **Editados:**
 ```
-✏️ docker-compose.yml          (Removidos serviços suitecrm e nginx)
+✏️ docker compose -f docker/docker-compose.yml          (Removidos serviços suitecrm e nginx)
 ✏️ backend/celery_app.py        (Removida task sync_suitecrm)
 ✏️ backend/tasks.py             (Removida função sync_suitecrm)
 ✏️ backend/.env.example         (Removidas variáveis SUITECRM_*)
@@ -159,7 +159,7 @@ Se por algum motivo precisar restaurar o SuiteCRM:
 2. **Reinstalar manualmente:**
    - Baixar SuiteCRM oficial
    - Recriar configurações Docker
-   - Readicionar ao docker-compose.yml
+   - Readicionar ao docker compose -f docker/docker-compose.yml
 
 **Mas isso NÃO é recomendado.** O LogiFlow standalone é superior.
 
@@ -171,13 +171,13 @@ Execute para validar que tudo está funcionando:
 
 ```bash
 # 1. Verificar containers ativos
-docker-compose ps
+docker compose -f docker/docker-compose.yml ps
 
 # 2. Executar diagnóstico
-docker-compose exec api python scripts/diagnose_docker.py
+docker compose -f docker/docker-compose.yml exec api python scripts/diagnose_docker.py
 
 # 3. Verificar Celery
-docker-compose logs celery_worker --tail=20
+docker compose -f docker/docker-compose.yml logs celery_worker --tail=20
 
 # 4. Testar API
 curl http://localhost:8000/health

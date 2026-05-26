@@ -30,7 +30,7 @@ Todas as pendências críticas foram resolvidas. O sistema está funcional de po
 
 **Arquivos**:
 - `backend/scripts/setup_oauth2_suitecrm.py` - Setup automatizado
-- `docker-compose.minimal.yml` - Credenciais configuradas (linhas 103-104)
+- `docker compose -f docker/docker-compose.yml.minimal.yml` - Credenciais configuradas (linhas 103-104)
 - `backend/config.py` - Configuração OAuth2 (linhas 51-54)
 
 **Validação**:
@@ -158,7 +158,7 @@ docker exec logiflow_api python scripts/seed_demo_data.py
 **Status**: ✅ **VALIDADO**
 
 **O que foi feito**:
-- ✅ `docker-compose.minimal.yml` validado e funcional
+- ✅ `docker compose -f docker/docker-compose.yml.minimal.yml` validado e funcional
 - ✅ 5 serviços essenciais configurados
 - ✅ Variáveis de ambiente corretas
 - ✅ Healthchecks configurados
@@ -177,12 +177,12 @@ docker exec logiflow_api python scripts/seed_demo_data.py
 scripts\setup-beta.bat
 
 # Ou manual
-docker-compose -f docker-compose.minimal.yml up -d
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml up -d
 ```
 
 **Validação**:
 ```bash
-docker-compose -f docker-compose.minimal.yml ps
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml ps
 # Todos devem estar "Up" e "healthy"
 ```
 
@@ -277,7 +277,7 @@ docker-compose -f docker-compose.minimal.yml ps
 
 **Arquivo de Referência**:
 - `backend/feature_flags.py` - Alterar status das features
-- Após alteração, reiniciar API: `docker-compose restart api`
+- Após alteração, reiniciar API: `docker compose -f docker/docker-compose.yml restart api`
 
 ---
 
@@ -369,7 +369,7 @@ scripts\run-smoke-test.bat
 
 ### Para Deploy em Render.com
 
-1. Usar `docker-compose.minimal.yml` como referência
+1. Usar `docker compose -f docker/docker-compose.yml.minimal.yml` como referência
 2. Configurar variáveis de ambiente no Render
 3. Seguir guia: `MD/DEPLOY_RENDER.md`
 
@@ -381,13 +381,13 @@ scripts\run-smoke-test.bat
 
 ```bash
 # Status geral
-docker-compose -f docker-compose.minimal.yml ps
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml ps
 
 # Logs
 docker logs -f logiflow_api
 
 # Restart
-docker-compose -f docker-compose.minimal.yml restart
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml restart
 
 # Smoke test
 docker exec logiflow_api python tests/smoke_test_beta.py

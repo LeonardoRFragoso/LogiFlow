@@ -80,10 +80,10 @@ git clone https://github.com/LeonardoRFragoso/LogiFlow.git
 cd "LogiFlow CRM"
 
 # Configure o ambiente
-cp .env.example .env
+cp backend/.env.example .env
 
 # Inicie os containers
-docker-compose up -d
+docker compose -f docker/docker-compose.yml up -d
 
 # Acesse a aplicação
 # Frontend: http://localhost:3000
@@ -94,13 +94,13 @@ docker-compose up -d
 
 ```bash
 # Ver logs
-docker-compose logs -f api
+docker compose -f docker/docker-compose.yml logs -f api
 
 # Rodar migrations
-docker-compose exec api alembic upgrade head
+docker compose -f docker/docker-compose.yml exec api alembic upgrade head
 
 # Rodar testes
-docker-compose exec api pytest
+docker compose -f docker/docker-compose.yml exec api pytest
 ```
 
 📖 [Guia Completo de Instalação](docs/deployment/local.md)

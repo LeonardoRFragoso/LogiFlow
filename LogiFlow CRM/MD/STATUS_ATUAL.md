@@ -74,8 +74,8 @@
 - ✅ `scripts/backup_tenant.sh` - Backup de tenants
 
 **Docker:**
-- ✅ `docker-compose.simple.yml` - Versão simplificada (RECOMENDADO)
-- ✅ `docker-compose-fastapi.yml` - Versão com SuiteCRM
+- ✅ `docker compose -f docker/docker-compose.yml.simple.yml` - Versão simplificada (RECOMENDADO)
+- ✅ `docker compose -f docker/docker-compose.yml-fastapi.yml` - Versão com SuiteCRM
 - ✅ `docker/api/Dockerfile` - Imagem FastAPI
 
 ---
@@ -115,7 +115,7 @@ Instalar SuiteCRM localmente com XAMPP/WAMP ou usar servidor PHP nativo do Windo
 ### Opção 1: Apenas API FastAPI (Recomendado para testes)
 
 ```powershell
-docker compose -f docker-compose.simple.yml up -d
+docker compose -f docker compose -f docker/docker-compose.yml.simple.yml up -d
 ```
 
 Acesse:
@@ -125,7 +125,7 @@ Acesse:
 ### Opção 2: API + SuiteCRM (Requer paciência)
 
 ```powershell
-docker compose -f docker-compose-fastapi.yml up -d
+docker compose -f docker compose -f docker/docker-compose.yml-fastapi.yml up -d
 ```
 
 Aguarde ~10 minutos para extensões PHP serem compiladas.
@@ -184,7 +184,7 @@ Aguarde ~10 minutos para extensões PHP serem compiladas.
 
 **Para desenvolvimento ágil:**
 
-1. **Use `docker-compose.simple.yml`** - Apenas API + DB + Redis
+1. **Use `docker compose -f docker/docker-compose.yml.simple.yml`** - Apenas API + DB + Redis
 2. **Instale SuiteCRM localmente** com XAMPP (mais rápido)
 3. **Foque no frontend Vue** - É o que está mais incompleto
 4. **Teste as integrações** (CT-e, GPS) via Swagger
@@ -200,13 +200,13 @@ Falta principalmente frontend e configuração final do SuiteCRM.
 
 ```powershell
 # Subir apenas API
-docker compose -f docker-compose.simple.yml up -d
+docker compose -f docker compose -f docker/docker-compose.yml.simple.yml up -d
 
 # Ver logs da API
 docker logs logiflow_api -f
 
 # Parar tudo
-docker compose -f docker-compose.simple.yml down
+docker compose -f docker compose -f docker/docker-compose.yml.simple.yml down
 
 # Acessar banco de dados
 docker exec -it logiflow_db mysql -u logiflow -plogiflow123 logiflow_crm

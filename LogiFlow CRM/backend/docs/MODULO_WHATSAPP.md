@@ -36,7 +36,7 @@ O módulo de WhatsApp integra o LogiFlow CRM com WhatsApp Business através da E
 **Docker Compose:**
 ```bash
 cd docker/evolution-api
-docker-compose up -d
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 **Verificar Status:**

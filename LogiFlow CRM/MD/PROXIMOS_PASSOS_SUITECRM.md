@@ -154,7 +154,7 @@ docker exec logiflow_suitecrm cat /var/www/html/public/legacy/config.php | grep 
 **Solução 2: Limpar cache do SuiteCRM**
 ```bash
 docker exec logiflow_suitecrm sh -c "cd /var/www/html && php bin/console cache:clear"
-docker-compose -f docker-compose.minimal.yml restart suitecrm nginx
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml restart suitecrm nginx
 ```
 
 **Solução 3: Verificar se as chaves RSA existem**
@@ -212,7 +212,7 @@ Se após seguir todos os passos a integração não funcionar:
 1. Verifique logs detalhados:
    ```bash
    docker exec logiflow_suitecrm tail -100 /var/log/php/error.log
-   docker-compose -f docker-compose.minimal.yml logs api
+   docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml logs api
    ```
 
 2. Consulte a documentação oficial:

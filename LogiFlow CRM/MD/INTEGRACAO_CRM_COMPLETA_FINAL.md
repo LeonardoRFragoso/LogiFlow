@@ -71,7 +71,7 @@ npm run dev
 
 # Terminal 3: SuiteCRM (se não estiver rodando)
 cd "LogiFlow CRM"
-docker-compose up -d suitecrm mysql
+docker compose -f docker/docker-compose.yml up -d suitecrm mysql
 ```
 
 ### **2. Acessar Aplicação**

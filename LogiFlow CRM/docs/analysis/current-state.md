@@ -449,7 +449,7 @@ backend/
 
 ### 8.2 Pontos de Atenção
 
-- ⚠️ Secrets hardcoded em docker-compose (dev only)
+- ⚠️ Secrets hardcoded em docker compose -f docker/docker-compose.yml (dev only)
 - ⚠️ DEBUG=True em configurações de desenvolvimento
 - ⚠️ Falta CSRF para formulários web tradicionais
 
@@ -461,9 +461,9 @@ backend/
 
 | Arquivo | Serviços |
 |---------|----------|
-| `docker-compose.yml` | db, redis, api, frontend, site, celery_worker, celery_beat, adminer |
-| `docker-compose.production.yml` | Configuração otimizada para produção |
-| `docker-compose.minimal.yml` | Setup mínimo para desenvolvimento |
+| `docker compose -f docker/docker-compose.yml` | db, redis, api, frontend, site, celery_worker, celery_beat, adminer |
+| `docker compose -f docker/docker-compose.yml.production.yml` | Configuração otimizada para produção |
+| `docker compose -f docker/docker-compose.yml.minimal.yml` | Setup mínimo para desenvolvimento |
 
 ### 9.2 CI/CD (GitHub Actions)
 

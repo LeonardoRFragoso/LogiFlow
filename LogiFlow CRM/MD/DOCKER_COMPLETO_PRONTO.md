@@ -6,7 +6,7 @@
 
 1. `@docker/app-motorista/Dockerfile` ✅
 2. `@docker/portal-cliente/Dockerfile` ✅
-3. `@docker-compose.completo.yml` ✅
+3. `@docker compose -f docker/docker-compose.yml.completo.yml` ✅
 4. `@start-completo.bat` ✅
 
 ---
@@ -55,13 +55,13 @@ copy .env.docker .env
 copy backend\.env.example backend\.env
 
 # 2. Build
-docker-compose -f docker-compose.completo.yml build
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.completo.yml build
 
 # 3. Iniciar
-docker-compose -f docker-compose.completo.yml up -d
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.completo.yml up -d
 
 # 4. Ver logs
-docker-compose -f docker-compose.completo.yml logs -f
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.completo.yml logs -f
 ```
 
 ---
@@ -149,11 +149,11 @@ start-completo.bat
 
 ```batch
 # Ver qual falhou
-docker-compose -f docker-compose.completo.yml build
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.completo.yml build
 
 # Build individual
-docker-compose -f docker-compose.completo.yml build app-motorista
-docker-compose -f docker-compose.completo.yml build portal-cliente
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.completo.yml build app-motorista
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.completo.yml build portal-cliente
 ```
 
 **Solução comum:** Verificar se `package.json` existe em cada pasta
@@ -172,7 +172,7 @@ Error: Bind for 0.0.0.0:3002 failed
 netstat -ano | findstr :3002
 taskkill /PID <numero> /F
 
-# Ou mudar porta no docker-compose.completo.yml
+# Ou mudar porta no docker compose -f docker/docker-compose.yml.completo.yml
 ```
 
 ---
@@ -197,11 +197,11 @@ start-minimal.bat
 
 ```batch
 # Ver logs
-docker-compose -f docker-compose.completo.yml logs <nome_servico>
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.completo.yml logs <nome_servico>
 
 # Exemplo:
-docker-compose -f docker-compose.completo.yml logs app-motorista
-docker-compose -f docker-compose.completo.yml logs portal-cliente
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.completo.yml logs app-motorista
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.completo.yml logs portal-cliente
 ```
 
 ---
@@ -260,13 +260,13 @@ LogiFlow CRM
 ## 📚 Arquivos Disponíveis
 
 ### **Docker Completo:**
-- `docker-compose.completo.yml` - Todos serviços
+- `docker compose -f docker/docker-compose.yml.completo.yml` - Todos serviços
 - `start-completo.bat` - Script completo
 - `docker/app-motorista/Dockerfile`
 - `docker/portal-cliente/Dockerfile`
 
 ### **Docker Minimal:**
-- `docker-compose.minimal.yml` - Só essenciais
+- `docker compose -f docker/docker-compose.yml.minimal.yml` - Só essenciais
 - `start-minimal.bat` - Script mínimo
 
 ### **Documentação:**

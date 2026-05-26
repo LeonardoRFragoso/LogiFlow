@@ -198,7 +198,7 @@ site-divulgacao/
 
 ## 🐳 Docker Configuration
 
-### **docker-compose.production.yml**
+### **docker compose -f docker/docker-compose.yml.production.yml**
 
 ```yaml
 services:
@@ -323,7 +323,7 @@ npm run dev
 
 ```bash
 # Iniciar todos os 4 frontends
-docker-compose -f docker-compose.production.yml up -d
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml up -d
 
 # Acessar:
 # - Sistema: http://localhost:3001
@@ -400,14 +400,14 @@ xl: 1280px  /* Large desktop */
 **Comandos úteis:**
 ```bash
 # Ver logs de um frontend
-docker-compose -f docker-compose.production.yml logs -f frontend
-docker-compose -f docker-compose.production.yml logs -f app-motorista
-docker-compose -f docker-compose.production.yml logs -f portal-cliente
-docker-compose -f docker-compose.production.yml logs -f site-divulgacao
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml logs -f frontend
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml logs -f app-motorista
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml logs -f portal-cliente
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml logs -f site-divulgacao
 
 # Rebuild de um frontend
-docker-compose -f docker-compose.production.yml build --no-cache frontend
-docker-compose -f docker-compose.production.yml up -d frontend
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml build --no-cache frontend
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.production.yml up -d frontend
 ```
 
 ---

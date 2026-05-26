@@ -20,13 +20,13 @@ O LogiFlow CRM integra o SuiteCRM 8.6.1 para gerenciamento avançado de relacion
 
 ```bash
 # Iniciar todos os serviços
-docker-compose up -d
+docker compose -f docker/docker-compose.yml up -d
 
 # Verificar status
-docker-compose ps
+docker compose -f docker/docker-compose.yml ps
 
 # Acompanhar logs do SuiteCRM
-docker-compose logs -f suitecrm
+docker compose -f docker/docker-compose.yml logs -f suitecrm
 ```
 
 ### 2. Aguardar Inicialização
@@ -57,11 +57,11 @@ http://localhost:8080/install.php
 #### Passo 2: Verificação do Sistema
 - O instalador verifica requisitos PHP e extensões
 - Todas as verificações devem estar **verdes** ✅
-- Se houver erros, revise os logs: `docker-compose logs suitecrm`
+- Se houver erros, revise os logs: `docker compose -f docker/docker-compose.yml logs suitecrm`
 
 #### Passo 3: Configuração do Banco de Dados
 
-Use as credenciais definidas no `.env` ou docker-compose:
+Use as credenciais definidas no `.env` ou docker compose -f docker/docker-compose.yml:
 
 ```
 Database Type: MySQL
@@ -320,13 +320,13 @@ No SuiteCRM, vá para:
 **Solução**:
 ```bash
 # Verificar se o banco está rodando
-docker-compose ps db
+docker compose -f docker/docker-compose.yml ps db
 
 # Ver logs do banco
-docker-compose logs db
+docker compose -f docker/docker-compose.yml logs db
 
 # Reiniciar banco se necessário
-docker-compose restart db
+docker compose -f docker/docker-compose.yml restart db
 ```
 
 ### Erro: "Permission denied" durante instalação
@@ -382,8 +382,8 @@ docker exec logiflow_suitecrm chmod -R 775 /var/www/html/custom
 
 **Solução**: A extensão OpenSSL está faltando - reconstrua o container:
 ```bash
-docker-compose build suitecrm --no-cache
-docker-compose up -d suitecrm
+docker compose -f docker/docker-compose.yml build suitecrm --no-cache
+docker compose -f docker/docker-compose.yml up -d suitecrm
 ```
 
 ---
@@ -394,10 +394,10 @@ docker-compose up -d suitecrm
 
 ```bash
 # Logs do SuiteCRM
-docker-compose logs -f suitecrm
+docker compose -f docker/docker-compose.yml logs -f suitecrm
 
 # Logs do Nginx
-docker-compose logs -f nginx
+docker compose -f docker/docker-compose.yml logs -f nginx
 
 # Logs específicos do SuiteCRM (dentro do container)
 docker exec logiflow_suitecrm tail -f /var/www/html/logs/prod/suitecrm.log
@@ -407,7 +407,7 @@ docker exec logiflow_suitecrm tail -f /var/www/html/logs/prod/suitecrm.log
 
 ```bash
 # Status dos containers
-docker-compose ps
+docker compose -f docker/docker-compose.yml ps
 
 # Uso de recursos
 docker stats logiflow_suitecrm
@@ -459,7 +459,7 @@ docker exec logiflow_suitecrm chown -R www:www /var/www/html/upload
 
 ## ✅ Checklist de Instalação
 
-- [ ] Containers Docker iniciados (`docker-compose up -d`)
+- [ ] Containers Docker iniciados (`docker compose -f docker/docker-compose.yml up -d`)
 - [ ] Instalação web concluída (`/install.php`)
 - [ ] Login admin funcionando
 - [ ] Chaves OAuth2 geradas
@@ -477,7 +477,7 @@ docker exec logiflow_suitecrm chown -R www:www /var/www/html/upload
 Para dúvidas ou problemas:
 
 1. Consulte a seção [Troubleshooting](#-troubleshooting)
-2. Revise os logs: `docker-compose logs`
+2. Revise os logs: `docker compose -f docker/docker-compose.yml logs`
 3. Verifique o [FAQ do SuiteCRM](https://docs.suitecrm.com/8.x/)
 4. Abra uma issue no repositório do projeto
 

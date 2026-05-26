@@ -77,7 +77,7 @@ MELHOR_ENVIO_SANDBOX=false
 
 ```bash
 cd "LogiFlow CRM"
-docker-compose restart api
+docker compose -f docker/docker-compose.yml restart api
 ```
 
 ### Opção B: Sem Docker

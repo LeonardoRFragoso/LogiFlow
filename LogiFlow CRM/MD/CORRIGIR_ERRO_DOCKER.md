@@ -45,10 +45,10 @@ start-minimal.bat
 copy backend\.env.example backend\.env
 
 # 2. Iniciar apenas essenciais
-docker-compose -f docker-compose.minimal.yml up -d
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml up -d
 
 # 3. Ver logs
-docker-compose -f docker-compose.minimal.yml logs -f
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml logs -f
 ```
 
 ---
@@ -96,20 +96,20 @@ validar-integracao.bat
 **Limpar tudo e tentar novamente:**
 ```batch
 # Parar tudo
-docker-compose -f docker-compose.minimal.yml down -v
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml down -v
 
 # Remover imagens antigas
 docker image prune -a -f
 
 # Rebuild
-docker-compose -f docker-compose.minimal.yml up -d --build
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml up -d --build
 ```
 
 ### **Problema: SuiteCRM não sobe**
 
 **Ver logs:**
 ```batch
-docker-compose -f docker-compose.minimal.yml logs suitecrm
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml logs suitecrm
 ```
 
 **Verificar permissões (se Linux/Mac):**
@@ -149,7 +149,7 @@ SUITECRM_CLIENT_SECRET=seu_secret
 ## 📚 Arquivos
 
 - `@start-minimal.bat` - Script simplificado
-- `@docker-compose.minimal.yml` - Compose minimalista
+- `@docker compose -f docker/docker-compose.yml.minimal.yml` - Compose minimalista
 - `@FINALIZAR_INTEGRACAO_AGORA.md` - Guia OAuth2
 - `@validar-integracao.bat` - Validação
 

@@ -12,7 +12,7 @@
 
 O SuiteCRM **JÁ ESTÁ** na pasta `./suitecrm` do projeto. Vamos apenas:
 
-1. ✅ Usar docker-compose.minimal.yml (que já funciona)
+1. ✅ Usar docker compose -f docker/docker-compose.yml.minimal.yml (que já funciona)
 2. ✅ Subir PHP-FPM + Nginx + Banco
 3. ✅ Acessar o instalador web: **http://localhost:8080/install.php**
 4. ✅ Completar instalação via interface web
@@ -23,8 +23,8 @@ O SuiteCRM **JÁ ESTÁ** na pasta `./suitecrm` do projeto. Vamos apenas:
 
 ```powershell
 # 1. Parar tudo
-docker-compose -f docker-compose.suitecrm-oficial.yml down
-docker-compose -f docker-compose.minimal.yml down
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.suitecrm-oficial.yml down
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml down
 
 # 2. Limpar cache Docker (opcional mas recomendado)
 docker system prune -f
@@ -76,7 +76,7 @@ docker exec logiflow_suitecrm chown -R www:www /var/www/html
 docker exec logiflow_suitecrm chmod -R 775 /var/www/html/cache /var/www/html/tmp /var/www/html/custom
 
 # Reiniciar
-docker-compose -f docker-compose.minimal.yml restart suitecrm nginx
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml restart suitecrm nginx
 ```
 
 Aguarde 10s e tente novamente: **http://localhost:8080/install.php**

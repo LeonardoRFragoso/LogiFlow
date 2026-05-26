@@ -110,7 +110,7 @@ No painel Focus NFe, configure:
 
 ```bash
 # No container do backend
-docker-compose exec backend python -c "
+docker compose -f docker/docker-compose.yml exec backend python -c "
 import os
 token = os.getenv('FOCUSNFE_TOKEN', '')
 env = os.getenv('FOCUSNFE_ENVIRONMENT', '')
@@ -145,7 +145,7 @@ print(f"   URL: {client.base_url}")
 
 Execute:
 ```bash
-docker-compose exec backend python test_focusnfe.py
+docker compose -f docker/docker-compose.yml exec backend python test_focusnfe.py
 ```
 
 ### Teste 3: Emitir CT-e de Teste (Homologação)
@@ -286,10 +286,10 @@ curl -X GET https://homologacao.focusnfe.com.br/v2/cte \
 
 ```bash
 # Ver emissões de CT-e
-docker-compose logs backend | grep "CT-e"
+docker compose -f docker/docker-compose.yml logs backend | grep "CT-e"
 
 # Ver erros Focus NFe
-docker-compose logs backend | grep "Focus" | grep "ERROR"
+docker compose -f docker/docker-compose.yml logs backend | grep "Focus" | grep "ERROR"
 ```
 
 ### Dashboard Focus NFe

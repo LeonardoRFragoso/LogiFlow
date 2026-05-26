@@ -77,7 +77,7 @@ const response = await fetch(`${import.meta.env.VITE_API_URL}/demo/request`, {
 
 ### **Fase 4: Docker Compose**
 
-**Adicionar ao `docker-compose.yml`:**
+**Adicionar ao `docker compose -f docker/docker-compose.yml`:**
 ```yaml
   # Site de Divulgação
   site:
@@ -322,7 +322,7 @@ curl http://localhost:8000/api/leads/stats/summary
 1. **Criar migrations do banco de dados**
 2. **Mover diretório do site**
 3. **Atualizar DemoModal.vue com variável de ambiente**
-4. **Adicionar serviço 'site' no docker-compose.yml**
+4. **Adicionar serviço 'site' no docker compose -f docker/docker-compose.yml**
 5. **Testar integração completa**
 6. **Criar dashboard de leads no frontend**
 7. **Implementar provisionamento de tenants**

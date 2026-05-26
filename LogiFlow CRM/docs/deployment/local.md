@@ -18,14 +18,14 @@ git clone https://github.com/LeonardoRFragoso/LogiFlow.git
 cd "LogiFlow CRM"
 
 # 2. Configure variáveis de ambiente
-cp .env.example .env
+cp backend/.env.example .env
 # Edite .env com suas configurações
 
 # 3. Suba os containers
-docker-compose up -d
+docker compose -f docker/docker-compose.yml up -d
 
 # 4. Verifique os serviços
-docker-compose ps
+docker compose -f docker/docker-compose.yml ps
 
 # 5. Acesse a aplicação
 # Frontend: http://localhost:3000
@@ -110,17 +110,17 @@ VITE_API_URL=http://localhost:8000/api/v1
 
 ```bash
 # Ver logs
-docker-compose logs -f api
-docker-compose logs -f frontend
+docker compose -f docker/docker-compose.yml logs -f api
+docker compose -f docker/docker-compose.yml logs -f frontend
 
 # Reiniciar serviço específico
-docker-compose restart api
+docker compose -f docker/docker-compose.yml restart api
 
 # Rebuild após mudanças
-docker-compose up -d --build
+docker compose -f docker/docker-compose.yml up -d --build
 
 # Limpar tudo
-docker-compose down -v
+docker compose -f docker/docker-compose.yml down -v
 ```
 
 ### Backend
@@ -161,22 +161,22 @@ npm run preview
 
 ```bash
 # Verificar se PostgreSQL está rodando
-docker-compose ps db
+docker compose -f docker/docker-compose.yml ps db
 
 # Ver logs do banco
-docker-compose logs db
+docker compose -f docker/docker-compose.yml logs db
 
 # Recriar banco
-docker-compose down -v
-docker-compose up -d db
+docker compose -f docker/docker-compose.yml down -v
+docker compose -f docker/docker-compose.yml up -d db
 ```
 
 ### Erro de conexão com Redis
 
 ```bash
 # Verificar Redis
-docker-compose ps redis
-docker-compose logs redis
+docker compose -f docker/docker-compose.yml ps redis
+docker compose -f docker/docker-compose.yml logs redis
 ```
 
 ### Porta já em uso
@@ -189,7 +189,7 @@ lsof -i :8000
 # Windows
 netstat -ano | findstr :8000
 
-# Matar processo ou mudar porta no docker-compose.yml
+# Matar processo ou mudar porta no docker/docker compose -f docker/docker-compose.yml
 ```
 
 ## Seed de Dados (Opcional)

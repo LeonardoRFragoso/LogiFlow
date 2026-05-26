@@ -189,10 +189,10 @@ async def mercadopago_webhook(
 ```bash
 # 1. Configurar Mercado Pago no .env
 # 2. Iniciar backend
-docker-compose up -d backend
+docker compose -f docker/docker-compose.yml up -d backend
 
 # 3. Monitorar logs
-docker-compose logs -f backend | grep -E "webhook|provisionamento|email"
+docker compose -f docker/docker-compose.yml logs -f backend | grep -E "webhook|provisionamento|email"
 
 # 4. Testar com cartão de teste do MP
 # (via interface do checkout)
@@ -487,7 +487,7 @@ async def process_approved_payment(payment_data: dict, db: Session):
 
 **3. Testar Fluxo Completo (30 min)**
 ```bash
-1. Iniciar backend: docker-compose up -d
+1. Iniciar backend: docker compose -f docker/docker-compose.yml up -d
 2. Acessar site: http://localhost:5173
 3. Solicitar demo (verificar email)
 4. Fazer checkout com cartão teste
@@ -510,7 +510,7 @@ async def process_approved_payment(payment_data: dict, db: Session):
 
 **5. Configurar Evolution API (1-2h)**
 ```bash
-1. Iniciar Docker: docker-compose -f docker-compose.evolution.yml up -d
+1. Iniciar Docker: docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.evolution.yml up -d
 2. Criar instância
 3. Escanear QR Code
 4. Configurar no .env

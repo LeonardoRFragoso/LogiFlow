@@ -256,7 +256,7 @@ LogiFlow CRM/
 │   ├── APPS_GUIA.md
 │   └── PROJETO_100_CONCLUIDO.md (este arquivo)
 │
-├── docker-compose.yml
+├── docker compose -f docker/docker-compose.yml
 └── README.md
 ```
 
@@ -359,7 +359,7 @@ npm run dev
 ### **3. Docker (Recomendado)**:
 ```bash
 cd "LogiFlow CRM"
-docker-compose up -d
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 **URLs**:

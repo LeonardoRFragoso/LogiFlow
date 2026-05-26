@@ -122,7 +122,7 @@ cp backend/.env.example backend/.env
 # Edite backend/.env com suas credenciais
 
 # 3. Suba os containers
-docker-compose up -d
+docker compose -f docker/docker-compose.yml up -d
 
 # 4. Acesse
 # Frontend: http://localhost:8080
@@ -245,7 +245,7 @@ LogiFlow CRM/
 ├── portal-cliente/           # PWA Cliente
 ├── docker/                   # Configs Docker/Nginx
 ├── docs/                     # 11 documentos
-├── docker-compose.yml        # Stack completa
+├── docker compose -f docker/docker-compose.yml        # Stack completa
 └── README.md                 # Este arquivo
 ```
 
@@ -355,16 +355,16 @@ pytest tests/test_auth.py -v
 
 ```bash
 # 1. Build das imagens
-docker-compose -f docker-compose.prod.yml build
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.prod.yml build
 
 # 2. Rodar migrações
-docker-compose -f docker-compose.prod.yml run --rm api alembic upgrade head
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.prod.yml run --rm api alembic upgrade head
 
 # 3. Iniciar serviços
-docker-compose -f docker-compose.prod.yml up -d
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.prod.yml up -d
 
 # 4. Verificar logs
-docker-compose -f docker-compose.prod.yml logs -f api
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.prod.yml logs -f api
 ```
 
 ### **Configurações de Produção**:

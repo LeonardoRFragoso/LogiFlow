@@ -26,7 +26,7 @@
 cd "C:\Users\leona\OneDrive\Documentos\Projetos\LogiFlow\LogiFlow CRM"
 
 # Iniciar apenas SuiteCRM e banco
-docker-compose up -d db redis suitecrm nginx
+docker compose -f docker/docker-compose.yml up -d db redis suitecrm nginx
 
 # Aguardar 30 segundos
 timeout /t 30
@@ -36,7 +36,7 @@ timeout /t 30
 
 ```batch
 # Verificar se está rodando
-docker-compose ps
+docker compose -f docker/docker-compose.yml ps
 
 # Deve mostrar:
 # logiflow_db          Up
@@ -294,7 +294,7 @@ type backend\.env | findstr SUITECRM
 **Solução:**
 - Verifique se SuiteCRM está rodando:
   ```batch
-  docker-compose ps suitecrm
+  docker compose -f docker/docker-compose.yml ps suitecrm
   ```
 - Verifique se a porta 8080 está aberta
 - Tente acessar http://localhost:8080 no navegador
@@ -398,22 +398,22 @@ Marque conforme completa:
 
 ```batch
 # Ver status Docker
-docker-compose ps
+docker compose -f docker/docker-compose.yml ps
 
 # Ver logs SuiteCRM
-docker-compose logs -f suitecrm
+docker compose -f docker/docker-compose.yml logs -f suitecrm
 
 # Ver logs API
-docker-compose logs -f api
+docker compose -f docker/docker-compose.yml logs -f api
 
 # Reiniciar API
-docker-compose restart api
+docker compose -f docker/docker-compose.yml restart api
 
 # Parar tudo
-docker-compose down
+docker compose -f docker/docker-compose.yml down
 
 # Iniciar tudo
-docker-compose up -d
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 ---

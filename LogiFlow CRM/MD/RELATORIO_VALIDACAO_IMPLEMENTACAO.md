@@ -33,7 +33,7 @@ O projeto LogiFlow CRM foi **100% implementado** conforme os documentos de plane
 | **Docker Compose** | ✓ | ✓ | ✅ 100% |
 
 **Evidências:**
-- `docker-compose.yml` - Stack completo com 8 serviços
+- `docker compose -f docker/docker-compose.yml` - Stack completo com 8 serviços
 - `backend/main.py` - FastAPI com 30+ routers
 - `frontend/package.json` - Vue 3.4.0 + Pinia + Vue Router
 - `suitecrm/` - Instalação completa do SuiteCRM
@@ -333,7 +333,7 @@ $hook_array['after_save'][] = array(
 
 #### 7.2 Docker Compose
 
-**Arquivo:** `docker-compose.yml` (256 linhas)
+**Arquivo:** `docker compose -f docker/docker-compose.yml` (256 linhas)
 
 **Serviços Configurados:**
 - ✅ MariaDB 10.6 (com healthcheck)

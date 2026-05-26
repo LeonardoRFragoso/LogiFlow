@@ -258,7 +258,7 @@ SUITECRM_PASSWORD=admin123
 
 **Reiniciar Backend:**
 ```powershell
-docker-compose -f docker-compose.minimal.yml restart api
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml restart api
 ```
 
 ---
@@ -333,7 +333,7 @@ GET /api/v1/suitecrm/test
 **Solução:**
 ```powershell
 # Verificar se MariaDB está rodando
-docker-compose -f docker-compose.minimal.yml ps
+docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-compose.yml.minimal.yml ps
 
 # Testar conexão
 mysql -h 127.0.0.1 -P 3306 -u suitecrm_ui -psuitecrm123 suitecrm_ui

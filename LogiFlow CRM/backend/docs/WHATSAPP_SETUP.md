@@ -18,8 +18,8 @@ Este guia explica como configurar a integração do LogiFlow CRM com WhatsApp us
 # Criar pasta
 mkdir evolution-api && cd evolution-api
 
-# Criar docker-compose.yml
-cat > docker-compose.yml << 'EOF'
+# Criar docker compose -f docker/docker-compose.yml
+cat > docker compose -f docker/docker-compose.yml << 'EOF'
 version: '3.8'
 
 services:
@@ -71,7 +71,7 @@ networks:
 EOF
 
 # Iniciar
-docker-compose up -d
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 ### Opção B: Usando apenas Evolution (sem banco)

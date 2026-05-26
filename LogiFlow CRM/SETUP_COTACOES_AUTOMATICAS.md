@@ -79,7 +79,7 @@ GOOGLE_MAPS_DISTANCE_MATRIX_KEY=AIzaSyC1234567890abcdefghijklmnopqrstuvw
 ### 7. Testar API
 
 ```bash
-docker-compose exec backend python -c "
+docker compose -f docker/docker-compose.yml exec backend python -c "
 import os
 import requests
 
@@ -163,7 +163,7 @@ MELHOR_ENVIO_SANDBOX=false
 ### 5. Testar Melhor Envio
 
 ```bash
-docker-compose exec backend python -c "
+docker compose -f docker/docker-compose.yml exec backend python -c "
 import sys
 sys.path.append('/app')
 
@@ -238,7 +238,7 @@ FRENET_TOKEN=abc123def456ghi789jkl012mno345pqr678stu
 ### 4. Testar Frenet
 
 ```bash
-docker-compose exec backend python -c "
+docker compose -f docker/docker-compose.yml exec backend python -c "
 import sys
 sys.path.append('/app')
 
@@ -409,7 +409,7 @@ else:
 
 Execute:
 ```bash
-docker-compose exec backend python test_cotacao_completa.py
+docker compose -f docker/docker-compose.yml exec backend python test_cotacao_completa.py
 ```
 
 **Resultado esperado:**

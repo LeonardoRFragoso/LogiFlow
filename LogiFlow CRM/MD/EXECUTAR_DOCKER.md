@@ -12,7 +12,7 @@
 - ✅ **Docker Desktop** 20.10+
   - Windows: [Download](https://www.docker.com/products/docker-desktop/)
   - Mac: [Download](https://www.docker.com/products/docker-desktop/)
-  - Linux: `sudo apt install docker-ce docker-compose-plugin`
+  - Linux: `sudo apt install docker-ce docker compose -f docker/docker-compose.yml-plugin`
 
 - ✅ **Git** (para clonar o projeto)
 
@@ -53,10 +53,10 @@ chmod +x start-docker.sh
 cp .env.docker .env
 
 # 2. Iniciar serviços
-docker-compose up -d
+docker compose -f docker/docker-compose.yml up -d
 
 # 3. Aguardar inicialização (2-3 minutos)
-docker-compose logs -f
+docker compose -f docker/docker-compose.yml logs -f
 ```
 
 ---
@@ -202,23 +202,23 @@ python tests/test_suitecrm_integration.py
 
 ```bash
 # Todos os serviços
-docker-compose logs -f
+docker compose -f docker/docker-compose.yml logs -f
 
 # Apenas API
-docker-compose logs -f api
+docker compose -f docker/docker-compose.yml logs -f api
 
 # Apenas SuiteCRM
-docker-compose logs -f suitecrm nginx
+docker compose -f docker/docker-compose.yml logs -f suitecrm nginx
 
 # Últimas 100 linhas
-docker-compose logs --tail=100
+docker compose -f docker/docker-compose.yml logs --tail=100
 ```
 
 ### **Ver Status**
 
 ```bash
 # Status de todos os containers
-docker-compose ps
+docker compose -f docker/docker-compose.yml ps
 
 # Uso de recursos
 docker stats
@@ -245,26 +245,26 @@ docker exec -it logiflow_db mysql -u root -p
 
 ```bash
 # Iniciar tudo
-docker-compose up -d
+docker compose -f docker/docker-compose.yml up -d
 
 # Parar tudo
-docker-compose down
+docker compose -f docker/docker-compose.yml down
 
 # Reiniciar serviço específico
-docker-compose restart api
+docker compose -f docker/docker-compose.yml restart api
 
 # Rebuild após mudanças no código
-docker-compose up -d --build
+docker compose -f docker/docker-compose.yml up -d --build
 
 # Ver logs em tempo real
-docker-compose logs -f api
+docker compose -f docker/docker-compose.yml logs -f api
 ```
 
 ### **Limpeza e Manutenção**
 
 ```bash
 # Parar e remover volumes (CUIDADO: apaga dados!)
-docker-compose down -v
+docker compose -f docker/docker-compose.yml down -v
 
 # Remover imagens antigas
 docker image prune -a
@@ -315,7 +315,7 @@ taskkill /PID <numero_pid> /F
 # Linux/Mac
 lsof -ti :8080 | xargs kill -9
 
-# Ou alterar porta no docker-compose.yml
+# Ou alterar porta no docker compose -f docker/docker-compose.yml
 ```
 
 ---
@@ -324,13 +324,13 @@ lsof -ti :8080 | xargs kill -9
 
 ```bash
 # Ver logs detalhados
-docker-compose logs api
+docker compose -f docker/docker-compose.yml logs api
 
 # Verificar healthcheck
 docker inspect logiflow_api | grep -A 10 Health
 
 # Reiniciar container específico
-docker-compose restart api
+docker compose -f docker/docker-compose.yml restart api
 ```
 
 ---
@@ -359,13 +359,13 @@ chmod -R 755 /var/www/html
 **Verificar:**
 ```bash
 # 1. Banco está rodando?
-docker-compose ps db
+docker compose -f docker/docker-compose.yml ps db
 
 # 2. Testar conexão
 docker exec logiflow_api python -c "from database import test_connection; test_connection()"
 
 # 3. Ver logs do banco
-docker-compose logs db
+docker compose -f docker/docker-compose.yml logs db
 ```
 
 ---
@@ -375,13 +375,13 @@ docker-compose logs db
 **Verificar:**
 ```bash
 # 1. Build completou?
-docker-compose logs frontend
+docker compose -f docker/docker-compose.yml logs frontend
 
 # 2. Nginx está servindo?
 curl http://localhost:3001
 
 # 3. Rebuild
-docker-compose up -d --build frontend
+docker compose -f docker/docker-compose.yml up -d --build frontend
 ```
 
 ---
@@ -392,11 +392,11 @@ docker-compose up -d --build frontend
 
 ```bash
 # 1. Backend (API)
-docker-compose restart api
+docker compose -f docker/docker-compose.yml restart api
 # Uvicorn está com --reload, atualiza automaticamente
 
 # 2. Frontend (requer rebuild)
-docker-compose up -d --build frontend
+docker compose -f docker/docker-compose.yml up -d --build frontend
 
 # 3. SuiteCRM (vardefs, hooks)
 # Entrar no container e executar Quick Repair
@@ -417,10 +417,10 @@ docker exec -it logiflow_suitecrm bash
 **2. Build cache:**
 ```bash
 # Usar cache do Docker
-docker-compose build
+docker compose -f docker/docker-compose.yml build
 
 # Sem cache (mais lento, mas limpo)
-docker-compose build --no-cache
+docker compose -f docker/docker-compose.yml build --no-cache
 ```
 
 **3. Volumes de desenvolvimento:**
@@ -433,7 +433,7 @@ docker-compose build --no-cache
 
 ### **Para deploy em produção:**
 
-**1. Usar docker-compose.prod.yml** (criar se não existir)
+**1. Usar docker compose -f docker/docker-compose.yml.prod.yml** (criar se não existir)
 
 **2. Configurações de segurança:**
 ```env
@@ -487,7 +487,7 @@ SUITECRM_URL=https://crm.seudominio.com
 - [ ] Portas 8080, 8000, 3001, 5173 livres
 
 ### **Após iniciar:**
-- [ ] Todos containers rodando (`docker-compose ps`)
+- [ ] Todos containers rodando (`docker compose -f docker/docker-compose.yml ps`)
 - [ ] SuiteCRM acessível (http://localhost:8080)
 - [ ] API healthcheck OK (http://localhost:8000/health)
 - [ ] Frontend carregando (http://localhost:3001)
@@ -544,20 +544,20 @@ SUITECRM_URL=https://crm.seudominio.com
 ### **Logs importantes:**
 ```bash
 # API
-docker-compose logs -f api
+docker compose -f docker/docker-compose.yml logs -f api
 
 # SuiteCRM + Nginx
-docker-compose logs -f suitecrm nginx
+docker compose -f docker/docker-compose.yml logs -f suitecrm nginx
 
 # Banco de dados
-docker-compose logs -f db
+docker compose -f docker/docker-compose.yml logs -f db
 
 # Workers (Celery)
-docker-compose logs -f celery_worker celery_beat
+docker compose -f docker/docker-compose.yml logs -f celery_worker celery_beat
 ```
 
 ### **Arquivos de configuração:**
-- `docker-compose.yml` - Orquestração
+- `docker compose -f docker/docker-compose.yml` - Orquestração
 - `.env` - Variáveis de ambiente
 - `docker/*/Dockerfile` - Images customizadas
 - `docker/nginx/sites/` - Configuração Nginx
