@@ -553,9 +553,9 @@
 - [Integração Mercado Pago](../MERCADOPAGO_INTEGRACAO.md)
 
 ### **Mercado Pago**
-- [Painel de Aplicações](https://www.mercadopago.com.br/developers/panel/app/4450394951038830)
+- [Painel de Aplicações](https://www.mercadopago.com.br/developers/panel/app/<MP_APP_ID>)
 - [Documentação API](https://www.mercadopago.com.br/developers/pt/docs)
-- [Webhooks](https://www.mercadopago.com.br/developers/panel/app/4450394951038830/webhooks)
+- [Webhooks](https://www.mercadopago.com.br/developers/panel/app/<MP_APP_ID>/webhooks)
 
 ### **Repositórios**
 - Backend: `LogiFlow CRM/backend/`
@@ -568,7 +568,7 @@
 
 ### **Credenciais Mercado Pago**
 - User ID: 175427787
-- Aplicação: 4450394951038830
+- Aplicação: <MP_APP_ID>
 - Status: Em teste (ETAPA 1 DE 6)
 - **Ação necessária:** Obter Access Token de produção
 

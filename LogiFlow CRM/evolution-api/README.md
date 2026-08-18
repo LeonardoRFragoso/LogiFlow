@@ -35,7 +35,7 @@ Abra no navegador: http://localhost:8080
 ```env
 # WhatsApp / Evolution API
 EVOLUTION_API_URL=http://localhost:8080
-EVOLUTION_API_KEY=logiflow-evolution-key-2025
+EVOLUTION_API_KEY=<set-EVOLUTION_API_KEY-in-runtime-environment>
 EVOLUTION_INSTANCE_NAME=logiflow
 ```
 
@@ -60,7 +60,7 @@ curl http://localhost:8000/whatsapp/qrcode
 ```bash
 # 1. Criar instância
 curl -X POST http://localhost:8080/instance/create \
-  -H "apikey: logiflow-evolution-key-2025" \
+  -H "apikey: <set-EVOLUTION_API_KEY-in-runtime-environment>" \
   -H "Content-Type: application/json" \
   -d '{
     "instanceName": "logiflow",
@@ -70,7 +70,7 @@ curl -X POST http://localhost:8080/instance/create \
 
 # 2. Obter QR Code
 curl http://localhost:8080/instance/connect/logiflow \
-  -H "apikey: logiflow-evolution-key-2025"
+  -H "apikey: <set-EVOLUTION_API_KEY-in-runtime-environment>"
 ```
 
 ### Passo 4: Escanear QR Code
@@ -154,10 +154,10 @@ docker compose up -d
 ```bash
 # Reiniciar instância
 curl -X DELETE http://localhost:8080/instance/logout/logiflow \
-  -H "apikey: logiflow-evolution-key-2025"
+  -H "apikey: <set-EVOLUTION_API_KEY-in-runtime-environment>"
 
 curl http://localhost:8080/instance/connect/logiflow \
-  -H "apikey: logiflow-evolution-key-2025"
+  -H "apikey: <set-EVOLUTION_API_KEY-in-runtime-environment>"
 ```
 
 ### Conexão cai frequentemente

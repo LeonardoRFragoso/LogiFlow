@@ -4,7 +4,7 @@
 
 **Dados da sua aplicação no Mercado Pago:**
 - **User ID**: 175427787
-- **Número da aplicação**: 4450394951038830
+- **Número da aplicação**: <MP_APP_ID>
 - **Integração**: Checkout Transparente
 - **API**: API Pagamentos
 - **Status**: Em teste (ETAPA 1 DE 6)
@@ -76,7 +76,7 @@
 Adicione ao `.env`:
 ```env
 # Mercado Pago
-MERCADOPAGO_ACCESS_TOKEN=APP_USR-4450394951038830-xxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-175427787
+MERCADOPAGO_ACCESS_TOKEN=APP_USR-<set-MERCADOPAGO_ACCESS_TOKEN-in-runtime-environment>
 MERCADOPAGO_PUBLIC_KEY=APP_USR-xxxxxxxx-xxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # URLs de retorno
@@ -93,7 +93,7 @@ pip install mercadopago>=2.2.0
 
 ### **3. Configurar Webhook no Mercado Pago**
 
-1. Acesse: https://www.mercadopago.com.br/developers/panel/app/4450394951038830/webhooks
+1. Acesse: https://www.mercadopago.com.br/developers/panel/app/<MP_APP_ID>/webhooks
 2. Adicione a URL: `https://api.logiflow.com.br/api/billing/webhooks/mercadopago`
 3. Selecione eventos:
    - ✅ `payment` (Pagamentos)
