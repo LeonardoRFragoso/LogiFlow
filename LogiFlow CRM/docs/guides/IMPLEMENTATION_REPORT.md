@@ -261,7 +261,7 @@ evolution-api:
   ports:
     - "8080:8080"
   environment:
-    - AUTHENTICATION_API_KEY=REDACTED_EVOLUTION_API_KEY
+    - AUTHENTICATION_API_KEY=<set-EVOLUTION_API_KEY-in-runtime-environment>
 ```
 
 ---
