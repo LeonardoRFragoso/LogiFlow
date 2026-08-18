@@ -87,7 +87,7 @@ Quando estiver pronto para produção, substitua por:
 # ========================================
 # Mercado Pago - PRODUÇÃO
 # ========================================
-MERCADOPAGO_ACCESS_TOKEN=APP_USR-4450394951038830-xxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-175427787
+MERCADOPAGO_ACCESS_TOKEN=APP_USR-<set-MERCADOPAGO_ACCESS_TOKEN-in-runtime-environment>
 MERCADOPAGO_PUBLIC_KEY=APP_USR-xxxxxxxx-xxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # URLs de produção

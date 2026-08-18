@@ -132,7 +132,7 @@ FOCUSNFE_ENVIRONMENT=homologacao
 
 # WhatsApp / Evolution API - IMPORTANTE
 EVOLUTION_API_URL=http://localhost:8080
-EVOLUTION_API_KEY=REDACTED_EVOLUTION_API_KEY
+EVOLUTION_API_KEY=<set-EVOLUTION_API_KEY-in-runtime-environment>
 EVOLUTION_INSTANCE_NAME=logiflow
 
 # Google Maps API - IMPORTANTE
@@ -194,7 +194,7 @@ services:
       - "8080:8080"
     environment:
       - SERVER_URL=http://localhost:8080
-      - AUTHENTICATION_API_KEY=REDACTED_EVOLUTION_API_KEY
+      - AUTHENTICATION_API_KEY=<set-EVOLUTION_API_KEY-in-runtime-environment>
     volumes:
       - evolution_data:/evolution/instances
     restart: unless-stopped
@@ -211,11 +211,11 @@ docker compose -f docker/docker-compose.yml -f docker compose -f docker/docker-c
 #### Configuração
 
 1. Acesse: http://localhost:8080
-2. Autenticação: Header `apikey: REDACTED_EVOLUTION_API_KEY`
+2. Autenticação: Header `apikey: <set-EVOLUTION_API_KEY-in-runtime-environment>`
 3. Criar instância:
 ```bash
 curl -X POST http://localhost:8080/instance/create \
-  -H "apikey: REDACTED_EVOLUTION_API_KEY" \
+  -H "apikey: <set-EVOLUTION_API_KEY-in-runtime-environment>" \
   -H "Content-Type: application/json" \
   -d '{
     "instanceName": "logiflow",

@@ -66,7 +66,7 @@ http://localhost:8080
 **Via API:**
 ```bash
 curl -X POST http://localhost:8080/instance/create \
-  -H "apikey: REDACTED_EVOLUTION_API_KEY" \
+  -H "apikey: <set-EVOLUTION_API_KEY-in-runtime-environment>" \
   -H "Content-Type: application/json" \
   -d '{
     "instanceName": "logiflow",
@@ -91,7 +91,7 @@ curl -X POST http://localhost:8080/instance/create \
 **Verificar Conexão:**
 ```bash
 curl http://localhost:8080/instance/connectionState/logiflow \
-  -H "apikey: REDACTED_EVOLUTION_API_KEY"
+  -H "apikey: <set-EVOLUTION_API_KEY-in-runtime-environment>"
 ```
 
 ---
@@ -101,7 +101,7 @@ curl http://localhost:8080/instance/connectionState/logiflow \
 **Arquivo `.env`:**
 ```env
 EVOLUTION_API_URL=http://localhost:8080
-EVOLUTION_API_KEY=REDACTED_EVOLUTION_API_KEY
+EVOLUTION_API_KEY=<set-EVOLUTION_API_KEY-in-runtime-environment>
 EVOLUTION_INSTANCE_NAME=logiflow
 ```
 

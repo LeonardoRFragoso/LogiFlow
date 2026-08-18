@@ -10,7 +10,7 @@
 | Campo | Valor |
 |-------|-------|
 | **User ID** | 175427787 |
-| **Número da aplicação** | 4450394951038830 |
+| **Número da aplicação** | <MP_APP_ID> |
 | **Integração** | Checkout Transparente |
 | **API** | API Pagamentos |
 | **Status** | Em teste (ETAPA 1 DE 6) |
@@ -144,7 +144,7 @@ https://seu-ngrok-url.ngrok.io/api/billing/webhooks/mercadopago
 1. Instalar ngrok: `npm install -g ngrok`
 2. Iniciar túnel: `ngrok http 8000`
 3. Copiar URL pública (ex: `https://abc123.ngrok.io`)
-4. Acessar: https://www.mercadopago.com.br/developers/panel/app/4450394951038830/webhooks
+4. Acessar: https://www.mercadopago.com.br/developers/panel/app/<MP_APP_ID>/webhooks
 5. Adicionar URL: `https://abc123.ngrok.io/api/billing/webhooks/mercadopago`
 6. Selecionar eventos: `payment` e `subscription`
 
@@ -168,19 +168,19 @@ curl -X POST http://localhost:8000/api/billing/webhooks/mercadopago \
 ### **Quando estiver pronto:**
 
 1. **Completar homologação no Mercado Pago**
-   - Acessar: https://www.mercadopago.com.br/developers/panel/app/4450394951038830
+   - Acessar: https://www.mercadopago.com.br/developers/panel/app/<MP_APP_ID>
    - Completar todas as 6 etapas
    - Solicitar credenciais de produção
 
 2. **Obter credenciais de produção**
    ```
-   Access Token: APP_USR-4450394951038830-xxxxxxxx-...
+   Access Token: APP_USR-<set-MERCADOPAGO_ACCESS_TOKEN-in-runtime-environment>...
    Public Key: APP_USR-xxxxxxxx-xxxxxx-...
    ```
 
 3. **Atualizar `.env` de produção**
    ```env
-   MERCADOPAGO_ACCESS_TOKEN=APP_USR-4450394951038830-xxxxxxxx-...
+   MERCADOPAGO_ACCESS_TOKEN=APP_USR-<set-MERCADOPAGO_ACCESS_TOKEN-in-runtime-environment>...
    MERCADOPAGO_PUBLIC_KEY=APP_USR-xxxxxxxx-xxxxxx-...
    CHECKOUT_SUCCESS_URL=https://app.logiflow.com.br/checkout/success
    CHECKOUT_FAILURE_URL=https://app.logiflow.com.br/checkout/failure
@@ -223,9 +223,9 @@ curl -X POST http://localhost:8000/api/billing/webhooks/mercadopago \
 
 ## 🔗 Links Úteis
 
-- **Painel de Aplicações:** https://www.mercadopago.com.br/developers/panel/app/4450394951038830
+- **Painel de Aplicações:** https://www.mercadopago.com.br/developers/panel/app/<MP_APP_ID>
 - **Documentação API:** https://www.mercadopago.com.br/developers/pt/docs
-- **Webhooks:** https://www.mercadopago.com.br/developers/panel/app/4450394951038830/webhooks
+- **Webhooks:** https://www.mercadopago.com.br/developers/panel/app/<MP_APP_ID>/webhooks
 - **Cartões de Teste:** https://www.mercadopago.com.br/developers/pt/docs/checkout-api/integration-test/test-cards
 - **SDK Python:** https://github.com/mercadopago/sdk-python
 
