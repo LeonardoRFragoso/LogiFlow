@@ -2,14 +2,12 @@
 
 <div align="center">
 
-[![CI](https://github.com/LeonardoRFragoso/LogiFlow/actions/workflows/ci.yml/badge.svg)](https://github.com/LeonardoRFragoso/LogiFlow/actions/workflows/ci.yml)
-[![CD](https://github.com/LeonardoRFragoso/LogiFlow/actions/workflows/cd.yml/badge.svg)](https://github.com/LeonardoRFragoso/LogiFlow/actions/workflows/cd.yml)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white)](https://vuejs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-**SaaS enterprise para transportadoras: CRM + TMS + fiscal + GPS — 60-70% mais acessível que concorrentes**
+**SaaS multi-tenant para transportadoras: CRM + TMS + fiscal + GPS**
 
 [🌐 Acessar Sistema](https://logi-flow-wuhp.vercel.app) • [📖 Documentação](LogiFlow%20CRM/docs/) • [🚀 Quick Start](#-quick-start)
 
@@ -25,7 +23,7 @@ Transportadoras enfrentam desafios diários na gestão de operações logística
 - Comunicação fragmentada com clientes e motoristas
 - Dificuldade no controle financeiro e fiscal
 
-O **LogiFlow CRM** centraliza todas essas operações em uma plataforma única, moderna e escalável — sendo 60-70% mais acessível que soluções enterprise tradicionais.
+O **LogiFlow CRM** centraliza todas essas operações em uma plataforma única, moderna e escalável.
 
 ---
 
@@ -74,7 +72,7 @@ O **LogiFlow CRM** centraliza todas essas operações em uma plataforma única, 
 | **Frontend** | Vue.js 3, Vite, Pinia, TailwindCSS |
 | **Database** | PostgreSQL 15 |
 | **Cache** | Redis 7 |
-| **Infraestrutura** | Docker, GitHub Actions, Render.com |
+| **Infraestrutura** | Docker, Render.com |
 
 ---
 
@@ -150,17 +148,16 @@ Toda a documentação está em [`LogiFlow CRM/docs/`](LogiFlow%20CRM/docs/):
 
 ## 🧪 Testes
 
+**Status atual:** sem suíte de testes automatizada configurada. Os comandos abaixo são a estrutura planejada para implementação futura.
+
 ```bash
 cd "LogiFlow CRM"
 
-# Testes unitários
+# Testes unitários (a implementar)
 pytest tests/unit -v
 
-# Testes de integração
+# Testes de integração (a implementar)
 pytest tests/integration -v
-
-# Coverage
-pytest --cov=. --cov-report=html
 ```
 
 ---
